@@ -1,0 +1,333 @@
+{
+  "date": "2026-11-23",
+  "edition": "monday",
+  "generated_at": "2026-11-23T06:41:00-05:00",
+  "markets": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "close_date": "2026-11-23",
+    "indices": [
+      {
+        "symbol": "^GSPC",
+        "label": "S&P 500",
+        "price": 6812.4,
+        "change_1d_pct": -0.62,
+        "wtd_pct": -0.62,
+        "ytd_pct": 14.8
+      },
+      {
+        "symbol": "^IXIC",
+        "label": "Nasdaq",
+        "price": 23104.77,
+        "change_1d_pct": -1.08,
+        "wtd_pct": -1.08,
+        "ytd_pct": 19.42
+      },
+      {
+        "symbol": "SOXX",
+        "label": "SOXX",
+        "price": 284.15,
+        "change_1d_pct": -2.31,
+        "wtd_pct": -2.31,
+        "ytd_pct": 22.06
+      }
+    ],
+    "crypto": [
+      {
+        "symbol": "BTC-USD",
+        "label": "Bitcoin",
+        "price": 97420,
+        "change_1d_pct": 1.84,
+        "wtd_pct": 1.84,
+        "ytd_pct": 4.95
+      },
+      {
+        "symbol": "ETH-USD",
+        "label": "Ether",
+        "price": 3512,
+        "change_1d_pct": 0.0,
+        "wtd_pct": 0.0,
+        "ytd_pct": -6.3
+      }
+    ],
+    "holdings": [
+      {
+        "symbol": "GOOGL",
+        "label": "GOOGL",
+        "price": 312.48,
+        "change_1d_pct": 0.92,
+        "wtd_pct": 0.92,
+        "ytd_pct": 38.2
+      },
+      {
+        "symbol": "PLTR",
+        "label": "PLTR",
+        "price": 186.1,
+        "change_1d_pct": -3.17,
+        "wtd_pct": -3.17,
+        "ytd_pct": 141.05
+      },
+      {
+        "symbol": "GEV",
+        "label": "GEV",
+        "price": 642.05,
+        "change_1d_pct": 1.4,
+        "wtd_pct": 1.4,
+        "ytd_pct": 92.64
+      },
+      {
+        "symbol": "COST",
+        "label": "COST",
+        "price": 958.3,
+        "change_1d_pct": 0.15,
+        "wtd_pct": 0.15,
+        "ytd_pct": 4.71
+      },
+      {
+        "symbol": "V",
+        "label": "V",
+        "price": 348.72,
+        "change_1d_pct": -0.44,
+        "wtd_pct": -0.44,
+        "ytd_pct": 10.33
+      },
+      {
+        "symbol": "GS",
+        "label": "GS",
+        "price": 812.66,
+        "change_1d_pct": 0.58,
+        "wtd_pct": 0.58,
+        "ytd_pct": 41.9
+      }
+    ]
+  },
+  "standout": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "ticker": "NVDA",
+    "name": "Nvidia",
+    "price": 160.2,
+    "change_1d_pct": -6.4,
+    "universe_size": 107
+  },
+  "earnings": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "reported_date": "2026-11-23",
+    "reported": [
+      {
+        "ticker": "NVDA",
+        "name": "Nvidia",
+        "timing": "amc",
+        "revenue_actual": 57000000000.0,
+        "revenue_estimate": 55180000000.0,
+        "revenue_surprise_pct": 3.3,
+        "eps_actual": 1.3,
+        "eps_estimate": 1.25,
+        "eps_surprise_pct": 4.0,
+        "after_hours_pct": -6.4
+      },
+      {
+        "ticker": "WMT",
+        "name": "Walmart",
+        "timing": "bmo",
+        "revenue_actual": 179500000000.0,
+        "revenue_estimate": 180040000000.0,
+        "revenue_surprise_pct": -0.3,
+        "eps_actual": 0.62,
+        "eps_estimate": 0.6,
+        "eps_surprise_pct": 3.3,
+        "after_hours_pct": 2.1
+      }
+    ],
+    "next_day": {
+      "date": "2026-11-25",
+      "names": [
+        "Deere"
+      ],
+      "line": "Deere reports tomorrow."
+    },
+    "week": [
+      {
+        "date": "2026-11-23",
+        "day": "Mon",
+        "names": [
+          "Zoom Communications"
+        ]
+      },
+      {
+        "date": "2026-11-24",
+        "day": "Tue",
+        "names": [
+          "Dell Technologies",
+          "Salesforce"
+        ]
+      },
+      {
+        "date": "2026-11-25",
+        "day": "Wed",
+        "names": [
+          "Deere"
+        ]
+      }
+    ]
+  },
+  "market_calendar": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "today_is_trading_day": true,
+    "closure_line": "Markets close Thursday for Thanksgiving, early close Friday at 1pm.",
+    "this_week": [
+      {
+        "date": "2026-11-26",
+        "kind": "closed",
+        "name": "Thanksgiving"
+      },
+      {
+        "date": "2026-11-27",
+        "kind": "early_close",
+        "close": "1pm"
+      }
+    ]
+  },
+  "weather": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "location": "New York",
+    "temp_now": 48,
+    "high": 53,
+    "low": 41,
+    "code": 3,
+    "conditions": "Cloudy",
+    "icon": "cloud",
+    "summary": "Cloudy, high 53°, low 41°.",
+    "precip": "Rain likely after 4pm."
+  },
+  "mta": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "lines": [
+      "4",
+      "5"
+    ],
+    "alerts": [
+      {
+        "lines": [
+          "4",
+          "5"
+        ],
+        "type": "Delays",
+        "text": "Delays in both directions after a signal problem at Grand Central.",
+        "planned": false,
+        "systemwide": false
+      }
+    ]
+  },
+  "sports": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "since": "2026-11-23T06:41:00-05:00",
+    "results": [
+      {
+        "league": "NFL",
+        "team": "49ers",
+        "opponent": "Packers",
+        "team_score": 27,
+        "opponent_score": 20,
+        "result": "W",
+        "home": true,
+        "start": "2026-11-23T20:15:00-05:00"
+      },
+      {
+        "league": "NBA",
+        "team": "Warriors",
+        "opponent": "Lakers",
+        "team_score": 108,
+        "opponent_score": 115,
+        "result": "L",
+        "home": false,
+        "start": "2026-11-23T22:00:00-05:00"
+      }
+    ],
+    "week": [
+      {
+        "league": "NBA",
+        "team": "Warriors",
+        "opponent": "Rockets",
+        "home": true,
+        "day": "Wed",
+        "start": "2026-11-25T19:30:00-05:00",
+        "time": "7:30pm"
+      },
+      {
+        "league": "NFL",
+        "team": "49ers",
+        "opponent": "Seahawks",
+        "home": true,
+        "day": "Thu",
+        "start": "2026-11-26T20:20:00-05:00",
+        "time": "8:20pm"
+      }
+    ]
+  },
+  "memes": {
+    "ok": true,
+    "as_of": "2026-11-23T06:41:00-05:00",
+    "candidates": [
+      {
+        "url": "https://i.redd.it/sample1.jpg",
+        "title": "Sample meme 1",
+        "subreddit": "memes",
+        "score": 4999,
+        "permalink": "https://www.reddit.com/r/memes/1",
+        "width": 1000,
+        "height": 952
+      },
+      {
+        "url": "https://i.redd.it/sample2.jpg",
+        "title": "Sample meme 2",
+        "subreddit": "memes",
+        "score": 4998,
+        "permalink": "https://www.reddit.com/r/memes/2",
+        "width": 1000,
+        "height": 1000
+      },
+      {
+        "url": "https://i.redd.it/sample3.jpg",
+        "title": "Sample meme 3",
+        "subreddit": "memes",
+        "score": 4997,
+        "permalink": "https://www.reddit.com/r/memes/3",
+        "width": 1000,
+        "height": 800
+      },
+      {
+        "url": "https://i.redd.it/sample4.jpg",
+        "title": "Sample meme 4",
+        "subreddit": "memes",
+        "score": 4996,
+        "permalink": "https://www.reddit.com/r/memes/4",
+        "width": 1000,
+        "height": 1200
+      },
+      {
+        "url": "https://i.redd.it/sample5.jpg",
+        "title": "Sample meme 5",
+        "subreddit": "memes",
+        "score": 4995,
+        "permalink": "https://www.reddit.com/r/memes/5",
+        "width": 1000,
+        "height": 952
+      },
+      {
+        "url": "https://i.redd.it/sample6.jpg",
+        "title": "Sample meme 6",
+        "subreddit": "memes",
+        "score": 4994,
+        "permalink": "https://www.reddit.com/r/memes/6",
+        "width": 1000,
+        "height": 1000
+      }
+    ]
+  }
+}

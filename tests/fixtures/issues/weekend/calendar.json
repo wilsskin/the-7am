@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-28",
+  "today": [
+    {
+      "start": null,
+      "all_day": true,
+      "title": "Sample Friend's birthday",
+      "kind": "birthday"
+    }
+  ],
+  "this_week": []
+}

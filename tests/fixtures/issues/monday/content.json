@@ -1,0 +1,205 @@
+{
+  "date": "2026-11-23",
+  "edition": "monday",
+  "subject": "Nvidia beat, and it still wasn't enough.",
+  "intro": "Nvidia beat on every line and the stock still fell. Chips dragged the Nasdaq into Friday's close. Thanksgiving week starts quiet, with markets shut Thursday.",
+  "section_desc": {
+    "your_day": "Cloudy with rain after 4pm and a short week ahead.",
+    "before_the_bell": "Chips closed last week on a down note.",
+    "earnings": "A light holiday week. Zoom tonight, then Dell and Salesforce Tuesday.",
+    "holdings": "PLTR leads the year. PLTR and GOOGL both had news this weekend.",
+    "big_read": "Why Nvidia's beat wasn't enough for the AI trade.",
+    "top_3": "A Fed nominee, a chip export rule and a big bank deal.",
+    "latest": "Quick hits across business, tech, world, culture and sports.",
+    "off_the_clock": "Early ski terrain and one thing worth doing this week.",
+    "memes": "Four from the weekend's feeds."
+  },
+  "your_day_nyc": [
+    {
+      "title": "Congestion pricing revenue tops projections for the third straight month",
+      "source": "NYT",
+      "url": "https://www.nytimes.com/2026/11/23/nyregion/congestion-pricing.html"
+    },
+    {
+      "title": "Rockefeller Center tree lighting set for December 2",
+      "source": "Gothamist",
+      "url": "https://gothamist.com/news/rockefeller-tree-lighting"
+    }
+  ],
+  "standout": {
+    "body": "Record quarter on every line, but data center guidance came in under what investors were hoping for. It was the biggest one-day drop among $100B+ companies and pulled the rest of the chip sector down with it.",
+    "link": {
+      "title": "Nvidia falls despite record quarter",
+      "source": "WSJ",
+      "url": "https://www.wsj.com/tech/nvidia-earnings-guidance"
+    }
+  },
+  "on_deck_today": [
+    {
+      "time": "8:30",
+      "text": "Chicago Fed national activity index"
+    },
+    {
+      "time": "2:00",
+      "text": "Fed governor speaks on bank capital rules"
+    }
+  ],
+  "holdings_news": [
+    {
+      "headline": "PLTR: Army expands its software contract",
+      "body": "Placeholder. Two to three sentences on what happened and why it matters to the position. Any number comes from data.json, never from the article.",
+      "link": {
+        "title": "Sample article",
+        "source": "WSJ",
+        "url": "https://www.wsj.com/business/palantir-army-contract"
+      },
+      "ticker": "PLTR"
+    },
+    {
+      "headline": "GOOGL: Gemini update ships to Workspace customers",
+      "body": "Placeholder. A second holding with news. Every holding with relevant, recent news gets a story, as many as the day calls for.",
+      "link": {
+        "title": "Sample article",
+        "source": "NYT",
+        "url": "https://www.nytimes.com/2026/11/23/technology/gemini-workspace.html"
+      },
+      "ticker": "GOOGL"
+    }
+  ],
+  "big_read": {
+    "headline": "Sample headline: the AI trade hits its first real test",
+    "body": "Placeholder paragraph one. About 300 words across three or four short paragraphs, in the Morning Brew shape: what happened, the context, why it matters, what to watch.\n\nPlaceholder paragraph two. Short declarative sentences. Strong verbs. Numbers over adjectives. No jokes, no em dashes, no filler.\n\nWhy it matters: Placeholder paragraph three. One medium-weight lead-in in black marks the takeaway.",
+    "link": {
+      "title": "Sample article",
+      "source": "NYT",
+      "url": "https://www.nytimes.com/2026/11/23/business/ai-trade-test.html"
+    }
+  },
+  "top_3": [
+    {
+      "headline": "Sample story one headline with a verb",
+      "body": "Placeholder. About 100 words: the news first, then context, then why it matters.",
+      "link": {
+        "title": "Sample article",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/markets/sample-one"
+      }
+    },
+    {
+      "headline": "Sample story two headline with a verb",
+      "body": "Placeholder. Same shape, different beat: markets, tech, world.",
+      "link": {
+        "title": "Sample article",
+        "source": "WSJ",
+        "url": "https://www.wsj.com/economy/sample-two"
+      }
+    },
+    {
+      "headline": "Sample story three headline with a verb",
+      "body": "Placeholder. If it needs more than 120 words, it belongs in The Big Read.",
+      "link": {
+        "title": "Sample article",
+        "source": "BBC",
+        "url": "https://www.bbc.com/news/sample-three"
+      }
+    }
+  ],
+  "latest": {
+    "business": [
+      {
+        "title": "Sample headline about a deal or Wall Street move",
+        "source": "WSJ",
+        "url": "https://www.wsj.com/finance/deal"
+      },
+      {
+        "title": "Sample headline: Goldman news kept to one line",
+        "source": "CNBC",
+        "url": "https://www.cnbc.com/2026/11/23/goldman.html"
+      },
+      {
+        "title": "Sample headline about the Fed",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/markets/fed"
+      }
+    ],
+    "tech": [
+      {
+        "title": "Sample headline about a model launch",
+        "source": "The Verge",
+        "url": "https://www.theverge.com/ai/model-launch"
+      },
+      {
+        "title": "Sample headline about big tech regulation",
+        "source": "NYT",
+        "url": "https://www.nytimes.com/2026/11/23/technology/regulation.html"
+      }
+    ],
+    "world": [
+      {
+        "title": "Sample world headline",
+        "source": "AP",
+        "url": "https://apnews.com/article/world-sample"
+      },
+      {
+        "title": "Sample politics headline",
+        "source": "BBC",
+        "url": "https://www.bbc.com/news/politics-sample"
+      }
+    ],
+    "pop_culture": [
+      {
+        "title": "Sample box office headline",
+        "source": "Variety",
+        "url": "https://variety.com/2026/film/box-office"
+      },
+      {
+        "title": "Sample music or streaming headline",
+        "source": "NYT",
+        "url": "https://www.nytimes.com/2026/11/23/arts/music.html"
+      }
+    ],
+    "sports": [
+      {
+        "title": "Sample headline: star quarterback out for the season with a torn ACL",
+        "source": "ESPN",
+        "url": "https://www.espn.com/nfl/story/qb-acl"
+      },
+      {
+        "title": "Sample headline about a big NFL trade",
+        "source": "ESPN",
+        "url": "https://www.espn.com/nfl/story/trade"
+      },
+      {
+        "title": "Sample Giants offseason headline",
+        "source": "The Athletic",
+        "url": "https://www.nytimes.com/athletic/giants-offseason"
+      }
+    ]
+  },
+  "off_the_clock": [
+    {
+      "headline": "Ski report: Killington opens more terrain this weekend",
+      "body": "Placeholder. Base depth, lifts open, snow in the forecast.",
+      "link": {
+        "title": "Sample article",
+        "source": "NYT",
+        "url": "https://www.nytimes.com/2026/11/23/travel/killington-ski.html"
+      }
+    },
+    {
+      "headline": "Things to do: a market or show worth the trip",
+      "body": "Placeholder. Where, when, why it's worth it. Never the same item as Around NYC.",
+      "link": {
+        "title": "Sample article",
+        "source": "Gothamist",
+        "url": "https://gothamist.com/arts-entertainment/things-to-do"
+      }
+    }
+  ],
+  "memes": [
+    "https://i.redd.it/sample1.jpg",
+    "https://i.redd.it/sample2.jpg",
+    "https://i.redd.it/sample3.jpg",
+    "https://i.redd.it/sample4.jpg"
+  ]
+}

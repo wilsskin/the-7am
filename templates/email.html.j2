@@ -1,0 +1,297 @@
+{#- The 7AM email. One template, edition switches. Every macro is a port of the helper of
+    the same name in build_reference.py; keep them in step. Colors come from brief/tokens.py
+    (T), never raw hex. Claude never writes HTML: everything here is filled from data.json,
+    calendar.json and content.json by brief/render.py. -#}
+{%- set S = sans -%}
+
+{%- macro h1(lead, rest) -%}
+<tr><td class="px" style="padding:32px 24px 0 24px;"><h1 class="t-title" style="margin:0;font-family:{{S}};font-size:26px;line-height:30px;font-weight:500;letter-spacing:-0.02em;color:{{T.primary}};"><span class="c-primary">{{lead}}</span>{% if rest %} <span class="c-secondary" style="color:{{T.secondary}};">{{rest}}</span>{% endif %}</h1></td></tr>
+{%- endmacro -%}
+
+{%- macro label(text, desc, top=section_gap) -%}
+<tr><td class="px sec" style="padding:{{top}}px 24px 16px 24px;"><h2 class="c-primary t-heading" style="margin:0;font-family:{{S}};font-size:20px;line-height:27px;font-weight:500;letter-spacing:-0.01em;color:{{T.primary}};">{{text}}</h2><p class="c-secondary" style="margin:0;padding-top:2px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{{desc}}</p></td></tr>
+{%- endmacro -%}
+
+{%- macro row(top=0) -%}
+<tr><td class="px" style="padding:{{top}}px 24px 0 24px;">{{ caller() }}</td></tr>
+{%- endmacro -%}
+
+{%- macro subtitle(text, top=0) -%}
+<h3 class="c-primary" style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:500;letter-spacing:0;color:{{T.primary}};">{{text}}</h3>
+{%- endmacro -%}
+
+{%- macro para(text, top=2, lead_in=None) -%}
+<p class="c-secondary" style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{% if lead_in %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{lead_in}}</span> {% endif %}{{text}}</p>
+{%- endmacro -%}
+
+{%- macro readlink(outlet, url, top=8) -%}
+<p style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;"><a href="{{url}}" class="c-secondary" style="color:{{T.secondary}};text-decoration:none;">Read on {{outlet}} →</a></p>
+{%- endmacro -%}
+
+{%- macro caption(text, color="secondary") -%}
+<span class="c-{{color}}" style="font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;color:{{T[color]}};">{{text}}</span>
+{%- endmacro -%}
+
+{%- macro tk(text) -%}<span style="font-weight:500;">{{text}}</span>{%- endmacro -%}
+
+{%- macro pill(text) -%}
+<span class="pill" style="font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;font-weight:400;color:{{T.secondary}};background-color:{{T.surface}};border-radius:4px;padding:2px 4px;">{{text}}</span>
+{%- endmacro -%}
+
+{%- macro badge_label(text, top=24) -%}
+<p style="margin:0;padding:{{top}}px 0 10px 0;line-height:19px;">{{ pill(text) }}</p>
+{%- endmacro -%}
+
+{%- macro theme_pill(text) -%}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td class="tpill" style="padding:6px 12px;border-radius:8px;background-color:{{T.theme_tint}};border:1px solid {{T.theme_line}};font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;color:{{T.primary}};">{{text}}</td></tr></table>
+{%- endmacro -%}
+
+{%- macro move(m) -%}<span class="c-{{m.c}}" style="color:{{T[m.c]}};">{{m.text}}</span>{%- endmacro -%}
+
+{%- macro card() -%}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="background-color:{{T.surface}};border-radius:16px;"><tr><td style="padding:8px 16px;">{{ caller() }}</td></tr></table>
+{%- endmacro -%}
+
+{%- macro table(header, rows) -%}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+{%- for c in header %}<td align="{{ 'left' if loop.first else 'right' }}" class="c-secondary" style="padding:10px 0 8px 0;{{num}}color:{{T.secondary}};">{{c}}</td>{% endfor -%}
+</tr>
+{%- for r in rows %}<tr>{% for c in r %}<td align="{{ 'left' if loop.first else 'right' }}" valign="top" class="c-primary b-subtle" style="padding:10px 0;border-top:1px solid {{T.subtle}};{{num}}color:{{T.primary}};">{{c}}</td>{% endfor %}</tr>{% endfor -%}
+</table>
+{%- endmacro -%}
+
+{%- macro meta_rows(items, left_w=72, valign="top") -%}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+{%- for left, right in items %}{% set pb = "0" if loop.last else "12px" %}<tr><td width="{{left_w}}" valign="{{valign}}" style="width:{{left_w}}px;padding-bottom:{{pb}};">{{left}}</td><td valign="{{valign}}" style="padding-bottom:{{pb}};">{{right}}</td></tr>{% endfor -%}
+</table>
+{%- endmacro -%}
+
+{%- macro body16(text, color="primary") -%}
+<span class="c-{{color}}" style="font-family:{{S}};font-size:16px;line-height:22px;color:{{T[color]}};">{{text}}</span>
+{%- endmacro -%}
+
+{%- macro headline_rows(items) -%}
+{%- for l in items %}<p style="margin:0;padding-bottom:{{ 0 if loop.last else 12 }}px;font-family:{{S}};font-size:16px;line-height:22px;"><a href="{{l.url}}" class="c-primary" style="color:{{T.primary}};text-decoration:none;">{{l.title}}</a> {{ caption(l.source) }}</p>{% endfor -%}
+{%- endmacro -%}
+
+{%- macro sublabel(text, top=24) -%}
+<p class="c-secondary" style="margin:0;padding:{{top}}px 0 8px 0;font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;color:{{T.secondary}};">{{text}}</p>
+{%- endmacro -%}
+
+{%- macro gap(px) -%}<div style="height:{{px}}px;line-height:{{px}}px;font-size:1px;">&nbsp;</div>{%- endmacro -%}
+
+{%- macro icon(name) -%}
+<img src="{{ icon_src.format(name) }}" width="20" height="20" alt="" style="display:block;width:20px;height:20px;border:0;">
+{%- endmacro -%}
+
+{%- macro route_bullets(lines) -%}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+{%- for n in lines %}{% if not loop.first %}<td width="4" style="width:4px;"></td>{% endif %}<td align="center" width="20" style="width:20px;height:20px;border-radius:10px;background-color:{{T.mta_45}};color:#FFFFFF;font-family:{{S}};font-size:12px;line-height:20px;font-weight:500;">{{n}}</td>{% endfor -%}
+</tr></table>
+{%- endmacro -%}
+
+{%- macro temp(text) -%}
+<span class="c-theme" style="font-family:{{S}};font-size:20px;line-height:22px;font-weight:500;letter-spacing:-0.01em;color:{{T.theme}};">{{text}}</span>
+{%- endmacro -%}
+
+{#- Your day card body. Rows (built in render.py) are one of:
+    {kind: header, text} / {kind: weather, icon, temp, text, detail} /
+    {kind: subway, lines, text} / {kind: calendar, left, text, detail}
+    Three columns: 32px icon, 64px left (temperature, route bullets, time, day), value text. -#}
+{%- macro icon_table(rows) -%}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+{%- set ns = namespace(first=true) -%}
+{%- for r in rows -%}
+{%- if r.kind == "header" -%}
+<tr><td colspan="3" class="c-secondary" style="padding:16px 0 4px 0;{{num}}color:{{T.secondary}};">{{r.text}}</td></tr>
+{%- set ns.first = true -%}
+{%- else -%}
+{%- set line = "" if ns.first else "border-top:1px solid " ~ T.subtle ~ ";" -%}
+{%- set cls = "" if ns.first else ' class="b-subtle"' -%}
+<tr><td width="32" valign="middle"{{cls|safe}} style="width:32px;padding:12px 0;{{line}}">{{ icon(r.icon) }}</td><td width="64" valign="middle"{{cls|safe}} style="width:64px;padding:12px 0;{{line}}">
+{%- if r.kind == "weather" %}{{ temp(r.temp) }}{% elif r.kind == "subway" %}{{ route_bullets(r.lines) }}{% else %}{{ caption(r.left, "primary") }}{% endif -%}
+</td><td valign="middle"{{cls|safe}} style="padding:12px 0;{{line}}">
+{%- if r.kind == "weather" %}{{ body16(r.text) }}{% if r.detail %}<br>{{ body16(r.detail, "secondary") }}{% endif %}
+{%- else %}{{ body16(r.text) }}{% if r.detail %} {{ caption(r.detail) }}{% endif %}{% endif -%}
+</td></tr>
+{%- set ns.first = false -%}
+{%- endif -%}
+{%- endfor -%}
+</table>
+{%- endmacro -%}
+
+{%- macro standout_line(ticker, m) -%}
+{{ticker}} <span style="{{num}}font-size:16px;">{{ move(m) }}</span>
+{%- endmacro -%}
+
+{%- macro er(cell) -%}{{cell.actual}}{% if cell.pct %} <span class="c-{{cell.c}}" style="color:{{T[cell.c]}};">({{cell.pct}})</span>{% endif %}{%- endmacro -%}
+
+{%- macro wl(result) -%}
+{%- set c = "up" if result == "W" else ("down" if result == "L" else "secondary") -%}
+<span class="c-{{c}}" style="color:{{T[c]}};font-weight:500;">{{result}}</span>
+{%- endmacro -%}
+
+{%- macro sports_row(left, mid, right, first=false) -%}
+{%- set line = "" if first else "border-top:1px solid " ~ T.subtle ~ ";" -%}
+{%- set cls = "" if first else ' class="b-subtle"' -%}
+<tr><td width="40" valign="top"{{cls|safe}} style="width:40px;padding:10px 0;{{line}}{{num}}color:{{T.primary}};">{{left}}</td><td valign="top"{{cls|safe}} style="padding:10px 0;{{line}}{{num}}color:{{T.primary}};" class="c-primary">{{mid}}</td><td align="right" valign="top"{{cls|safe}} style="padding:10px 0;{{line}}{{num}}color:{{T.secondary}};" class="c-secondary">{{right}}</td></tr>
+{%- endmacro -%}
+
+{%- macro story(s, top=0, big=false) -%}
+{%- call row(top) -%}
+{{ subtitle(s.headline) }}
+{%- for p in s.paragraphs %}{{ para(p.text, 2 if loop.first else 16, p.lead_in) }}{% endfor -%}
+{{ readlink(s.source, s.url, 16 if big else 8) }}
+{%- endcall -%}
+{%- endmacro -%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>{{ v.subject }}</title>
+<style>
+  body { margin:0; padding:0; }
+  @media (max-width: 480px) {
+    .px { padding-left:16px !important; padding-right:16px !important; }
+    .t-title { font-size:22px !important; line-height:25px !important; }
+    .t-heading { font-size:18px !important; line-height:24px !important; }
+    .card { border-radius:8px !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .bg { background-color:{{D.bg}} !important; }
+    .card, .meme-ph { background-color:{{D.surface}} !important; }
+    .c-primary { color:{{D.primary}} !important; }
+    .c-secondary { color:{{D.secondary}} !important; }
+    .c-theme { color:{{D.theme}} !important; }
+    .c-up { color:{{D.up}} !important; }
+    .c-down { color:{{D.down}} !important; }
+    .b-subtle { border-color:{{D.subtle}} !important; }
+    .pill { background-color:{{D.subtle}} !important; color:{{D.secondary}} !important; }
+    .tpill { background-color:{{D.theme_tint}} !important; border-color:{{D.theme_line}} !important; color:{{D.primary}} !important; }
+  }
+</style>
+</head>
+<body class="bg" style="margin:0;padding:0;background-color:{{T.bg}};">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:{{T.bg}};">{{ v.lead }}{% for i in range(8) %}&zwnj;&nbsp;{% endfor %}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg" style="background-color:{{T.bg}};">
+<tr><td align="center" style="padding:32px 0 32px 0;">
+<table role="presentation" width="{{content_width}}" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:{{content_width}}px;">
+{#- ---------- masthead + title ---------- #}
+<tr><td class="px" style="padding:0 24px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td class="c-primary" style="font-family:{{S}};font-size:20px;line-height:27px;font-weight:500;letter-spacing:-0.01em;color:{{T.primary}};">{{ v.brand }}</td>
+<td align="right" class="c-secondary" style="font-family:{{mono}};font-size:14px;line-height:19px;letter-spacing:0.02em;text-transform:uppercase;color:{{T.secondary}};">{{ v.date_label }}</td>
+</tr></table></td></tr>
+{{ h1(v.lead, v.rest) }}
+
+{#- ---------- Your day ---------- #}
+{%- set yd = v.your_day %}
+{{ label("Your day", yd.desc) }}
+{%- if yd.birthday_pill %}{% call row() %}{{ theme_pill(yd.birthday_pill) }}{{ gap(16) }}{% endcall %}{% endif %}
+{%- if yd.rows %}
+{% call row() %}{% call card() %}{{ icon_table(yd.rows) }}{% endcall %}{% endcall %}
+{%- endif %}
+{%- if yd.nyc %}
+{% call row() %}{{ sublabel("Around NYC", 24 if (yd.rows or yd.birthday_pill) else 0) }}{{ headline_rows(yd.nyc) }}{% endcall %}
+{%- endif %}
+
+{#- ---------- Before the bell / Markets ---------- #}
+{%- set bb = v.bell %}
+{{ label(bb.label, bb.desc) }}
+{%- if bb.rows %}
+{%- set trs = [] %}{% for q in bb.rows %}{% do trs.append([q.label, q.price, move(q.d1), move(q.period)]) %}{% endfor %}
+{% call row() %}{% call card() %}{{ table(["Asset", "Price", "1D", bb.period_label], trs) }}{% endcall %}{% endcall %}
+{%- endif %}
+{%- if bb.standout %}
+{% call row(24 if bb.rows else 0) %}{{ subtitle(standout_line(bb.standout.ticker, bb.standout.move)) }}{{ para(bb.standout.body) }}{{ readlink(bb.standout.source, bb.standout.url) }}{% endcall %}
+{%- endif %}
+{%- if bb.on_deck %}
+{%- set items = [] %}{% for o in bb.on_deck %}{% do items.append((caption(o.time or ""), body16(o.text))) %}{% endfor %}
+{% call row(24 if (bb.rows or bb.standout) else 0) %}{{ subtitle("On deck today") }}{{ gap(8) }}{{ meta_rows(items, 48, "middle") }}{% endcall %}
+{%- endif %}
+
+{#- ---------- Earnings ---------- #}
+{%- if v.earnings %}{% set ea = v.earnings %}
+{{ label("Earnings", ea.desc) }}
+{%- if ea.week %}
+{%- set items = [] %}{% for w in ea.week %}{% do items.append((caption(w.day), body16(w.names))) %}{% endfor %}
+{% call row() %}{{ subtitle("Reporting this week") }}{{ gap(8) }}{{ meta_rows(items, 48, "middle") }}{% endcall %}
+{%- elif ea.reported %}
+{%- set trs = [] %}{% for r in ea.reported %}{% do trs.append([tk(r.ticker), er(r.revenue), er(r.eps), move(r.after_hours)]) %}{% endfor %}
+{% call row() %}{{ subtitle("Reported yesterday") }}{{ gap(8) }}{% call card() %}{{ table(["Asset", "Revenue", "EPS", "After hrs"], trs) }}{% endcall %}{% endcall %}
+{%- endif %}
+{%- endif %}
+
+{#- ---------- Your holdings ---------- #}
+{%- if v.holdings %}{% set ho = v.holdings %}
+{{ label("Your holdings", ho.desc) }}
+{%- if ho.rows %}
+{%- set trs = [] %}{% for q in ho.rows %}{% do trs.append([tk(q.label), q.price, move(q.d1), move(q.period)]) %}{% endfor %}
+{% call row() %}{% call card() %}{{ table(["Asset", "Price", "1D", ho.period_label], trs) }}{% endcall %}{% endcall %}
+{%- endif %}
+{%- for s in ho.stories %}
+{{ story(s, (24 if ho.rows else 0) if loop.first else 32) }}
+{%- endfor %}
+{%- endif %}
+
+{#- ---------- The big read ---------- #}
+{%- if v.big_read %}
+{{ label("The big read", v.big_read.desc) }}
+{{ story(v.big_read.story, 0, true) }}
+{%- endif %}
+
+{#- ---------- Top 3 ---------- #}
+{%- if v.top_3 %}
+{{ label("Top 3", v.top_3.desc) }}
+{%- for s in v.top_3.stories %}
+{{ story(s, 0 if loop.first else 32) }}
+{%- endfor %}
+{%- endif %}
+
+{#- ---------- The latest ---------- #}
+{%- if v.latest %}
+{{ label("The latest", v.latest.desc) }}
+{% call row() %}
+{%- for g in v.latest.groups %}{{ badge_label(g.label, 0 if loop.first else 24) }}{{ headline_rows(g.links) }}{% endfor %}
+{%- set sp = v.latest.sports_card %}
+{%- if sp %}
+{%- if not v.latest.groups or v.latest.groups[-1].label != "Sports" %}{{ badge_label("Sports", 0 if not v.latest.groups else 24) }}{% else %}{{ gap(16) }}{% endif %}
+{%- call card() %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+{%- for g in sp.results %}{{ sports_row(wl(g.result), g.line, g.league, loop.first) }}{% endfor %}
+{%- if sp.week %}<tr><td colspan="3" class="c-secondary" style="padding:{{ 16 if sp.results else 10 }}px 0 4px 0;{{num}}color:{{T.secondary}};">This week</td></tr>
+{%- for g in sp.week %}{{ sports_row(caption(g.day, "primary"), g.line, g.time, loop.first) }}{% endfor %}{% endif -%}
+</table>{%- endcall %}
+{%- endif %}
+{% endcall %}
+{%- endif %}
+
+{#- ---------- Off the clock ---------- #}
+{%- if v.off_the_clock %}
+{{ label("Off the clock", v.off_the_clock.desc) }}
+{%- for s in v.off_the_clock.stories %}
+{{ story(s, 0 if loop.first else 32) }}
+{%- endfor %}
+{%- endif %}
+
+{#- ---------- Meme roundup ---------- #}
+{%- if v.memes %}
+{{ label("Meme roundup", v.memes.desc) }}
+{%- for m in v.memes.images %}
+{% call row(0 if loop.first else 16) %}<img src="{{m.url}}" width="504"{% if m.height %} height="{{m.height}}"{% endif %} alt="Meme" style="display:block;width:100%;max-width:504px;height:auto;border:0;border-radius:8px;">{% endcall %}
+{%- endfor %}
+{%- endif %}
+
+{#- ---------- Footer ---------- #}
+<tr><td class="px" style="padding:{{section_gap}}px 24px 0 24px;">
+<p class="c-secondary" style="margin:0;font-family:{{S}};font-size:16px;line-height:22px;color:{{T.secondary}};">© {{ v.year }} Wilson Skinner</p>
+<p class="c-secondary" style="margin:0;padding-top:4px;font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;color:{{T.secondary}};">{{ v.footer }}</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

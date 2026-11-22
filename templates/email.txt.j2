@@ -1,0 +1,169 @@
+{#- Plain-text version. Same order as email.html.j2. -#}
+{{ v.brand }} · {{ v.date_label }}
+
+{{ v.lead }}{% if v.rest %} {{ v.rest }}{% endif %}
+
+
+YOUR DAY
+{{ v.your_day.desc }}
+{% if v.your_day.birthday_pill %}
+{{ v.your_day.birthday_pill }}
+{% endif %}
+
+{% for r in v.your_day.rows %}
+{% if r.kind == "header" %}
+
+{{ r.text }}
+{% elif r.kind == "weather" %}
+{{ r.temp }}  {{ r.text }}{% if r.detail %} {{ r.detail }}{% endif %}
+
+{% elif r.kind == "subway" %}
+{{ r.lines|join("/") }} train: {{ r.text }}
+{% else %}
+{{ r.left }}  {{ r.text }}{% if r.detail %} ({{ r.detail }}){% endif %}
+
+{% endif %}
+{% endfor %}
+{% if v.your_day.nyc %}
+
+Around NYC
+{% for l in v.your_day.nyc %}
+- {{ l.title }} ({{ l.source }}) {{ l.url }}
+{% endfor %}
+{% endif %}
+
+
+{{ v.bell.label|upper }}
+{{ v.bell.desc }}
+
+{% for q in v.bell.rows %}
+{{ q.label }}: {{ q.price }}  {{ q.d1.text }} 1D, {{ q.period.text }} {{ v.bell.period_label }}
+{% endfor %}
+{% if v.bell.standout %}
+
+{{ v.bell.standout.ticker }} {{ v.bell.standout.move.text }}
+{{ v.bell.standout.body }}
+Read on {{ v.bell.standout.source }}: {{ v.bell.standout.url }}
+{% endif %}
+{% if v.bell.on_deck %}
+
+On deck today
+{% for o in v.bell.on_deck %}
+{% if o.time %}{{ o.time }}  {% endif %}{{ o.text }}
+{% endfor %}
+{% endif %}
+{% if v.earnings %}
+
+
+EARNINGS
+{{ v.earnings.desc }}
+{% if v.earnings.week %}
+
+Reporting this week
+{% for w in v.earnings.week %}
+{{ w.day }}  {{ w.names }}
+{% endfor %}
+{% elif v.earnings.reported %}
+
+Reported yesterday
+{% for r in v.earnings.reported %}
+{{ r.ticker }}: revenue {{ r.revenue.actual }}{% if r.revenue.pct %} ({{ r.revenue.pct }}){% endif %}, EPS {{ r.eps.actual }}{% if r.eps.pct %} ({{ r.eps.pct }}){% endif %}, after hours {{ r.after_hours.text }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if v.holdings %}
+
+
+YOUR HOLDINGS
+{{ v.holdings.desc }}
+
+{% for q in v.holdings.rows %}
+{{ q.label }}: {{ q.price }}  {{ q.d1.text }} 1D, {{ q.period.text }} {{ v.holdings.period_label }}
+{% endfor %}
+{% for s in v.holdings.stories %}
+
+{{ s.headline }}
+{% for p in s.paragraphs %}{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
+
+{% endfor %}
+Read on {{ s.source }}: {{ s.url }}
+{% endfor %}
+{% endif %}
+{% if v.big_read %}
+
+
+THE BIG READ
+{{ v.big_read.desc }}
+
+{{ v.big_read.story.headline }}
+{% for p in v.big_read.story.paragraphs %}
+
+{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
+{% endfor %}
+
+Read on {{ v.big_read.story.source }}: {{ v.big_read.story.url }}
+{% endif %}
+{% if v.top_3 %}
+
+
+TOP 3
+{{ v.top_3.desc }}
+{% for s in v.top_3.stories %}
+
+{{ s.headline }}
+{% for p in s.paragraphs %}{{ p.text }}
+{% endfor %}
+Read on {{ s.source }}: {{ s.url }}
+{% endfor %}
+{% endif %}
+{% if v.latest %}
+
+
+THE LATEST
+{{ v.latest.desc }}
+{% for g in v.latest.groups %}
+
+{{ g.label }}
+{% for l in g.links %}
+- {{ l.title }} ({{ l.source }}) {{ l.url }}
+{% endfor %}
+{% endfor %}
+{% if v.latest.sports_card %}
+
+{% for g in v.latest.sports_card.results %}
+{{ g.result }}  {{ g.line }} ({{ g.league }})
+{% endfor %}
+{% if v.latest.sports_card.week %}
+This week
+{% for g in v.latest.sports_card.week %}
+{{ g.day }}  {{ g.line }}, {{ g.time }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% if v.off_the_clock %}
+
+
+OFF THE CLOCK
+{{ v.off_the_clock.desc }}
+{% for s in v.off_the_clock.stories %}
+
+{{ s.headline }}
+{% for p in s.paragraphs %}{{ p.text }}
+{% endfor %}
+Read on {{ s.source }}: {{ s.url }}
+{% endfor %}
+{% endif %}
+{% if v.memes %}
+
+
+MEME ROUNDUP
+{{ v.memes.desc }}
+{% for m in v.memes.images %}
+{{ m.url }}
+{% endfor %}
+{% endif %}
+
+
+© {{ v.year }} Wilson Skinner
+{{ v.footer }}

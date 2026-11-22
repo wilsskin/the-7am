@@ -1,0 +1,96 @@
+{
+  "date": "2026-11-24",
+  "edition": "weekday",
+  "generated_at": "2026-11-24T06:41:00-05:00",
+  "markets": {
+    "ok": false,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "error": "RuntimeError: sample failure"
+  },
+  "standout": {
+    "ok": false,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "error": "RuntimeError: sample failure"
+  },
+  "earnings": {
+    "ok": false,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "error": "RuntimeError: sample failure"
+  },
+  "market_calendar": {
+    "ok": true,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "today_is_trading_day": true,
+    "closure_line": "Markets close Thursday for Thanksgiving, early close Friday at 1pm.",
+    "this_week": [
+      {
+        "date": "2026-11-26",
+        "kind": "closed",
+        "name": "Thanksgiving"
+      },
+      {
+        "date": "2026-11-27",
+        "kind": "early_close",
+        "close": "1pm"
+      }
+    ]
+  },
+  "weather": {
+    "ok": false,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "error": "RuntimeError: sample failure"
+  },
+  "mta": {
+    "ok": true,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "lines": [
+      "4",
+      "5"
+    ],
+    "alerts": [
+      {
+        "lines": [
+          "4",
+          "5"
+        ],
+        "type": "Delays",
+        "text": "Delays in both directions after a signal problem at Grand Central.",
+        "planned": false,
+        "systemwide": false
+      }
+    ]
+  },
+  "sports": {
+    "ok": true,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "since": "2026-11-24T06:41:00-05:00",
+    "results": [
+      {
+        "league": "NFL",
+        "team": "49ers",
+        "opponent": "Packers",
+        "team_score": 27,
+        "opponent_score": 20,
+        "result": "W",
+        "home": true,
+        "start": "2026-11-23T20:15:00-05:00"
+      },
+      {
+        "league": "NBA",
+        "team": "Warriors",
+        "opponent": "Lakers",
+        "team_score": 108,
+        "opponent_score": 115,
+        "result": "L",
+        "home": false,
+        "start": "2026-11-23T22:00:00-05:00"
+      }
+    ],
+    "week": []
+  },
+  "memes": {
+    "ok": false,
+    "as_of": "2026-11-24T06:41:00-05:00",
+    "error": "RuntimeError: sample failure"
+  }
+}

@@ -1,0 +1,3 @@
+# Dev only (screenshots). Not needed by the morning run.
+-r requirements.txt
+playwright==1.65.2

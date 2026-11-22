@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-24",
+  "today": [
+    {
+      "start": "2026-11-24T12:30:00-05:00",
+      "all_day": false,
+      "title": "Team lunch",
+      "location": "200 West St",
+      "kind": "event"
+    },
+    {
+      "start": null,
+      "all_day": true,
+      "title": "Sample Friend's birthday",
+      "kind": "birthday"
+    }
+  ],
+  "this_week": []
+}
