@@ -356,6 +356,11 @@ Read before Milestone 1. Each risk names its fallback; if the fallback isn't goo
 - **Gmail clipping.** Holdings news has no cap, so a big day can get long. Keep the rendered HTML under 95KB; if it goes over, shorten stories, not sections.
 - **Memes from the cloud.** The task has to download and look at each meme image before picking. If it can't view images, pick by title and score and tell Wilson.
 
+**Found at build time (Nov 22, 2026)**
+- Yahoo, Open-Meteo, MTA, ESPN, Coinbase and the S&P 500 list all work from Wilson's Mac. ESPN's scoreboard rejects date ranges, so sports asks one date at a time. Cloud test still pending.
+- Claude's web search refuses domain filters for WSJ, NYT, Reuters, AP, BBC, FT and The Verge (those sites block Anthropic's crawler), and the fetcher can't open them. Axios returns 403; Gothamist and Variety redirect bots to a paywall host. EDITORIAL.md says how to cite them anyway.
+- Google Calendar: birthdays are ordinary all-day events on the primary calendar ("Lily Bien's birthday"); there is no separate Birthdays calendar. The title rule catches them.
+
 **Decided (Nov 22, 2026)**
 - On Tuesdays, WTD equals 1D (the week is one day old). Keep it as is; no special case.
 - Monday covers only what happened since Sunday's issue (news and sports), not the whole weekend.
