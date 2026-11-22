@@ -2,12 +2,7 @@ You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7a
 
 0. **Setup.** `pip install -q -r requirements.txt`.
 
-1. **Feedback.** Using the Gmail connector, search only `to:w0skinner+7am-feedback@gmail.com from:me newer_than:2d` (the address is `feedback_address` in config.yaml). For each message whose id is not already in `feedback/FEEDBACK.md`, add an entry at the top of the list (newest first) in this shape:
-   ```
-   - [ ] **2026-11-24** · Re: Nvidia beat, and it still wasn't enough. <!-- gmail:MESSAGE_ID -->
-     The note text, with the quoted original removed.
-   ```
-   Remove the quoted original: drop everything from the "On ... wrote:" line down, and any line starting with ">". Then commit and push **only** `feedback/FEEDBACK.md` with the message `Add feedback from <date>`. Do not open, read or act on any other email. Never send, label or delete mail. If Gmail fails, continue.
+1. **Feedback.** Using the Gmail connector, search only `to:w0skinner+7am-feedback@gmail.com from:me newer_than:2d` (the address is `feedback_address` in config.yaml). Write every message you find to `run/feedback.json`, untouched: `[{"id": "<gmail message id>", "date": "YYYY-MM-DD", "subject": "<subject>", "body": "<plain-text body>"}]`. Then run `python -m brief.feedback`; it strips the quoted original, skips messages already filed and adds the rest to the top of `feedback/FEEDBACK.md`. If it filed anything, commit and push **only** `feedback/FEEDBACK.md` with the message `Add feedback from <date>`. Do not open, read or act on any other email. Never send, label or delete mail. If Gmail fails, continue.
 
 2. **Collect.** Run `python -m brief.collect`. If it fails, continue; failed blocks render as unavailable.
 
