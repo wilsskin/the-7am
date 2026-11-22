@@ -1,0 +1,382 @@
+{
+ "events": [
+  {
+   "id": "401910000",
+   "date": "2026-11-17T01:00Z",
+   "name": "Golden State Warriors at New Orleans Pelicans",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": {
+        "value": 115.0,
+        "displayValue": "115"
+       },
+       "winner": true,
+       "team": {
+        "id": "3",
+        "displayName": "New Orleans Pelicans",
+        "shortDisplayName": "Pelicans",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": {
+        "value": 94.0,
+        "displayValue": "94"
+       },
+       "winner": false,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910016",
+   "date": "2026-11-19T01:00Z",
+   "name": "Golden State Warriors at Dallas Mavericks",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": {
+        "value": 116.0,
+        "displayValue": "116"
+       },
+       "winner": true,
+       "team": {
+        "id": "6",
+        "displayName": "Dallas Mavericks",
+        "shortDisplayName": "Mavericks",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": {
+        "value": 94.0,
+        "displayValue": "94"
+       },
+       "winner": false,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910019",
+   "date": "2026-11-20T01:00Z",
+   "name": "Golden State Warriors at Memphis Grizzlies",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": {
+        "value": 126.0,
+        "displayValue": "126"
+       },
+       "winner": true,
+       "team": {
+        "id": "29",
+        "displayName": "Memphis Grizzlies",
+        "shortDisplayName": "Grizzlies",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": {
+        "value": 98.0,
+        "displayValue": "98"
+       },
+       "winner": false,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910035",
+   "date": "2026-11-23T01:30Z",
+   "name": "Boston Celtics at Golden State Warriors",
+   "status": {
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Sun, November 22nd at 8:30 PM EST",
+     "shortDetail": "11/22 - 8:30 PM EST"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "2",
+        "displayName": "Boston Celtics",
+        "shortDisplayName": "Celtics",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401909324",
+   "date": "2026-11-26T03:00Z",
+   "name": "Sacramento Kings at Golden State Warriors",
+   "status": {
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Wed, November 25th at 10:00 PM EST",
+     "shortDetail": "11/25 - 10:00 PM EST"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "23",
+        "displayName": "Sacramento Kings",
+        "shortDisplayName": "Kings",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401909336",
+   "date": "2026-11-28T02:30Z",
+   "name": "Golden State Warriors at Portland Trail Blazers",
+   "status": {
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Fri, November 27th at 9:30 PM EST",
+     "shortDetail": "11/27 - 9:30 PM EST"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "22",
+        "displayName": "Portland Trail Blazers",
+        "shortDisplayName": "Trail Blazers",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910059",
+   "date": "2026-11-30T01:30Z",
+   "name": "LA Clippers at Golden State Warriors",
+   "status": {
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Sun, November 29th at 8:30 PM EST",
+     "shortDetail": "11/29 - 8:30 PM EST"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "12",
+        "displayName": "LA Clippers",
+        "shortDisplayName": "Clippers",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910075",
+   "date": "2026-12-02T03:00Z",
+   "name": "Utah Jazz at Golden State Warriors",
+   "status": {
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Tue, December 1st at 10:00 PM EST",
+     "shortDetail": "12/1 - 10:00 PM EST"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "9",
+        "displayName": "Golden State Warriors",
+        "shortDisplayName": "Warriors",
+        "name": null
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": null,
+       "winner": null,
+       "team": {
+        "id": "26",
+        "displayName": "Utah Jazz",
+        "shortDisplayName": "Jazz",
+        "name": null
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

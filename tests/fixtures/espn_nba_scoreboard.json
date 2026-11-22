@@ -1,0 +1,274 @@
+{
+ "events": [
+  {
+   "id": "401910023",
+   "date": "2026-11-21T18:00Z",
+   "name": "Milwaukee Bucks at Philadelphia 76ers",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "132",
+       "winner": true,
+       "team": {
+        "id": "20",
+        "displayName": "Philadelphia 76ers",
+        "shortDisplayName": "76ers",
+        "name": "76ers"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "129",
+       "winner": false,
+       "team": {
+        "id": "15",
+        "displayName": "Milwaukee Bucks",
+        "shortDisplayName": "Bucks",
+        "name": "Bucks"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910024",
+   "date": "2026-11-22T00:30Z",
+   "name": "Portland Trail Blazers at New York Knicks",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "97",
+       "winner": true,
+       "team": {
+        "id": "18",
+        "displayName": "New York Knicks",
+        "shortDisplayName": "Knicks",
+        "name": "Knicks"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "96",
+       "winner": false,
+       "team": {
+        "id": "22",
+        "displayName": "Portland Trail Blazers",
+        "shortDisplayName": "Trail Blazers",
+        "name": "Trail Blazers"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910025",
+   "date": "2026-11-22T01:00Z",
+   "name": "LA Clippers at Dallas Mavericks",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "110",
+       "winner": true,
+       "team": {
+        "id": "6",
+        "displayName": "Dallas Mavericks",
+        "shortDisplayName": "Mavericks",
+        "name": "Mavericks"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "100",
+       "winner": false,
+       "team": {
+        "id": "12",
+        "displayName": "LA Clippers",
+        "shortDisplayName": "Clippers",
+        "name": "Clippers"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910026",
+   "date": "2026-11-22T01:00Z",
+   "name": "Memphis Grizzlies at Minnesota Timberwolves",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "104",
+       "winner": true,
+       "team": {
+        "id": "16",
+        "displayName": "Minnesota Timberwolves",
+        "shortDisplayName": "Timberwolves",
+        "name": "Timberwolves"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "95",
+       "winner": false,
+       "team": {
+        "id": "29",
+        "displayName": "Memphis Grizzlies",
+        "shortDisplayName": "Grizzlies",
+        "name": "Grizzlies"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910027",
+   "date": "2026-11-22T01:00Z",
+   "name": "New Orleans Pelicans at San Antonio Spurs",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "114",
+       "winner": true,
+       "team": {
+        "id": "24",
+        "displayName": "San Antonio Spurs",
+        "shortDisplayName": "Spurs",
+        "name": "Spurs"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "91",
+       "winner": false,
+       "team": {
+        "id": "3",
+        "displayName": "New Orleans Pelicans",
+        "shortDisplayName": "Pelicans",
+        "name": "Pelicans"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "401910028",
+   "date": "2026-11-22T03:00Z",
+   "name": "Boston Celtics at Sacramento Kings",
+   "status": {
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   },
+   "competitions": [
+    {
+     "timeValid": true,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "97",
+       "winner": true,
+       "team": {
+        "id": "23",
+        "displayName": "Sacramento Kings",
+        "shortDisplayName": "Kings",
+        "name": "Kings"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "96",
+       "winner": false,
+       "team": {
+        "id": "2",
+        "displayName": "Boston Celtics",
+        "shortDisplayName": "Celtics",
+        "name": "Celtics"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

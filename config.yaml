@@ -1,0 +1,42 @@
+# All personal settings for The 7AM. See BUILD_PLAN.md §3.
+brand: { name: "The 7AM" }          # working name, Wilson may rename
+recipient: w0skinner@gmail.com
+feedback_address: w0skinner+7am-feedback@gmail.com   # Reply-To on every issue (§10b)
+timezone: America/New_York
+send_time: "07:00"
+location: { name: "New York", lat: 40.7306, lon: -73.9866 }   # East Village
+subway_lines: ["4", "5"]
+
+markets:
+  indices:
+    - { symbol: "^GSPC", label: "S&P 500" }
+    - { symbol: "^IXIC", label: "Nasdaq" }
+    - { symbol: "SOXX",  label: "SOXX" }
+  crypto:
+    - { symbol: "BTC-USD", label: "Bitcoin" }
+    - { symbol: "ETH-USD", label: "Ether" }
+  holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS"]
+  standout_min_market_cap: 100_000_000_000
+  big_earnings_universe: top_50_sp500_by_market_cap   # plus holdings
+
+sports:
+  # week_preview: list this team's games Monday through Sunday in the Monday issue.
+  teams:
+    - { league: nfl, team: "San Francisco 49ers", week_preview: true }
+    - { league: nba, team: "Golden State Warriors", week_preview: true }
+    - { league: mlb, team: "San Francisco Giants", week_preview: false }
+  also_cover: ["NFL major headlines and trades", "NBA major headlines and trades"]
+
+memes:
+  subreddits: ["wallstreetbets", "ProgrammerHumor", "memes"]   # Wilson will tune
+  count: 4
+  candidates: 12
+  min_score: 500
+
+sources:
+  subscribed: ["wsj.com", "nytimes.com"]          # prefer these links
+  allowed: ["wsj.com", "nytimes.com", "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk",
+            "nbcnews.com", "cnbc.com", "axios.com", "theverge.com", "techcrunch.com",
+            "espn.com", "variety.com", "hollywoodreporter.com", "gothamist.com", "ny1.com",
+            "ft.com", "bloomberg.com"]
+  paywalled_unsubscribed: ["ft.com", "bloomberg.com"]   # link only if no other source has it
