@@ -19,3 +19,10 @@ The 7AM is a sibling of wilsonskinner.com: same tokens, same grayscale restraint
 - **Offer options with tradeoffs** when there's more than one reasonable approach. Don't just pick one silently.
 - **Ask rather than guess** on any implementation detail that isn't obvious. Wilson prefers a quick question over an assumption that needs to be undone.
 - Wilson is not an experienced engineer, so explain the reasoning behind technical decisions clearly. Explain anything involving APIs, keys, git or deploys from scratch.
+
+## Data source notes (verified Nov 22, 2026)
+
+- ESPN's scoreboard rejects date ranges (`dates=A-B` returns 400). `brief/collect/sports.py` asks one date at a time.
+- Claude's web search can't filter to WSJ, NYT, Reuters, AP, BBC, FT or The Verge, and the fetcher can't open them. EDITORIAL.md says how to cite them anyway.
+- Setup steps only Wilson can do are in `SETUP.md`.
+

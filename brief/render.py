@@ -463,6 +463,9 @@ def render(run_dir: Path, lenient: bool = False, icon_src: str = "cid:{}", now: 
     cfg = cfg or load_config()
     now = now or now_et()
     errors, warnings = [], []
+    # Clear the last run's output, so a failed render can never leave a stale issue to send.
+    for stale in (f"{out_name}.html", f"{out_name}.txt", "render.json", "render_error.txt"):
+        (run_dir / stale).unlink(missing_ok=True)
 
     data = Data.model_validate(load_json(run_dir / "data.json"))
     raw_cal = load_json(run_dir / "calendar.json")
@@ -511,7 +514,9 @@ def main():
     src = "../templates/icons/{}.png" if a.preview else "cid:{}"
     try:
         meta = render(Path(a.run_dir), a.lenient, src)
-    except RenderError as e:
+    except Exception as e:
+        # brief.send turns this into the plain-text fallback email if nothing renders.
+        (Path(a.run_dir) / "render_error.txt").write_text(f"{type(e).__name__}: {e}\n")
         print("render failed:\n" + str(e), file=sys.stderr)
         sys.exit(2)
     for w in meta["warnings"]:
