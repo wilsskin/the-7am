@@ -165,9 +165,10 @@ def dedupe(c: Content, warnings: list[str]) -> None:
 
 def check_links(c: Content, cfg: dict, lenient: bool, errors: list[str]) -> None:
     allowed = cfg["sources"]["allowed"]
+    leisure = allowed + cfg["sources"].get("off_the_clock_extra", [])
     bad = []
     for section, lst, i, url, title in items_by_priority(c):
-        if not host_allowed(url, allowed):
+        if not host_allowed(url, leisure if section == "off_the_clock" else allowed):
             errors.append(f'{section}: "{title}" links to {urlparse(str(url)).hostname}, not an allowed source')
             bad.append((section, lst, i))
     if lenient:

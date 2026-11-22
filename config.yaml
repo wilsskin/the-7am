@@ -41,3 +41,8 @@ sources:
             "espn.com", "variety.com", "hollywoodreporter.com", "gothamist.com", "ny1.com",
             "ft.com", "bloomberg.com"]
   paywalled_unsubscribed: ["ft.com", "bloomberg.com"]   # link only if no other source has it
+  # Allowed only in Off the clock (ski, things to do, outdoors, cars, AI tools). Decided Nov 22, 2026.
+  off_the_clock_extra: ["onthesnow.com", "skimag.com", "killington.com", "stowe.com", "palisadestahoe.com",
+                        "timeout.com", "theinfatuation.com", "eater.com", "nymag.com", "secretnyc.co",
+                        "outsideonline.com", "backpacker.com", "caranddriver.com", "motortrend.com",
+                        "electrek.co", "rivian.com", "simonwillison.net"]

@@ -70,4 +70,4 @@ Then: **Run now**, check the email, reply to it once, and confirm the reply show
 ## Monthly: refresh the S&P 500 list
 
 Market caps in `data/sp500.csv` drive the standout stock and the earnings filter. Once a month, in ~/code/the-7am:
-`! .venv/bin/python -m brief.sp500` then commit and push the CSV (or ask Claude to).
+The scheduled task does this on the 1st of each month and pushes the CSV. To do it by hand: `! .venv/bin/python -m brief.sp500`.

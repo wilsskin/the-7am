@@ -4,6 +4,8 @@ You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7a
 
 1. **Feedback.** Using the Gmail connector, search only `to:w0skinner+7am-feedback@gmail.com from:me newer_than:2d` (the address is `feedback_address` in config.yaml). Write every message you find to `run/feedback.json`, untouched: `[{"id": "<gmail message id>", "date": "YYYY-MM-DD", "subject": "<subject>", "body": "<plain-text body>"}]`. Then run `python -m brief.feedback`; it strips the quoted original, skips messages already filed and adds the rest to the top of `feedback/FEEDBACK.md`. If it filed anything, commit and push **only** `feedback/FEEDBACK.md` with the message `Add feedback from <date>`. Do not open, read or act on any other email. Never send, label or delete mail. If Gmail fails, continue.
 
+1b. **Monthly S&P 500 refresh.** If today is the 1st of the month, run `python -m brief.sp500` (about 3 minutes). If it printed `0 without market cap` or only a handful, commit and push **only** `data/sp500.csv` with the message `Refresh S&P 500 list <date>`. If it failed or many caps are missing, leave the old file and mention it in your summary.
+
 2. **Collect.** Run `python -m brief.collect`. If it fails, continue; failed blocks render as unavailable.
 
 3. **Calendar.** Using the Google Calendar connector, read today's events (midnight to midnight, America/New_York) on the primary calendar (w0skinner@gmail.com) and on "Holidays in United States". Include all-day events. On Mondays, also read Tuesday through Sunday for the "This week" preview. Only read; never create, edit or respond to events. Write `run/calendar.json`:
@@ -20,4 +22,4 @@ You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7a
 
 6. **Send.** Run `python -m brief.send`.
 
-7. Finish with a one-line summary: sent or failed, which sections were unavailable, and how many feedback notes were filed. Do not commit or push anything other than `feedback/FEEDBACK.md`.
+7. Finish with a one-line summary: sent or failed, which sections were unavailable, and how many feedback notes were filed. Do not commit or push anything other than `feedback/FEEDBACK.md` and, on the 1st, `data/sp500.csv`.

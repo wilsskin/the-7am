@@ -174,3 +174,13 @@ def test_too_big_fails_loudly(issue):
         c["big_read"]["body"] = "\n\n".join(["word " * 300] * 30)
     with pytest.raises(render.RenderError, match="Gmail clips"):
         go(issue(edit_content=huge))
+
+
+def test_leisure_sources_only_in_off_the_clock(issue):
+    def ok(c):
+        c["off_the_clock"][0]["link"]["url"] = "https://www.killington.com/mountain-report"
+    go(issue(edit_content=ok))
+    def bad(c):
+        c["latest"]["tech"][0]["url"] = "https://www.timeout.com/newyork/things-to-do"
+    with pytest.raises(render.RenderError, match="not an allowed source"):
+        go(issue(edit_content=bad))

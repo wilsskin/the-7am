@@ -18,6 +18,7 @@ Never state a price, percentage, EPS or revenue figure in prose unless it is in 
 ## Sources and links
 
 - Only these domains: wsj.com, nytimes.com, reuters.com, apnews.com, bbc.com, bbc.co.uk, nbcnews.com, cnbc.com, axios.com, theverge.com, techcrunch.com, espn.com, variety.com, hollywoodreporter.com, gothamist.com, ny1.com, ft.com, bloomberg.com (the list in `config.yaml` wins if they differ).
+- Off the clock may also use the leisure sources in `config.yaml` (`off_the_clock_extra`: ski reports, Time Out, The Infatuation, Eater, Car and Driver and similar). Never use them anywhere else.
 - Prefer WSJ and NYT when they cover the story; Wilson subscribes. Use FT or Bloomberg only if no other allowed source has it.
 - Every link goes to the actual article, never a homepage or section page. Open the URL to confirm it exists and says what you say. Never invent or guess a URL. If you can't find a real article, drop the item.
 - Some sites block Claude's search filter and fetcher (WSJ, NYT, Reuters, AP, BBC, FT and The Verge as of Nov 22, 2026; Axios returns 403; Gothamist and Variety redirect to a paywall host). Search without a domain filter to find their articles. A URL that came back from web search, with a title and snippet that match your summary, counts as confirmed even if you can't open it. Never build one of these URLs yourself.
