@@ -21,8 +21,10 @@ SOURCE = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/
 
 # Shorter, everyday names for the Earnings section ("Deere reports tomorrow.").
 SUFFIXES = [" & Company", " & Co.", ", Inc.", " Inc.", " Inc", " Corporation", " Corp.", " Corp", " Company", " Co.",
-            " Incorporated", " plc", " PLC", " Ltd.", " Ltd", " & Co.", " N.V.", " Holdings",
+            " Incorporated", " plc", " PLC", " Ltd.", " Ltd", " N.V.", " Holdings",
             " Group", " (The)", " (Class A)", " (Class B)", " (Class C)"]
+# Names the list writes "Last (First)", like "Lilly (Eli)".
+RENAMES = {"Lilly (Eli)": "Eli Lilly"}
 
 
 def yahoo_ticker(sym: str) -> str:
@@ -30,6 +32,7 @@ def yahoo_ticker(sym: str) -> str:
 
 
 def short_name(name: str) -> str:
+    name = RENAMES.get(name, name)
     for _ in range(3):
         for s in SUFFIXES:
             if name.endswith(s):
