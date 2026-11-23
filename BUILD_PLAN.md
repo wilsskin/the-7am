@@ -376,6 +376,10 @@ Read before Milestone 1. Each risk names its fallback; if the fallback isn't goo
 - The scheduled task refreshes `data/sp500.csv` on the 1st of each month and pushes it: the second exception to "only push FEEDBACK.md".
 - Wilson's own birthday (theme pill in Your day) and "unavailable" states (a collector failed) aren't mocked up. Build them from the spec, render each with a fixture at Milestone 2, and show Wilson the draft.
 
+**To do later (agreed Nov 22, 2026)**
+- **Send from Wilson's own domain** (option A). Verify wilsonskinner.com (or a subdomain) in Resend by adding the DNS records Resend gives, then change `sender` in config.yaml to something like `The 7AM <7am@wilsonskinner.com>` and update the Gmail filter. Why: the shared onboarding@resend.dev sender forces click and open tracking (links go through resend-clicks.com), which DESIGN_SYSTEM.md rules out; on a verified domain tracking is off by default. Confirm both tracking toggles are off in Resend → Domains afterwards.
+- **Rotate the Resend API key**: the first key was pasted into a chat. Create a new one, delete the old one (ends in 24p2), update ~/.zshrc and the scheduled task's secret.
+
 **Small decisions still open (ask Wilson when you reach them)**
 - Plain-text version layout: derive it from the HTML order; show Wilson once.
 - Meme subreddits and the final name ("The 7AM" is a working name) are Wilson's to tune any time.
