@@ -20,9 +20,9 @@ CSV_PATH = ROOT / "data" / "sp500.csv"
 SOURCE = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
 
 # Shorter, everyday names for the Earnings section ("Deere reports tomorrow.").
-SUFFIXES = [", Inc.", " Inc.", " Inc", " Corporation", " Corp.", " Corp", " Company", " Co.",
+SUFFIXES = [" & Company", " & Co.", ", Inc.", " Inc.", " Inc", " Corporation", " Corp.", " Corp", " Company", " Co.",
             " Incorporated", " plc", " PLC", " Ltd.", " Ltd", " & Co.", " N.V.", " Holdings",
-            " Group", " (Class A)", " (Class B)", " (Class C)"]
+            " Group", " (The)", " (Class A)", " (Class B)", " (Class C)"]
 
 
 def yahoo_ticker(sym: str) -> str:
@@ -42,6 +42,7 @@ def load() -> list[dict]:
         rows = list(csv.DictReader(f))
     for r in rows:
         r["market_cap"] = float(r["market_cap"]) if r["market_cap"] else 0.0
+        r["name"] = short_name(r["name"])
     # One row per company: Alphabet (GOOGL/GOOG), Fox and News Corp list two share
     # classes. Keep the bigger one, so Alphabet is GOOGL, matching the holdings.
     best = {}

@@ -1,6 +1,7 @@
 """Earnings results and calendar (Finnhub /calendar/earnings, free key).
 
-Universe: the 50 biggest S&P 500 companies by market cap, plus Wilson's holdings.
+Universe: every S&P 500 company, plus Wilson's holdings (config big_earnings_universe;
+'top_50_sp500_by_market_cap' is still supported). Rows are sorted biggest first.
   reported   the previous trading day's reporters, with surprise % on revenue and EPS
              and the after-hours move (latest extended-hours price vs that day's close)
   next_day   who reports on the next trading day, and the sentence render.py appends
@@ -96,7 +97,8 @@ def collect(cfg: dict, now: datetime) -> dict:
     rows = sp500.load()
     ranked = sorted(rows, key=lambda r: r["market_cap"], reverse=True)
     names = {r["ticker"]: r["name"] for r in rows}
-    universe = {r["ticker"]: r["name"] for r in ranked[:50]}
+    size = 50 if cfg["markets"].get("big_earnings_universe") == "top_50_sp500_by_market_cap" else len(ranked)
+    universe = {r["ticker"]: r["name"] for r in ranked[:size]}
     for h in cfg["markets"]["holdings"]:
         universe[h] = names.get(h, h)
     rank = {r["ticker"]: i for i, r in enumerate(ranked)}
