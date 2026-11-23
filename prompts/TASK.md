@@ -1,6 +1,8 @@
 You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7am repo. Each run starts fresh, so everything you need is in this file and the files it names.
 
-0. **Setup.** `pip install -q -r requirements.txt`.
+0. **Setup.** `pip install -q --ignore-installed PyYAML -r requirements.txt` (the cloud image's Debian PyYAML can't be uninstalled otherwise). Use `python3` if `python` isn't found.
+
+   **Dates and times are New York time.** The issue's date and edition come from `run/data.json` (the collectors use America/New_York), not from the UTC clock. Always build and send the issue whenever you're run, even outside the usual morning time: a manual "Run now" is a deliberate test. `brief.send` already prevents a second send on the same date.
 
 1. **Feedback.** Using the Gmail connector, search only `to:w0skinner+7am-feedback@gmail.com from:me newer_than:2d` (the address is `feedback_address` in config.yaml). Write every message you find to `run/feedback.json`, untouched: `[{"id": "<gmail message id>", "date": "YYYY-MM-DD", "subject": "<subject>", "body": "<plain-text body>"}]`. Then run `python -m brief.feedback`; it strips the quoted original, skips messages already filed and adds the rest to the top of `feedback/FEEDBACK.md`. If it filed anything, commit and push **only** `feedback/FEEDBACK.md` with the message `Add feedback from <date>`. Do not open, read or act on any other email. Never send, label or delete mail. If Gmail fails, continue.
 
