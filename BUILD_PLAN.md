@@ -379,6 +379,7 @@ Read before Milestone 1. Each risk names its fallback; if the fallback isn't goo
 
 **To do later (agreed Nov 22, 2026)**
 - **Send from Wilson's own domain** (option A). Higher priority than it looked: on Nov 22 the resend-clicks.com redirect failed its TLS handshake, so tapped links in the email did not open (direct URLs all work). Verify wilsonskinner.com (or a subdomain) in Resend by adding the DNS records Resend gives, then change `sender` in config.yaml to something like `The 7AM <7am@wilsonskinner.com>` and update the Gmail filter. Why: the shared onboarding@resend.dev sender forces click and open tracking (links go through resend-clicks.com), which DESIGN_SYSTEM.md rules out; on a verified domain tracking is off by default. Confirm both tracking toggles are off in Resend → Domains afterwards.
+- **Sender avatar for everyone (with the own-domain step).** Gmail's inbox circle comes from the sender address. Once mail comes from e.g. 7am@wilsonskinner.com, create a free Google Account for that address (needs email forwarding on the domain to receive Google's code) and set `brand/7am-twotone.png` as its profile photo. BIMI is the official route but needs a paid certificate, so it's out. Until then: a Google Contact for the sender with the logo as its photo, which only Wilson sees.
 - **Rotate the Resend API key**: the first key was pasted into a chat. Create a new one, delete the old one (ends in 24p2), update ~/.zshrc and the scheduled task's secret.
 
 **Small decisions still open (ask Wilson when you reach them)**
