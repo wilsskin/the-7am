@@ -3,6 +3,7 @@ You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7a
 0. **Setup.** Make a private Python environment so the cloud image's own packages can't interfere, and wait for it to finish before anything else:
    `python3 -m venv .venv && .venv/bin/pip install -q -r requirements.txt && .venv/bin/python -c "import requests, yfinance, pydantic, jinja2, yaml; print('ok')"`
    It must print `ok`. Then run every `python -m ...` command below as `.venv/bin/python -m ...`.
+   If making `.venv` fails, fall back to `python3 -m pip install -q --ignore-installed PyYAML -r requirements.txt`, check the same imports with `python3`, and use `python3 -m ...` instead.
 
    **Dates and times are New York time.** The issue's date and edition come from `run/data.json` (the collectors use America/New_York), not from the UTC clock. Always build and send the issue whenever you're run, even outside the usual morning time: a manual "Run now" is a deliberate test. `brief.send` already prevents a second send on the same date.
 
