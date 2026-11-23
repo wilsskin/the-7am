@@ -1,7 +1,8 @@
 """Earnings results and calendar (Finnhub /calendar/earnings, free key).
 
-Universe: every S&P 500 company, plus Wilson's holdings (config big_earnings_universe;
-'top_50_sp500_by_market_cap' is still supported). Rows are sorted biggest first.
+Universe: the biggest N S&P 500 companies by market cap (config big_earnings_universe,
+e.g. top_200_sp500_by_market_cap; all_sp500 for every one), plus Wilson's holdings.
+Rows are sorted biggest first.
   reported   the previous trading day's reporters, with surprise % on revenue and EPS
              and the after-hours move (latest extended-hours price vs that day's close)
   next_day   who reports on the next trading day, and the sentence render.py appends
@@ -9,6 +10,7 @@ Universe: every S&P 500 company, plus Wilson's holdings (config big_earnings_uni
   week       Monday through Friday of this week, company names per day (Monday issue)
 """
 import os
+import re
 from datetime import date, datetime, time, timedelta
 
 from brief import sp500
@@ -97,7 +99,8 @@ def collect(cfg: dict, now: datetime) -> dict:
     rows = sp500.load()
     ranked = sorted(rows, key=lambda r: r["market_cap"], reverse=True)
     names = {r["ticker"]: r["name"] for r in rows}
-    size = 50 if cfg["markets"].get("big_earnings_universe") == "top_50_sp500_by_market_cap" else len(ranked)
+    m = re.fullmatch(r"top_(\d+)_sp500_by_market_cap", cfg["markets"].get("big_earnings_universe", ""))
+    size = int(m.group(1)) if m else len(ranked)      # "all_sp500" (or anything else) = every company
     universe = {r["ticker"]: r["name"] for r in ranked[:size]}
     for h in cfg["markets"]["holdings"]:
         universe[h] = names.get(h, h)

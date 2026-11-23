@@ -37,7 +37,7 @@ def short_name(name: str) -> str:
         for s in SUFFIXES:
             if name.endswith(s):
                 name = name[: -len(s)].rstrip(",")
-    return name.strip()
+    return name.strip().removesuffix(" &").strip()   # "Deere &" saved by an older refresh
 
 
 def load() -> list[dict]:

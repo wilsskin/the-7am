@@ -372,7 +372,7 @@ Read before Milestone 1. Each risk names its fallback; if the fallback isn't goo
 - Subway alerts and calendar events show on weekends too, when there are any.
 - Crypto's 4pm price is the open of the 16:00 ET hourly bar (fallback: close of the 15:00 bar).
 - The GitHub repo is created in Milestone 1 so the cloud Yahoo test can run early.
-- Earnings covers every S&P 500 company plus holdings (not just the top 50), biggest first. Watch the email size in peak season; if it gets close to 95KB, cap the table at the largest names with an "and N others" line (ask Wilson first).
+- Earnings covers the 200 biggest S&P 500 companies plus holdings (not just the top 50), biggest first. Watch the email size in peak season; if it gets close to 95KB, cap the table at the largest names with an "and N others" line (ask Wilson first).
 - Off the clock may link leisure sites beyond the news allowlist (`sources.off_the_clock_extra` in config.yaml); render.py allows them only there.
 - The scheduled task refreshes `data/sp500.csv` on the 1st of each month and pushes it: the second exception to "only push FEEDBACK.md".
 - Wilson's own birthday (theme pill in Your day) and "unavailable" states (a collector failed) aren't mocked up. Build them from the spec, render each with a fixture at Milestone 2, and show Wilson the draft.

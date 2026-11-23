@@ -226,3 +226,14 @@ def test_meme_candidates_filter():
 
 def test_meme_interleave():
     assert memes.interleave([[1, 2, 3], ["a"], ["x", "y"]]) == [1, "a", "x", 2, "y", 3]
+
+
+def test_company_short_names():
+    from brief import sp500
+    assert sp500.short_name("Deere & Company") == "Deere"
+    assert sp500.short_name("Deere &") == "Deere"
+    assert sp500.short_name("Home Depot (The)") == "Home Depot"
+    assert sp500.short_name("Lilly (Eli)") == "Eli Lilly"
+    assert sp500.short_name("Apple Inc.") == "Apple"
+    names = [r["name"] for r in sp500.load()]
+    assert not [n for n in names if n.endswith("&") or "(" in n]

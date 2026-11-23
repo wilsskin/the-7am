@@ -18,7 +18,7 @@ markets:
     - { symbol: "ETH-USD", label: "Ether" }
   holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS"]
   standout_min_market_cap: 100_000_000_000
-  big_earnings_universe: all_sp500   # plus holdings. Decided Nov 22, 2026 (was top 50)
+  big_earnings_universe: top_200_sp500_by_market_cap   # plus holdings. Decided Nov 22, 2026 (was top 50); any top_N works, or all_sp500
 
 sports:
   # week_preview: list this team's games Monday through Sunday in the Monday issue.
