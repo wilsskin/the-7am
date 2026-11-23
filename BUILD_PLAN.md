@@ -359,6 +359,7 @@ Read before Milestone 1. Each risk names its fallback; if the fallback isn't goo
 **Found at build time (Nov 22, 2026)**
 - Yahoo, Open-Meteo, MTA, ESPN, Coinbase and the S&P 500 list all work from Wilson's Mac. ESPN's scoreboard rejects date ranges, so sports asks one date at a time. Cloud test still pending.
 - Claude's web search refuses domain filters for WSJ, NYT, Reuters, AP, BBC, FT and The Verge (those sites block Anthropic's crawler), and the fetcher can't open them. Axios returns 403; Gothamist and Variety redirect bots to a paywall host. EDITORIAL.md says how to cite them anyway.
+- Resend (Milestone 4 test, Nov 22): inline cid icons show in Gmail iOS, light and dark mode look right, and Reply goes to the feedback address. Feedback search and filing work end to end. But the shared onboarding@resend.dev sender adds click tracking (links rewritten via resend-clicks.com) and an open pixel, against "no tracking" in DESIGN_SYSTEM.md. Tracking is per domain and off by default on a verified domain, so the fix is sending from Wilson's own domain.
 - Google Calendar: birthdays are ordinary all-day events on the primary calendar ("Lily Bien's birthday"); there is no separate Birthdays calendar. The title rule catches them.
 
 **Decided (Nov 22, 2026)**
