@@ -1,4 +1,4 @@
-"""python -m brief.send [--dry-run] [--now-send] [--test]
+"""python -m brief.send [--dry-run] [--test]
 
 Sends run/issue.html (+ issue.txt) through Resend: one requests.post, no SDK.
 

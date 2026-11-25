@@ -38,12 +38,12 @@ Code owns the parts that must be exact. Claude owns the parts that need judgment
 
 ### Daily run (scheduled task)
 
-1. Task fires at **6:22am ET** (`CRON_TZ=America/New_York 22 6 * * *`). Off the hour on purpose: on-the-hour runs can start late.
+1. Task fires at **6:28am ET** (`CRON_TZ=America/New_York 28 6 * * *`). Off the hour and half hour on purpose: those runs can start late.
 2. Claude Code clones the repo, files any new feedback replies (§10b), then runs `python -m brief.collect` → writes `run/data.json`.
 3. Claude reads today's calendar through the connector → writes `run/calendar.json`.
 4. Claude follows `prompts/EDITORIAL.md`, researches the news with web search, writes `run/content.json` matching `brief/schema.py`.
 5. `python -m brief.render` validates both JSON files, enforces rules (dedupe, word caps, allowlist), renders `run/issue.html` + plain-text fallback.
-6. `python -m brief.send` sends via Resend, scheduled for 7:00am ET (`scheduled_at`) if it's earlier than that, otherwise immediately.
+6. `python -m brief.send` sends via Resend immediately (lands around 6:35am ET). Never use `scheduled_at`: Resend can't schedule emails with attachments, and every issue has inline icons (this silently dropped the Nov 23 issue).
 
 ### Failure rules (non-negotiable)
 
@@ -110,7 +110,6 @@ brand: { name: "The 7AM" }          # working name, Wilson may rename
 recipient: w0skinner@gmail.com
 feedback_address: w0skinner+7am-feedback@gmail.com   # Reply-To on every issue (§10b)
 timezone: America/New_York
-send_time: "07:00"
 location: { name: "New York", lat: 40.7306, lon: -73.9866 }   # East Village
 subway_lines: ["4", "5"]
 
@@ -299,7 +298,7 @@ Follow `DESIGN_SYSTEM.md` exactly. `build_reference.py` already contains a helpe
 - Icons go in the `attachments` array with a `content_id` (inline images). Verify at build time that Resend supports this and that Gmail iOS shows them; if not, fall back to hosting the PNGs at a public https URL and ask Wilson where.
 - `reply_to: config.feedback_address`, so hitting Reply in Gmail sends feedback without typing an address (§10b).
 - Subject line comes from content.json (`subject`), no prefix.
-- Use `scheduled_at` = 7:00 ET when the run finishes early.
+- Never use `scheduled_at`: Resend rejects scheduling for emails with attachments. Send immediately.
 - Wilson should add a Gmail filter: never send to spam, mark important.
 
 ## 10b. Feedback loop
@@ -315,7 +314,7 @@ Wilson gives feedback by replying to the issue. There is no feedback section or 
 5. The task commits and pushes **only** `feedback/FEEDBACK.md` with the message `Add feedback from <date>`. This is the one exception to "do not commit or push anything" in TASK.md.
 6. Feedback is not acted on automatically. When Wilson opens a Claude Code session, Claude reads `feedback/FEEDBACK.md`, proposes fixes, and marks entries done (`- [x]`) once they ship.
 
-Why this way: free, nothing to tap or set up beyond Reply, and the notes end up as a plain file in the repo. Tradeoff: the morning task gets Gmail read access, so the search is fixed to the feedback address from Wilson himself, and TASK.md says to read nothing else in the inbox. Replies sent after 6:22am are picked up the next morning. Verify at build time that Resend's `reply_to` survives into Gmail iOS's Reply.
+Why this way: free, nothing to tap or set up beyond Reply, and the notes end up as a plain file in the repo. Tradeoff: the morning task gets Gmail read access, so the search is fixed to the feedback address from Wilson himself, and TASK.md says to read nothing else in the inbox. Replies sent after 6:28am are picked up the next morning. Verify at build time that Resend's `reply_to` survives into Gmail iOS's Reply.
 
 Where the file lives: in the GitHub repo, because the cloud task can only save to GitHub, not to Wilson's Mac. The repo is cloned locally at `~/code/the-7am` (not the iCloud `projects/newsletter` folder, see §2). Run `git pull` there to see new entries.
 
