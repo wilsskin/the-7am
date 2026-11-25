@@ -23,7 +23,7 @@ Never state a price, percentage, EPS or revenue figure in prose unless it is in 
 - Every link goes to the actual article, never a homepage or section page. Open the URL to confirm it exists and says what you say. Never invent or guess a URL. If you can't find a real article, drop the item.
 - Some sites block Claude's search filter and fetcher (WSJ, NYT, Reuters, AP, BBC, FT and The Verge as of Nov 22, 2026; Axios returns 403; Gothamist and Variety redirect to a paywall host). Search without a domain filter to find their articles. A URL that came back from web search, with a title and snippet that match your summary, counts as confirmed even if you can't open it. Never build one of these URLs yourself.
 - `source` is the outlet's short name: WSJ, NYT, Reuters, AP, BBC, NBC News, CNBC, Axios, The Verge, TechCrunch, ESPN, Variety, The Hollywood Reporter, Gothamist, NY1, FT, Bloomberg.
-- `link.title` is the article's own headline.
+- `link.title` is the article's own headline. In stories it is the blue link that ends the last paragraph ("... still fell. Nvidia falls despite record quarter ↗"), so keep it as the outlet wrote it, and short is better.
 - Paraphrase. Never copy article sentences.
 
 ## Each story appears once
@@ -40,6 +40,10 @@ Write like wilsonskinner.com: short declarative sentences, one idea each, specif
 - The subject line and intro can have some edge, like Exec Sum. Everything else is straight.
 - Sentence case everywhere.
 
+## Paragraphs: six lines on a phone
+
+Wilson reads on an iPhone, where a 16px line holds about 43 characters. **No paragraph may run past 6 lines: 250 characters, about 45 words, counting an inline headline and the link at the end.** Aim for 150 to 220 characters (3 to 5 lines), two or three sentences, one idea each. This is how Morning Brew paces its main stories (median about 32 words a paragraph, measured Nov 25, 2026). Write more paragraphs, not longer ones: start a new one with `\n\n` when you change idea. render.py splits any paragraph that runs over at the nearest sentence break, and warns when a single sentence is too long to split, but write to the limit yourself so the breaks fall where you mean them.
+
 ## Fields, in the order they appear
 
 **subject** (≤60 characters, hard max 70). A punchy hook from the top story, Exec Sum style. Sentence case, no emoji, no prefix. "Nvidia beat, and it still wasn't enough."
@@ -50,17 +54,17 @@ Write like wilsonskinner.com: short declarative sentences, one idea each, specif
 
 **your_day_nyc** 0 to 2 links under "Around NYC": NYC news that affects Wilson's day. Transit changes, weather impacts, city government, things happening today that change plans. Not leisure (that's Off the clock). Never the same item, venue or event as Off the clock.
 
-**standout** (not on weekends) `data.json` names the biggest 1-day mover among $100B+ companies; code writes its headline ("NVDA −6.40%"). You write `body`: 2 to 3 sentences on why it moved, and `link` to the article that explains it. If you can't find why, set `standout` to null.
+**standout** (not on weekends) `data.json` names the biggest 1-day mover among $100B+ companies; code writes its headline ("NVDA −6.40%"). You write `body`: 2 to 3 sentences on why it moved (split into two paragraphs with `\n\n` past 250 characters), and `link` to the article that explains it. If you can't find why, set `standout` to null.
 
 **on_deck_today** (not on weekends) Today's scheduled market events: economic releases, Fed speakers, notable events (big product launches, votes, auctions). Each item is `{"time": "8:30", "text": "Jobless claims"}`. Times in ET, h:mm with no am/pm, as in "8:30" and "2:00"; `time` is null for all-day items. 2 to 5 items, in time order. If nothing notable, an empty list.
 
-**holdings_news** (not on weekends) A story for **every** holding with relevant, recent news. No cap; on a big day cover them all. Never pad: no news, no story. Relevant means it could move the stock or changes the story around it: earnings, guidance, deals, contracts, regulation, executive changes, big product launches, analyst moves on the name. Skip passing mentions and listicles. `ticker` is the holding; the headline starts with it: "PLTR: Army expands its software contract". Body 2 to 3 sentences (≤90 words).
+**holdings_news** (not on weekends) A story for **every** holding with relevant, recent news. No cap; on a big day cover them all. Never pad: no news, no story. Relevant means it could move the stock or changes the story around it: earnings, guidance, deals, contracts, regulation, executive changes, big product launches, analyst moves on the name. Skip passing mentions and listicles. `ticker` is the holding; the headline starts with it: "PLTR: Army expands its software contract". Body 2 to 3 sentences (≤90 words), split into paragraphs at 250 characters.
 
-**big_read** The single most important story. About 300 words, 3 to 4 short paragraphs separated by a blank line (`\n\n`), Morning Brew structure: what happened, the context, why it matters, what to watch. At most one paragraph may start with "Why it matters:", which is set in medium weight. Tone: clear, concise, direct. Ends with the link.
+**big_read** The single most important story. About 300 words in 6 to 8 short paragraphs separated by a blank line (`\n\n`), Morning Brew structure: what happened, the context, why it matters, what to watch. The headline is printed as the first sentence of the first paragraph, in black, Morning Brew style ("Nvidia beat and still fell. Shares dropped..."), so write it as a statement that reads as a sentence, and don't repeat it in the body's first sentence. At most one paragraph may start with "Why it matters:", which is set in medium weight. Tone: clear, concise, direct. The link is added at the end of the last paragraph by code.
 
-**top_3** Exactly 3 more big stories. Headline + one paragraph of about 100 words (≤130) + link. Spread across beats: markets, tech, world.
+**top_3** Exactly 3 more big stories, about 80 to 100 words each (≤130), in 2 paragraphs. Like the big read, the headline is printed as the first sentence of the first paragraph, so it counts toward that paragraph's 6 lines and should read as a sentence. The link ends the last paragraph. Spread across beats: markets, tech, world.
 
-**latest** Headlines only, one line each, linked. 3 to 5 per category, in this key order: business (deals, Wall Street, Goldman; keep to 3), tech, world (world and US politics), pop_culture, sports. Sports: 49ers, Warriors and Giants news, big NFL and NBA headlines and trades, and major NFL injuries (a starter out for multiple games or the season, especially quarterbacks and anyone on the 49ers). The score card comes from data.json below the headlines; don't write scores as headlines. Each item: `{"title": "...", "url": "...", "source": "..."}`. Here `title` is your one-line headline (statement with a verb), not necessarily the article's.
+**latest** Headlines only, one line each, linked. 3 to 5 per category, in this key order: business (deals, Wall Street, Goldman; keep to 3), tech, world (world and US politics), pop_culture, sports. Sports: 49ers, Warriors and Giants news, big NFL and NBA headlines and trades, and major NFL injuries (a starter out for multiple games or the season, especially quarterbacks and anyone on the 49ers). The score card comes from data.json below the headlines; don't write scores as headlines. Each item: `{"title": "...", "url": "...", "source": "..."}`. Here `title` is your one-line headline (statement with a verb), not necessarily the article's. It prints in black; only the outlet name after it is the link.
 
 **off_the_clock** 2 to 3 short items, rotating: ski conditions (November to April: Northeast and Tahoe), things to do in NYC this week, outdoors and backpacking, cars (Rivian etc.), AI tools. The topic goes at the start of the headline: "Ski report: Killington opens more terrain", "Things to do: ...", "Cars: ...", "AI tools: ...". Body 1 to 3 sentences.
 

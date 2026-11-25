@@ -30,6 +30,13 @@ from brief.schema import Calendar, Content, Data
 
 MAX_BYTES = 95_000          # Gmail clips at ~102KB; fail loudly before that
 LEAD_INS = ("Why it matters:",)
+# Six lines on an iPhone. The 358px mobile column fits ~43 characters per 16px line (measured
+# Nov 25, 2026), so 6 lines is ~255 characters. This counts an inline headline and the link at
+# the end of the paragraph. Longer paragraphs are split at a sentence break.
+MAX_PARA_CHARS = 250
+ARROW = "\u2197\ufe0e"   # ↗ forced to text, so iOS doesn't swap in the emoji
+ABBREVS = {"mr", "mrs", "ms", "dr", "st", "inc", "corp", "co", "ltd", "jr", "sr", "vs", "no", "gov", "sen", "rep",
+           "gen", "jan", "feb", "mar", "apr", "aug", "sept", "sep", "oct", "nov", "dec", "est", "approx"}
 LATEST_LABELS = {"business": "Business", "tech": "Tech", "world": "World",
                  "pop_culture": "Pop culture", "sports": "Sports"}
 # Word caps (warn only). Global target 1,600–1,900 (weekend ~1,000).
@@ -264,13 +271,63 @@ def split_lead(intro: str) -> tuple[str, str]:
     return parts[0], parts[1] if len(parts) > 1 else ""
 
 
-def story_view(s, headline=None) -> dict:
+def sentences(text: str) -> list[str]:
+    """Split at '. ', '? ' or '! ' followed by a capital, digit or quote, but not after an
+    abbreviation ("U.S.", "Inc.", "Dr.")."""
+    out, start = [], 0
+    for m in re.finditer(r"[.!?][\"\u201d\u2019)]?\s+(?=[A-Z0-9\"\u201c$])", text):
+        word = text[start:m.start() + 1].split()[-1].rstrip(".").lower() if text[start:m.start() + 1].split() else ""
+        if word in ABBREVS or re.fullmatch(r"(?:[a-z]\.)*[a-z]", word):
+            continue
+        out.append(text[start:m.end()].strip())
+        start = m.end()
+    out.append(text[start:].strip())
+    return [x for x in out if x]
+
+
+def split_paragraph(text: str, extra: int, limit: int = MAX_PARA_CHARS) -> list[str]:
+    """Split one paragraph into even chunks of whole sentences, each at most `limit` characters
+    (the first and last chunk share `extra`: an inline headline or link). Never splits a sentence."""
+    if len(text) + extra <= limit:
+        return [text]
+    sents = sentences(text)
+    if len(sents) < 2:
+        return [text]
+    n = -(-(len(text) + extra) // limit)                 # ceil
+    target = (len(text) + extra) / n
+    chunks, cur = [], ""
+    for sent in sents:
+        if cur and len(cur) + 1 + len(sent) > target and len(chunks) < n - 1:
+            chunks.append(cur)
+            cur = sent
+        else:
+            cur = f"{cur} {sent}" if cur else sent
+    chunks.append(cur)
+    return chunks
+
+
+def story_view(s, headline=None, inline=False) -> dict:
+    """inline: the headline is the paragraph's first sentence (Big read, Top 3), Morning Brew style.
+    The link (article title + ↗) always ends the last paragraph."""
+    head = headline or s.headline
+    inline_head = head if head.endswith((".", "?", "!")) else head + "."
+    link_len = len(s.link.title) + 3
+    raw = [p.strip() for p in s.body.split("\n\n") if p.strip()]
     paras = []
-    for p in [p.strip() for p in s.body.split("\n\n") if p.strip()]:
+    for i, p in enumerate(raw):
         lead = next((l for l in LEAD_INS if p.startswith(l)), None)
-        paras.append({"lead_in": lead, "text": p[len(lead):].strip() if lead else p})
-    return {"headline": headline or s.headline, "paragraphs": paras,
-            "url": str(s.link.url), "source": s.link.source}
+        text = p[len(lead):].strip() if lead else p
+        extra = (len(lead) + 1 if lead else 0) + (len(inline_head) + 1 if inline and i == 0 else 0) \
+            + (link_len if i == len(raw) - 1 else 0)
+        for j, chunk in enumerate(split_paragraph(text, extra)):
+            paras.append({"lead_in": lead if j == 0 else None, "text": chunk, "head": None, "link": None})
+    if not paras:
+        paras = [{"lead_in": None, "text": "", "head": None, "link": None}]
+    if inline:
+        paras[0]["head"] = inline_head
+    paras[-1]["link"] = {"title": s.link.title, "url": str(s.link.url)}
+    return {"headline": head, "paragraphs": paras, "inline": inline,
+            "url": str(s.link.url), "source": s.link.source, "link_title": s.link.title}
 
 
 def quote_view(q, crypto: bool, period: str) -> dict:
@@ -290,7 +347,8 @@ def your_day_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, editi
     rows = []
     w = data.weather
     if w.ok:
-        rows.append({"kind": "weather", "icon": w.icon, "temp": f"{w.temp_now}°", "text": w.summary, "detail": w.precip})
+        rows.append({"kind": "weather", "icon": w.icon, "temp": f"{w.temp_now}°", "hi": f"H{w.high}°", "lo": f"L{w.low}°",
+                     "text": w.outlook or w.conditions or ""})
     if data.mta.ok:
         for a in data.mta.alerts:
             lines = [l for l in cfg["subway_lines"] if l in a.lines]
@@ -332,8 +390,8 @@ def bell_view(data: Data, c: Content, edition: str) -> dict:
     standout = None
     s = data.standout
     if not weekend and s.ok and c.standout:
-        standout = {"ticker": s.ticker, "move": fmt.move(s.change_1d_pct), "body": c.standout.body,
-                    "url": str(c.standout.link.url), "source": c.standout.link.source}
+        standout = {"ticker": s.ticker, "move": fmt.move(s.change_1d_pct),
+                    **story_view(c.standout, headline=s.ticker)}
     return {"label": "Markets" if weekend else "Before the bell", "period_label": period,
             "desc": join(c.section_desc.get("before_the_bell", ""), closure), "rows": rows,
             "standout": standout, "on_deck": [] if weekend else [o.model_dump() for o in c.on_deck_today]}
@@ -406,8 +464,8 @@ def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: dat
         "bell": bell_view(data, c, edition),
         "earnings": earnings_view(data, c, edition),
         "holdings": holdings_view(data, c, edition),
-        "big_read": {"desc": desc.get("big_read", ""), "story": story_view(c.big_read)} if c.big_read else None,
-        "top_3": {"desc": desc.get("top_3", ""), "stories": [story_view(s) for s in c.top_3]} if c.top_3 else None,
+        "big_read": {"desc": desc.get("big_read", ""), "story": story_view(c.big_read, inline=True)} if c.big_read else None,
+        "top_3": {"desc": desc.get("top_3", ""), "stories": [story_view(s, inline=True) for s in c.top_3]} if c.top_3 else None,
         "latest": latest_view(data, c, edition),
         "off_the_clock": {"desc": desc.get("off_the_clock", ""), "stories": [story_view(s) for s in c.off_the_clock]}
                          if c.off_the_clock else None,
@@ -428,6 +486,20 @@ def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: dat
     return v
 
 
+def check_paragraphs(v: dict, warnings: list[str]) -> None:
+    """Warn about any paragraph still over 6 phone lines after splitting (one very long sentence)."""
+    stories = [v["bell"]["standout"]] if v["bell"]["standout"] else []
+    stories += (v["holdings"] or {}).get("stories", []) + ([v["big_read"]["story"]] if v["big_read"] else [])
+    stories += (v["top_3"] or {}).get("stories", []) + (v["off_the_clock"] or {}).get("stories", [])
+    for st in stories:
+        for p in st["paragraphs"]:
+            n = sum(len(x) + 1 for x in (p.get("head"), p["lead_in"], p["text"]) if x)
+            n += len(p["link"]["title"]) + 3 if p.get("link") else 0
+            if n > MAX_PARA_CHARS + 30:
+                warnings.append(f'"{st["headline"]}": a {n}-character paragraph runs past 6 lines on a phone; '
+                                "shorten its sentences")
+
+
 def icons_used(v: dict) -> list[str]:
     return sorted({r["icon"] for r in v["your_day"]["rows"] if r.get("icon")})
 
@@ -443,7 +515,8 @@ def env() -> Environment:
 def render_html(v: dict, icon_src: str) -> str:
     t = env().get_template("email.html.j2")
     html = t.render(v=v, T=tokens.COLORS, D=tokens.DARK, sans=tokens.SANS, mono=tokens.MONO, num=tokens.NUM,
-                    section_gap=tokens.SECTION_GAP, content_width=tokens.CONTENT_WIDTH, icon_src=icon_src)
+                    section_gap=tokens.SECTION_GAP, content_width=tokens.CONTENT_WIDTH, icon_src=icon_src,
+                    arrow=ARROW)
     html = re.sub(r"\n\s*\n+", "\n", html)
     size = len(html.encode())
     if size > MAX_BYTES:
@@ -496,6 +569,7 @@ def render(run_dir: Path, lenient: bool = False, icon_src: str = "cid:{}", now: 
     check_numbers(c, data, warnings)
 
     v = build_view(data, cal, c, cfg, now)
+    check_paragraphs(v, warnings)
     html = render_html(v, icon_src)
     text = render_text(v)
     (run_dir / f"{out_name}.html").write_text(html)

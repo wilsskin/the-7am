@@ -190,7 +190,8 @@
     "conditions": "Cloudy",
     "icon": "cloud",
     "summary": "Cloudy, high 53°, low 41°.",
-    "precip": "Rain likely after 4pm."
+    "precip": "Rain likely after 4pm.",
+    "outlook": "Cloudy until 4pm, then rain"
   },
   "mta": {
     "ok": true,

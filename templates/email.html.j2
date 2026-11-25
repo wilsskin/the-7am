@@ -20,12 +20,19 @@
 <h3 class="c-primary" style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:500;letter-spacing:0;color:{{T.primary}};">{{text}}</h3>
 {%- endmacro -%}
 
-{%- macro para(text, top=2, lead_in=None) -%}
-<p class="c-secondary" style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{% if lead_in %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{lead_in}}</span> {% endif %}{{text}}</p>
+{#- Every external link: Apple blue, body size (inherited), no underline, ends in ↗. -#}
+{%- macro extlink(text, url, nowrap=false) -%}
+<a href="{{url}}" class="c-link" style="color:{{T.link}};text-decoration:none;{{ 'white-space:nowrap;' if nowrap }}">{{text}}&nbsp;{{arrow}}</a>
 {%- endmacro -%}
 
-{%- macro readlink(outlet, url, top=8) -%}
-<p style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;"><a href="{{url}}" class="c-secondary" style="color:{{T.secondary}};text-decoration:none;">Read on {{outlet}} →</a></p>
+{#- A body paragraph. head: the story headline as its first sentence (Big read, Top 3).
+    link: {title, url}, which ends the paragraph inline. -#}
+{%- macro para(text, top=2, lead_in=None, head=None, link=None) -%}
+<p class="c-secondary" style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{% if head %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{head}}</span> {% endif %}{% if lead_in %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{lead_in}}</span> {% endif %}{{text}}{% if link %} {{ extlink(link.title, link.url) }}{% endif %}</p>
+{%- endmacro -%}
+
+{%- macro paras(s) -%}
+{%- for p in s.paragraphs %}{{ para(p.text, (0 if s.inline else 2) if loop.first else 16, p.lead_in, p.head, p.link) }}{% endfor -%}
 {%- endmacro -%}
 
 {%- macro caption(text, color="secondary") -%}
@@ -71,7 +78,7 @@
 {%- endmacro -%}
 
 {%- macro headline_rows(items) -%}
-{%- for l in items %}<p style="margin:0;padding-bottom:{{ 0 if loop.last else 12 }}px;font-family:{{S}};font-size:16px;line-height:22px;"><a href="{{l.url}}" class="c-primary" style="color:{{T.primary}};text-decoration:none;">{{l.title}}</a> {{ caption(l.source) }}</p>{% endfor -%}
+{%- for l in items %}<p class="c-primary" style="margin:0;padding-bottom:{{ 0 if loop.last else 12 }}px;font-family:{{S}};font-size:16px;line-height:22px;color:{{T.primary}};">{{l.title}} {{ extlink(l.source, l.url, true) }}</p>{% endfor -%}
 {%- endmacro -%}
 
 {%- macro sublabel(text, top=24) -%}
@@ -90,14 +97,19 @@
 </tr></table>
 {%- endmacro -%}
 
+{#- Weather: "H60° L53° – Foggy until 10am, then partly cloudy", high in Apple red, low in Apple blue. -#}
 {%- macro temp(text) -%}
 <span class="c-theme" style="font-family:{{S}};font-size:20px;line-height:22px;font-weight:500;letter-spacing:-0.01em;color:{{T.theme}};">{{text}}</span>
 {%- endmacro -%}
 
+{%- macro weather_line(r) -%}
+<span class="c-primary" style="font-family:{{S}};font-size:16px;line-height:22px;color:{{T.primary}};"><span class="c-hi" style="color:{{T.hi}};font-weight:500;">{{r.hi}}</span> <span class="c-lo" style="color:{{T.lo}};font-weight:500;">{{r.lo}}</span>{% if r.text %} &ndash; {{r.text}}{% endif %}</span>
+{%- endmacro -%}
+
 {#- Your day card body. Rows (built in render.py) are one of:
-    {kind: header, text} / {kind: weather, icon, temp, text, detail} /
+    {kind: header, text} / {kind: weather, icon, temp, hi, lo, text} /
     {kind: subway, lines, text} / {kind: calendar, left, text, detail}
-    Three columns: 32px icon, 64px left (temperature, route bullets, time, day), value text. -#}
+    Three columns: 32px icon, 64px left (current temperature, route bullets, time, day), value text. -#}
 {%- macro icon_table(rows) -%}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 {%- set ns = namespace(first=true) -%}
@@ -108,11 +120,11 @@
 {%- else -%}
 {%- set line = "" if ns.first else "border-top:1px solid " ~ T.subtle ~ ";" -%}
 {%- set cls = "" if ns.first else ' class="b-subtle"' -%}
-<tr><td width="32" valign="middle"{{cls|safe}} style="width:32px;padding:12px 0;{{line}}">{{ icon(r.icon) }}</td><td width="64" valign="middle"{{cls|safe}} style="width:64px;padding:12px 0;{{line}}">
+<tr><td width="32" valign="middle"{{cls|safe}} style="width:32px;padding:12px 0;{{line}}">{{ icon(r.icon) }}</td>
+<td width="64" valign="middle"{{cls|safe}} style="width:64px;padding:12px 0;{{line}}">
 {%- if r.kind == "weather" %}{{ temp(r.temp) }}{% elif r.kind == "subway" %}{{ route_bullets(r.lines) }}{% else %}{{ caption(r.left, "primary") }}{% endif -%}
 </td><td valign="middle"{{cls|safe}} style="padding:12px 0;{{line}}">
-{%- if r.kind == "weather" %}{{ body16(r.text) }}{% if r.detail %}<br>{{ body16(r.detail, "secondary") }}{% endif %}
-{%- else %}{{ body16(r.text) }}{% if r.detail %} {{ caption(r.detail) }}{% endif %}{% endif -%}
+{%- if r.kind == "weather" %}{{ weather_line(r) }}{% else %}{{ body16(r.text) }}{% if r.detail %} {{ caption(r.detail) }}{% endif %}{% endif -%}
 </td></tr>
 {%- set ns.first = false -%}
 {%- endif -%}
@@ -137,11 +149,9 @@
 <tr><td width="40" valign="top"{{cls|safe}} style="width:40px;padding:10px 0;{{line}}{{num}}color:{{T.primary}};">{{left}}</td><td valign="top"{{cls|safe}} style="padding:10px 0;{{line}}{{num}}color:{{T.primary}};" class="c-primary">{{mid}}</td><td align="right" valign="top"{{cls|safe}} style="padding:10px 0;{{line}}{{num}}color:{{T.secondary}};" class="c-secondary">{{right}}</td></tr>
 {%- endmacro -%}
 
-{%- macro story(s, top=0, big=false) -%}
+{%- macro story(s, top=0) -%}
 {%- call row(top) -%}
-{{ subtitle(s.headline) }}
-{%- for p in s.paragraphs %}{{ para(p.text, 2 if loop.first else 16, p.lead_in) }}{% endfor -%}
-{{ readlink(s.source, s.url, 16 if big else 8) }}
+{% if not s.inline %}{{ subtitle(s.headline) }}{% endif %}{{ paras(s) }}
 {%- endcall -%}
 {%- endmacro -%}
 
@@ -169,6 +179,8 @@
     .c-theme { color:{{D.theme}} !important; }
     .c-up { color:{{D.up}} !important; }
     .c-down { color:{{D.down}} !important; }
+    .c-link, .c-lo { color:{{D.link}} !important; }
+    .c-hi { color:{{D.hi}} !important; }
     .b-subtle { border-color:{{D.subtle}} !important; }
     .pill { background-color:{{D.subtle}} !important; color:{{D.secondary}} !important; }
     .tpill { background-color:{{D.theme_tint}} !important; border-color:{{D.theme_line}} !important; color:{{D.primary}} !important; }
@@ -183,8 +195,8 @@
 {#- ---------- masthead + title ---------- #}
 <tr><td class="px" style="padding:0 24px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td class="c-primary" style="font-family:{{S}};font-size:20px;line-height:27px;font-weight:500;letter-spacing:-0.01em;color:{{T.primary}};">{{ v.brand }}</td>
-<td align="right" class="c-secondary" style="font-family:{{mono}};font-size:14px;line-height:19px;letter-spacing:0.02em;text-transform:uppercase;color:{{T.secondary}};">{{ v.date_label }}</td>
+<td valign="middle" class="c-primary" style="font-family:{{S}};font-size:20px;line-height:27px;font-weight:500;letter-spacing:-0.01em;color:{{T.primary}};">{{ v.brand }}</td>
+<td align="right" valign="middle" class="c-secondary" style="font-family:{{mono}};font-size:14px;line-height:27px;letter-spacing:0.02em;text-transform:uppercase;color:{{T.secondary}};">{{ v.date_label }}</td>
 </tr></table></td></tr>
 {{ h1(v.lead, v.rest) }}
 
@@ -207,7 +219,7 @@
 {% call row() %}{% call card() %}{{ table(["Asset", "Price", "1D", bb.period_label], trs) }}{% endcall %}{% endcall %}
 {%- endif %}
 {%- if bb.standout %}
-{% call row(24 if bb.rows else 0) %}{{ subtitle(standout_line(bb.standout.ticker, bb.standout.move)) }}{{ para(bb.standout.body) }}{{ readlink(bb.standout.source, bb.standout.url) }}{% endcall %}
+{% call row(24 if bb.rows else 0) %}{{ subtitle(standout_line(bb.standout.ticker, bb.standout.move)) }}{{ paras(bb.standout) }}{% endcall %}
 {%- endif %}
 {%- if bb.on_deck %}
 {%- set items = [] %}{% for o in bb.on_deck %}{% do items.append((caption(o.time or ""), body16(o.text))) %}{% endfor %}
@@ -241,7 +253,7 @@
 {#- ---------- The big read ---------- #}
 {%- if v.big_read %}
 {{ label("The big read", v.big_read.desc) }}
-{{ story(v.big_read.story, 0, true) }}
+{{ story(v.big_read.story, 0) }}
 {%- endif %}
 
 {#- ---------- Top 3 ---------- #}

@@ -105,8 +105,9 @@ class Weather(Block):
     low: int | None = None
     code: int | None = None
     conditions: str | None = None
-    icon: Literal["sun", "cloud", "rain", "snow"] | None = None
+    icon: Literal["sun", "partly", "cloud", "fog", "drizzle", "rain", "snow", "storm"] | None = None
     summary: str | None = None
+    outlook: str | None = None
     precip: str | None = None
 
 

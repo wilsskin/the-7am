@@ -8,8 +8,9 @@ MONO = "ui-monospace,'SF Mono',Menlo,Consolas,monospace"
 
 COLORS = {
     "bg": "#F8F8F8",
-    "primary": "#000000",
-    "secondary": "#6F6F6F",
+    "primary": "#1D1D1F",      # apple.com text
+    "secondary": "#6E6E73",
+    "tertiary": "#424245",     # apple.com middle gray: icons
     "surface": "#F0F0F0",
     "subtle": "#EBEBEB",
     "theme": "#0079AF",
@@ -18,13 +19,20 @@ COLORS = {
     "up": "#1B7A5E",
     "down": "#C03A3A",
     "mta_45": "#00933C",
+    "link": "#007AFF",      # Apple systemBlue: every external link, and the weather low
+    "hi": "#FF3B30",        # Apple systemRed: the weather high
+    "lo": "#007AFF",
 }
+
+# Icons are PNGs baked in this gray (templates/icons/make_icons.swift), so it has no dark variant.
+ICON_GRAY = "#424245"   # = COLORS["tertiary"]
 
 # Apple Mail dark mode (the @media (prefers-color-scheme: dark) block).
 DARK = {
     "bg": "#0B0B0B",
     "primary": "#F2F2F2",
     "secondary": "#9A9A9A",
+    "tertiary": "#C7C7CC",
     "surface": "#1A1A1A",
     "subtle": "#2A2A2A",
     "theme": "#4FB3E3",
@@ -33,6 +41,9 @@ DARK = {
     "up": "#3DD6A8",
     "down": "#FF6B6B",
     "mta_45": "#00933C",
+    "link": "#0A84FF",
+    "hi": "#FF453A",
+    "lo": "#0A84FF",
 }
 
 SPACING = {"unit": 8, "xsmall": 16, "small": 24, "medium": 32, "xxlarge": 96}

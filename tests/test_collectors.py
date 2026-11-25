@@ -135,15 +135,25 @@ def test_norm_matches_yahoo_tickers():
 def test_weather_parse_fixture():
     w = weather.parse(load("openmeteo.json"), et(2026, 11, 22))
     assert isinstance(w["temp_now"], int) and w["high"] >= w["low"]
-    assert w["icon"] in {"sun", "cloud", "rain", "snow"}
+    assert w["icon"] in {"sun", "partly", "cloud", "fog", "drizzle", "rain", "snow", "storm"}
     assert w["summary"].endswith(f"high {w['high']}°, low {w['low']}°.")
 
 
-@pytest.mark.parametrize("code,icon", [(0, "sun"), (1, "sun"), (2, "cloud"), (45, "cloud"), (48, "cloud"),
-                                       (51, "rain"), (67, "rain"), (80, "rain"), (95, "rain"),
+@pytest.mark.parametrize("code,icon", [(0, "sun"), (1, "sun"), (2, "partly"), (3, "cloud"), (45, "fog"), (48, "fog"),
+                                       (51, "drizzle"), (61, "rain"), (67, "rain"), (80, "rain"), (95, "storm"),
                                        (71, "snow"), (77, "snow"), (85, "snow")])
 def test_icon_for(code, icon):
     assert weather.icon_for(code) == icon
+
+
+def test_outlook_line():
+    hours = list(range(24))
+    assert weather.outlook_line(hours, [45] * 10 + [2] * 14, 6) == "Foggy until 10am, then partly cloudy"
+    assert weather.outlook_line(hours, [3] * 16 + [61] * 5 + [2] * 3, 6) == \
+        "Cloudy until 4pm, then rain until 9pm, then partly cloudy"
+    assert weather.outlook_line(hours, [3] * 24, 6) == "Cloudy"
+    # A one-hour blip folds into its neighbor.
+    assert weather.outlook_line(hours, [0] * 12 + [61] + [0] * 11, 6) == "Sunny"
 
 
 def test_precip_line():

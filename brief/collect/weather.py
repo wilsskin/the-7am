@@ -2,8 +2,10 @@
 
 temp_now   the big theme-color number in Your day, the temperature when the task runs
 summary    "Cloudy, high 53°, low 41°."
+outlook    "Foggy until 10am, then partly cloudy" (from the hourly codes, now through 11pm)
 precip     "Rain likely after 4pm." / "Snow likely until 11am." / "Rain likely all day." / None
-icon       sun, cloud, rain or snow, from today's WMO weather code
+icon       the SF Symbol for today's WMO weather code, as Apple Weather picks it:
+           sun, partly, cloud, fog, drizzle, rain, snow or storm
 """
 from datetime import datetime
 
@@ -24,14 +26,71 @@ CONDITIONS = {
 SNOW_CODES = set(range(71, 78)) | {85, 86}
 
 
-def icon_for(code: int) -> str:
+def kind_for(code: int) -> str:
+    """WMO code -> one of the icon names, which double as the outlook's condition groups."""
     if code in (0, 1):
         return "sun"
+    if code == 2:
+        return "partly"
+    if code in (45, 48):
+        return "fog"
+    if 51 <= code <= 57:
+        return "drizzle"
     if code in SNOW_CODES:
         return "snow"
-    if 51 <= code <= 67 or 80 <= code <= 82 or 95 <= code <= 99:
+    if 61 <= code <= 67 or 80 <= code <= 82:
         return "rain"
+    if 95 <= code <= 99:
+        return "storm"
     return "cloud"
+
+
+icon_for = kind_for
+
+OUTLOOK_WORDS = {"sun": "Sunny", "partly": "Partly cloudy", "cloud": "Cloudy", "fog": "Foggy",
+                 "drizzle": "Drizzle", "rain": "Rain", "snow": "Snow", "storm": "Thunderstorms"}
+MIN_SPELL = 2        # hours; a shorter change of conditions is folded into its neighbor
+
+
+def outlook_line(hours: list[int], codes: list[int], now_hour: int) -> str | None:
+    """'Foggy until 10am, then partly cloudy': today's conditions from now through 11pm,
+    at most three spells, each at least MIN_SPELL hours."""
+    day = [(h, kind_for(c)) for h, c in zip(hours, codes) if h >= max(now_hour, DAY_HOURS.start)]
+    if not day:
+        return None
+    spells: list[list] = []                      # [kind, first hour, hours]
+    for h, k in day:
+        if spells and spells[-1][0] == k:
+            spells[-1][2] += 1
+        else:
+            spells.append([k, h, 1])
+    changed = True
+    while changed and len(spells) > 1:           # fold short spells into the previous one
+        changed = False
+        for i, sp in enumerate(spells):
+            if sp[2] < MIN_SPELL:
+                j = i - 1 if i > 0 else 1
+                spells[j][2] += sp[2]
+                spells[j][1] = min(spells[j][1], sp[1])
+                del spells[i]
+                merged = []
+                for x in spells:                 # neighbors may now match
+                    if merged and merged[-1][0] == x[0]:
+                        merged[-1][2] += x[2]
+                    else:
+                        merged.append(x)
+                spells = merged
+                changed = True
+                break
+    spells = spells[:3]
+    words = ["Clear" if k == "sun" and h >= 18 else OUTLOOK_WORDS[k] for k, h, _ in spells]
+    if len(spells) == 1:
+        return words[0]
+    parts = [f"{words[0]} until {_hour_label(spells[1][1])}"]
+    for i in range(1, len(spells)):
+        w = words[i].lower()
+        parts.append(f"then {w} until {_hour_label(spells[i + 1][1])}" if i + 1 < len(spells) else f"then {w}")
+    return ", ".join(parts)
 
 
 def _hour_label(h: int) -> str:
@@ -70,6 +129,7 @@ def parse(data: dict, now: datetime) -> dict:
         "code": code,
         "conditions": cond,
         "icon": icon_for(code),
+        "outlook": outlook_line(hours, [h["weather_code"][i] for i in idx], now.hour),
         "summary": f"{cond}, high {hi}°, low {lo}°.",
         "precip": precip_line(hours, [h["precipitation_probability"][i] for i in idx],
                               [h["weather_code"][i] for i in idx], now.hour),

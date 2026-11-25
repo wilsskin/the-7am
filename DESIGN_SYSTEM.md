@@ -1,7 +1,7 @@
 # The 7AM Design System
 
-**Version:** 1.7
-**Last Updated:** November 22, 2026
+**Version:** 1.8
+**Last Updated:** November 25, 2026
 **Parent system:** [wms-portfolio DESIGN_SYSTEM.md](https://github.com/wilsskin/wms-portfolio/blob/main/DESIGN_SYSTEM.md) v3.0
 
 Read this before making any visual change. The 7AM is a sibling of wilsonskinner.com: same tokens, same restraint. Where this file is silent, the portfolio's DESIGN_SYSTEM.md wins. If you're in a hurry, jump to [Quick Reference](#quick-reference) and [Do's and Don'ts](#dos-and-donts).
@@ -17,6 +17,7 @@ The reference issues are the visual source of truth. `build_reference.py` genera
 A holiday issue is a weekday issue whose Before the bell description ends with the closure line. Icons live in `templates/icons/`. Build `templates/email.html.j2` by turning the helpers in `build_reference.py` into Jinja macros, not by designing from scratch.
 
 ### Changelog
+- **1.8 (Nov 25, 2026), Wilson's first-issue review:** masthead name and date share one vertical center line. All external links are Apple blue (`#007AFF`) at body size, no underline, ending in ↗; stories end with the article title as an inline link in the last paragraph ("Read on WSJ →" is gone); in The latest and Around NYC the headline is black text and only the outlet name is the link. Paragraphs max 6 lines on a phone (250 characters; render.py splits at a sentence break). The big read and Top 3 headlines are the first sentence of the first paragraph (Morning Brew style), still 500 and primary. Icons are SF Symbols in `#424245`, with Apple Weather's condition set. Weather row keeps the current temperature (theme color) in the left column, then "H53° L41° – Cloudy until 4pm, then rain" with the high in Apple red and the low in Apple blue. Text colors move to apple.com's: primary `#1D1D1F`, a new tertiary `#424245` (icons), secondary `#6E6E73`.
 - **1.7 (Nov 22, 2026):** Feedback section removed from the issue. Feedback still works by replying to the email (BUILD_PLAN.md §10b); nothing in the layout points to it.
 - **1.6 (Nov 22, 2026):** feedback is now a reply to the email. The Feedback section is just its header (label + fixed description telling Wilson to reply); the button is gone, so the theme pill is used only for Wilson's birthday.
 - **1.5 (Nov 22, 2026):** The latest's category labels (Business, Tech, World, Pop culture, Sports) are tag pills again; the sports card moves below the sports headlines; the Earnings description ends with who reports next on Tue–Fri.
@@ -33,11 +34,13 @@ A holiday issue is a weekday issue whose Before the bell description ends with t
 |---|---|
 | Font | System stack: SF Pro on Apple devices (see Text Styles) |
 | Page background | `#F8F8F8` · `--color-bg` |
-| Primary text | `#000000` · `--color-text-primary` |
-| Secondary text | `#6F6F6F` · `--color-text-secondary` |
+| Primary text | `#1D1D1F` · `--color-text-primary` |
+| Tertiary (icons) | `#424245` · `--color-text-tertiary` |
+| Secondary text | `#6E6E73` · `--color-text-secondary` |
 | Card background | `#F0F0F0` · `--color-surface` |
 | Lines inside cards | `#EBEBEB` · `--color-border-subtle` |
 | Theme color | `#0079AF` · `--color-theme` |
+| Links | `#007AFF` · `--color-link` (Apple systemBlue) |
 | Issue title | `title` · 26px · 500 |
 | Section label | `heading` · 20px · 500 · sentence case · primary |
 | Section description | `body` · 16px · 400 · secondary, 2px under the label |
@@ -51,11 +54,11 @@ A holiday issue is a weekday issue whose Before the bell description ends with t
 
 ## Visual Theme & Atmosphere
 
-Editorial restraint, delivered to an inbox. The canvas is the same near-white `#F8F8F8` as the portfolio. Headlines and section labels are pure black; body steps back to `#6F6F6F`. Depth comes from spacing alone: no divider lines between sections, no shadows, no gradients, no illustrations.
+Editorial restraint, delivered to an inbox. The canvas is the same near-white `#F8F8F8` as the portfolio. Headlines and section labels are near-black `#1D1D1F`; body steps back to `#6E6E73`. Both are apple.com's text colors, with `#424245` between them for icons. Depth comes from spacing alone: no divider lines between sections, no shadows, no gradients, no illustrations.
 
 Hierarchy is flat on purpose, like the portfolio: section labels are 20px and everything inside a section is 16px, told apart by weight (500 headline, 400 body), color (black vs gray) and 96px of space between sections.
 
-Color enters the way it does on the case study pages: one theme color, used sparingly on the temperature and theme pills. Links stay gray, like the portfolio's "View →". Green and red appear only on market data and scores. Everything else is black and gray.
+Color enters the way it does on the case study pages: one theme color, used sparingly on the theme pill. Links are Apple blue with ↗, so anything that leaves the email looks the same everywhere. Green and red appear on market data and scores; Apple red and blue on the weather high and low. Everything else is black and gray.
 
 The effect: a morning briefing that reads like a page from wilsonskinner.com. *The news speaks for itself.*
 
@@ -118,8 +121,9 @@ That gives SF Pro in Gmail on iPhone, Apple Mail and Chrome on a Mac. No `<link>
 | Token | Light | Dark (Apple Mail) | Use |
 |---|---|---|---|
 | `--color-bg` | `#F8F8F8` | `#0B0B0B` | Page background |
-| `--color-text-primary` | `#000000` | `#F2F2F2` | Section labels, headlines, values, numbers |
-| `--color-text-secondary` | `#6F6F6F` | `#9A9A9A` | Body, descriptions, sub-labels, meta, read links, icons |
+| `--color-text-primary` | `#1D1D1F` | `#F2F2F2` | Section labels, headlines, values, numbers |
+| `--color-text-tertiary` | `#424245` | `#C7C7CC` | Icons (baked into the PNGs, so no dark swap) |
+| `--color-text-secondary` | `#6E6E73` | `#9A9A9A` | Body, descriptions, sub-labels, meta |
 | `--color-surface` | `#F0F0F0` | `#1A1A1A` | Cards, tag pills, meme placeholders |
 | `--color-border-subtle` | `#EBEBEB` | `#2A2A2A` | Row lines inside cards only |
 | `--color-theme` | `#0079AF` | `#4FB3E3` | Hero number (temperature) only |
@@ -128,10 +132,12 @@ That gives SF Pro in Gmail on iPhone, Apple Mail and Chrome on a Mac. No `<link>
 | `--color-up` | `#1B7A5E` | `#3DD6A8` | Positive moves and beats, W. JumboCode green (`#28A07E`) darkened to pass AA on cards. |
 | `--color-down` | `#C03A3A` | `#FF6B6B` | Negative moves, Miss, L. Confirmed by Wilson Nov 22, 2026. |
 | `--color-mta-45` | `#00933C` | same | 4/5 route bullets only |
+| `--color-link` | `#007AFF` | `#0A84FF` | Every external link (Apple systemBlue), and the weather low |
+| `--color-hi` | `#FF3B30` | `#FF453A` | Weather high only (Apple systemRed) |
 
 Rules:
 - The theme color is the CarGurus case study color (`#0079AF`), already part of the brand. Text at full strength, pills at 15% fill with a 50% border.
-- Links are not blue. Read links are secondary gray; headline links are primary black. Both without underline, like the portfolio.
+- Links are Apple blue, body size, no underline, followed by a non-breaking space and ↗ (`↗︎`, forced to text so iOS doesn't draw the emoji). One style for every external link. Apple blue is 3.9:1 on the page background: under AA for small text, accepted to match iOS.
 - Up/down color is never the only signal: always a sign (+1.2% / −0.8%, an earnings surprise like (+3.3%)) or a letter (W / L). Use a real minus sign (−), not a hyphen.
 - Hex values live in one Python dict (`brief/tokens.py`). Templates reference the dict, never raw hex.
 - Never introduce a color outside this table. If one feels necessary, ask Wilson.
@@ -186,15 +192,17 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 **Preheader.** Hidden text after `<body>` that sets the inbox preview. First sentence of the intro, padded with `&zwnj;&nbsp;`.
 
-**Masthead.** One row: "The 7AM" in `heading` (20px, 500, −0.01em, primary) on the left; masthead date on the right (mono, uppercase, "TUE NOV 24"). No logo image, no line under it.
+**Masthead.** One row: "The 7AM" in `heading` (20px, 500, −0.01em, primary) on the left; masthead date on the right (mono, uppercase, "TUE NOV 24"). Both cells `valign="middle"` with a 27px line height, so they share one center line in every client. No logo image, no line under it.
 
 **Title.** Two-tone `title`, 32px below the masthead. 2 to 5 sentences, aim for 3.
 
 **Section header.** Section label, 2px, section description, then 16px to the content. 96px above. No line, no icon. Every section has a description.
 
-**Story.** Small headline, 2px gap, body paragraphs with 16px between them, then a read link 8px below (16px in The big read).
+**Story.** Small headline, 2px gap, body paragraphs with 16px between them. The last paragraph ends with the link inline. In The big read and Top 3 there is no separate headline: it is the first sentence of the first paragraph, in small-headline style (500, primary), with a period added, like Morning Brew.
 
-**Read link.** The portfolio's "View →": `meta` size, secondary, no underline, text "Read on WSJ →". Always names the outlet. Real → character.
+**Paragraph.** `body`, at most 6 lines on a 390px phone: 250 characters including an inline headline and link (the mobile column holds ~43 characters a line). render.py splits longer paragraphs at a sentence break and warns when it can't.
+
+**Link.** Apple blue, inherits the surrounding text size (16px), no underline, text then `&nbsp;↗`. In stories the text is the article's title; in headline rows it is the outlet name, kept on one line.
 
 **Tag pill.** The portfolio's `.tag-pill`: `meta`, secondary, `--color-surface` fill, 2px 4px padding, `--radius-sm`. Used only for the category labels in The latest (Business, Tech, World, Pop culture, Sports), on their own line, 24px above (0 when first) and 10px below.
 
@@ -202,9 +210,9 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 **Theme pill.** The portfolio's `.impact-pill`: `meta`, primary text, `--color-theme-tint` fill, 1px `--color-theme-line` border, 6px 12px padding, `--radius-md`. Max one per section. Used only for Wilson's own birthday (Your day). Market closures are text in the Before the bell description, not a pill.
 
-**Icon.** 20×20 line icon, 1.75px stroke in `--color-text-secondary`, PNG at 3x (60px) with a transparent background, in `templates/icons/`. Set: `sun`, `cloud`, `rain`, `snow` (weather, picked from the forecast's condition code), `subway`, `calendar`. PNG because Gmail strips SVG. `alt=""` because the text next to it carries the meaning. The same gray works in light and dark mode.
+**Icon.** SF Symbols, regular weight, outline, in `#424245`, rendered to 60px PNGs (3x of 20px) with a transparent background by `templates/icons/make_icons.swift`. Set: `sun` (sun.max), `partly` (cloud.sun), `cloud`, `fog` (cloud.fog), `drizzle` (cloud.drizzle), `rain` (cloud.rain), `snow` (cloud.snow), `storm` (cloud.bolt.rain), picked from the WMO code the way Apple Weather does; `subway` (tram); `calendar`. PNG because Gmail strips SVG. `alt=""` because the text next to it carries the meaning. The dark gray is low-contrast on a dark-mode card.
 
-**Your day card.** Surface card holding a three-column table: 32px icon column, 64px left column (temperature as a 20px/500 theme-color number, route bullets, or a time, "All day" or day name in `meta` primary), then value text with an optional `meta` detail. Every cell is vertically centered (`valign=\"middle\"`), so the icon, left value and text share one center line. 12px vertical padding per row, 1px `--color-border-subtle` line between rows. Order: weather (weather icon), subway (subway icon), today's calendar events and birthdays (calendar icon). Monday adds a "This week" `meta` header row inside the card, then one calendar row per event (day name left, time as `meta` detail after the title).
+**Your day card.** Surface card holding a three-column table: 32px icon column, 64px left column (route bullets, or a time, "All day" or day name in `meta` primary), then value text with an optional `meta` detail. The weather row has the current temperature in the left column (20px, 500, theme color) and "H53° L41° – Cloudy until 4pm, then rain" as value text, with H in `--color-hi` and L in `--color-lo` at 500. The outlook comes from the hourly forecast: up to three spells of at least 2 hours. Every cell is vertically centered (`valign=\"middle\"`), so the icon, left value and text share one center line. 12px vertical padding per row, 1px `--color-border-subtle` line between rows. Order: weather (weather icon), subway (subway icon), today's calendar events and birthdays (calendar icon). Monday adds a "This week" `meta` header row inside the card, then one calendar row per event (day name left, time as `meta` detail after the title).
 
 **Data card.** Surface card, 8px 16px padding (the only card padding). Header row in `meta` secondary, first column headed "Asset". Data rows in numbers style, 10px vertical padding, 1px `--color-border-subtle` line above each row. First column left-aligned, numbers right-aligned.
 
@@ -220,7 +228,7 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 **Meta row.** Two columns: left (a time or a day name in `meta`), right a value text, optionally followed by a `meta` detail. 48px left column, 12px between rows. Both cells vertically centered (`valign="middle"`) so the 14px time sits on the same center line as the 16px text.
 
-**Headline row.** Value-text link (primary, no underline, 400), then the outlet in `meta` secondary on the same line. 12px between rows. No bullets.
+**Headline row.** Value text (primary, 400, not a link), then the outlet as a link ("Gothamist ↗") on the same line. 12px between rows. No bullets.
 
 **Sub-label.** `meta`, secondary, sentence case ("Around NYC"). 24px above (0 when first), 8px below.
 
@@ -278,12 +286,13 @@ Email clients are not browsers. These are non-negotiable.
 
 ### Do
 - Use the four text roles and the named variants. Nothing else.
-- Keep body text secondary (#6F6F6F); reserve primary for section labels, headlines, values and numbers.
+- Keep body text secondary (#6E6E73); reserve primary for section labels, headlines, values and numbers.
 - Give every section a one-line description.
 - Use spacing to separate sections. 96px, always as padding-top.
-- Use the theme color only on the temperature and theme pills.
+- Use the theme color only on the theme pill.
 - Make every number tabular and every move signed.
-- Name the outlet on every link.
+- Use the one link style (Apple blue, ↗) for every external link.
+- Keep every paragraph to 6 phone lines.
 - Keep the masthead date as the only monospace text.
 - Keep body at 16px on every screen size.
 
@@ -305,10 +314,13 @@ Email clients are not browsers. These are non-negotiable.
 
 | Text | Contrast | Passes |
 |---|---|---|
-| `#000000` on `#F8F8F8` | 18.54:1 | AAA |
-| `#6F6F6F` on `#F8F8F8` | 4.52:1 | AA |
-| `#6F6F6F` on `#F0F0F0` | 4.4:1 | Just under AA. Short labels inside cards only, never sentences |
+| `#1D1D1F` on `#F8F8F8` | 15.9:1 | AAA |
+| `#424245` on `#F8F8F8` | 9.4:1 | AAA |
+| `#6E6E73` on `#F8F8F8` | 4.78:1 | AA |
+| `#6E6E73` on `#F0F0F0` | 4.45:1 | Just under AA. Short labels inside cards only, never sentences |
 | `#0079AF` on `#F8F8F8` | 4.5:1 | AA |
+| `#007AFF` on `#F8F8F8` | 3.9:1 | AA large only. Accepted to match iOS |
+| `#FF3B30` on `#F0F0F0` | 3.2:1 | AA large only. Weather high, always with the "H" |
 | `#1B7A5E` on `#F0F0F0` | 4.6:1 | AA |
 | `#C03A3A` on `#F0F0F0` | 4.7:1 | AA |
 
@@ -323,27 +335,27 @@ Email clients are not browsers. These are non-negotiable.
 
 ### Quick color reference
 ```
-Page background:  #F8F8F8   Primary text:  #000000   Secondary text: #6F6F6F
+Page background:  #F8F8F8   Primary text:  #1D1D1F   Secondary text: #6E6E73   Tertiary: #424245
 Card surface:     #F0F0F0   Card lines:    #EBEBEB   Theme:          #0079AF
-Up:               #1B7A5E   Down:          #C03A3A
+Up:               #1B7A5E   Down:          #C03A3A   Link:           #007AFF
 ```
 
 ### Example component prompts
 
 **Title:**
-> `<h1>`, system font 26px weight 500, line-height 30px, letter-spacing −0.02em. First sentence #000000, remaining sentences in a `<span>` at #6F6F6F. 22px at ≤480px.
+> `<h1>`, system font 26px weight 500, line-height 30px, letter-spacing −0.02em. First sentence #1D1D1F, remaining sentences in a `<span>` at #6E6E73. 22px at ≤480px.
 
 **Section header:**
-> `<h2>`, system font 20px weight 500, line-height 27px, letter-spacing −0.01em, sentence case, #000000. 18px at ≤480px. Then `<p>` 16px 400 #6F6F6F, 2px above. 96px padding-top on the header, 16px below the description. No line.
+> `<h2>`, system font 20px weight 500, line-height 27px, letter-spacing −0.01em, sentence case, #1D1D1F. 18px at ≤480px. Then `<p>` 16px 400 #6E6E73, 2px above. 96px padding-top on the header, 16px below the description. No line.
 
 **Story:**
-> `<h3>` 16px weight 500, #000000. 2px gap. Body `<p>` 16px 400, line-height 22px, #6F6F6F, 16px between paragraphs. Read link: 14px, +0.01em, #6F6F6F, no underline, "Read on NYT →".
+> `<h3>` 16px weight 500, #1D1D1F. 2px gap. Body `<p>` 16px 400, line-height 22px, #6E6E73, 16px between paragraphs, max 250 characters each. The last paragraph ends with the article title as a link: #007AFF, no underline, "Title&nbsp;↗".
 
 **Data card:**
-> Table, background #F0F0F0, radius 16px (8px ≤480px), padding 8px 16px. Header cells 14px #6F6F6F, first one "Asset". Rows 14px tabular-nums #000000, 10px vertical padding, 1px #EBEBEB top border. Moves signed and colored #1B7A5E / #C03A3A.
+> Table, background #F0F0F0, radius 16px (8px ≤480px), padding 8px 16px. Header cells 14px #6E6E73, first one "Asset". Rows 14px tabular-nums #1D1D1F, 10px vertical padding, 1px #EBEBEB top border. Moves signed and colored #1B7A5E / #C03A3A.
 
 **Theme pill:**
-> Single-cell table, background #D3E5ED, 1px border #7CB9D4, radius 8px, padding 6px 12px, 14px #000000.
+> Single-cell table, background #D3E5ED, 1px border #7CB9D4, radius 8px, padding 6px 12px, 14px #1D1D1F.
 
 ### Iteration guide
 - Reach for a role or variant before writing any font rule.

@@ -15,7 +15,7 @@ YOUR DAY
 
 {{ r.text }}
 {% elif r.kind == "weather" %}
-{{ r.temp }}  {{ r.text }}{% if r.detail %} {{ r.detail }}{% endif %}
+{{ r.temp }}  {{ r.hi }} {{ r.lo }}{% if r.text %} - {{ r.text }}{% endif %}
 
 {% elif r.kind == "subway" %}
 {{ r.lines|join("/") }} train: {{ r.text }}
@@ -42,8 +42,10 @@ Around NYC
 {% if v.bell.standout %}
 
 {{ v.bell.standout.ticker }} {{ v.bell.standout.move.text }}
-{{ v.bell.standout.body }}
-Read on {{ v.bell.standout.source }}: {{ v.bell.standout.url }}
+{% for p in v.bell.standout.paragraphs %}{{ p.text }}
+
+{% endfor %}
+{{ v.bell.standout.link_title }}: {{ v.bell.standout.url }}
 {% endif %}
 {% if v.bell.on_deck %}
 
@@ -86,7 +88,7 @@ YOUR HOLDINGS
 {% for p in s.paragraphs %}{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
 
 {% endfor %}
-Read on {{ s.source }}: {{ s.url }}
+{{ s.link_title }} ({{ s.source }}): {{ s.url }}
 {% endfor %}
 {% endif %}
 {% if v.big_read %}
@@ -95,13 +97,12 @@ Read on {{ s.source }}: {{ s.url }}
 THE BIG READ
 {{ v.big_read.desc }}
 
-{{ v.big_read.story.headline }}
 {% for p in v.big_read.story.paragraphs %}
 
-{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
+{% if p.head %}{{ p.head }} {% endif %}{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
 {% endfor %}
 
-Read on {{ v.big_read.story.source }}: {{ v.big_read.story.url }}
+{{ v.big_read.story.link_title }} ({{ v.big_read.story.source }}): {{ v.big_read.story.url }}
 {% endif %}
 {% if v.top_3 %}
 
@@ -110,10 +111,10 @@ TOP 3
 {{ v.top_3.desc }}
 {% for s in v.top_3.stories %}
 
-{{ s.headline }}
-{% for p in s.paragraphs %}{{ p.text }}
+{% for p in s.paragraphs %}{% if p.head %}{{ p.head }} {% endif %}{{ p.text }}
+
 {% endfor %}
-Read on {{ s.source }}: {{ s.url }}
+{{ s.link_title }} ({{ s.source }}): {{ s.url }}
 {% endfor %}
 {% endif %}
 {% if v.latest %}
@@ -151,7 +152,7 @@ OFF THE CLOCK
 {{ s.headline }}
 {% for p in s.paragraphs %}{{ p.text }}
 {% endfor %}
-Read on {{ s.source }}: {{ s.url }}
+{{ s.link_title }} ({{ s.source }}): {{ s.url }}
 {% endfor %}
 {% endif %}
 {% if v.memes %}

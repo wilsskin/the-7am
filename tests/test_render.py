@@ -184,3 +184,14 @@ def test_leisure_sources_only_in_off_the_clock(issue):
         c["latest"]["tech"][0]["url"] = "https://www.timeout.com/newyork/things-to-do"
     with pytest.raises(render.RenderError, match="not an allowed source"):
         go(issue(edit_content=bad))
+
+
+def test_long_paragraph_splits_at_a_sentence_break():
+    text = ("Nvidia beat on revenue and earnings. The U.S. government cleared new chip exports to the Gulf. "
+            "Shares still fell after hours as investors worried about margins. Analysts at Goldman kept their "
+            "buy rating. The company guided above the street for next quarter. Inc. filings come Friday.")
+    chunks = render.split_paragraph(text, 0)
+    assert len(chunks) == 2 and all(len(c) <= render.MAX_PARA_CHARS for c in chunks)
+    assert " ".join(chunks) == text
+    assert not any(c.endswith("U.S.") for c in chunks)
+    assert render.split_paragraph("Short one.", 0) == ["Short one."]

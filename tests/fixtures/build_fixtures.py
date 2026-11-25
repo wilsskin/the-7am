@@ -47,7 +47,7 @@ def data(date, edition, ts):
                                 {"date": "2026-11-27", "kind": "early_close", "close": "1pm"}]},
         "weather": {"ok": True, "as_of": ts, "location": "New York", "temp_now": 48, "high": 53, "low": 41, "code": 3,
                     "conditions": "Cloudy", "icon": "cloud", "summary": "Cloudy, high 53°, low 41°.",
-                    "precip": "Rain likely after 4pm."},
+                    "outlook": "Cloudy until 4pm, then rain", "precip": "Rain likely after 4pm."},
         "mta": {"ok": True, "as_of": ts, "lines": ["4", "5"], "alerts": [] if edition == "weekend" else [
             {"lines": ["4", "5"], "type": "Delays", "text": "Delays in both directions after a signal problem at Grand Central.",
              "planned": False, "systemwide": False}]},
