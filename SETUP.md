@@ -58,7 +58,7 @@ The morning task only searches `to:w0skinner+7am-feedback@gmail.com from:me` and
 
 A scheduled task is a Claude session that starts by itself on a timer, in Anthropic's cloud, so your Mac can be off.
 
-- **Schedule:** every day at 6:22am New York time. Off the hour on purpose: on-the-hour jobs can start late.
+- **Schedule:** every day at 6:28am New York time. Off the half hour on purpose: on-the-hour jobs can start late.
 - **Prompt:** the contents of `prompts/TASK.md`.
 - **Repo:** wilsskin/the-7am.
 - **Connectors:** Google Calendar and Gmail only. Remove every other one.

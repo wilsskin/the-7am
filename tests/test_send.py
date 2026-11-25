@@ -1,4 +1,4 @@
-"""send.py: payload shape, scheduling, inline icons, fallback. Resend is faked; nothing is sent."""
+"""send.py: payload shape, sends right away, inline icons, fallback. Resend is faked; nothing is sent."""
 import base64
 import json
 import shutil
@@ -22,28 +22,18 @@ def rendered(tmp_path):
     return d
 
 
-def test_payload_scheduled_for_7am_with_inline_icons(rendered):
+def test_payload_sends_now_with_inline_icons(rendered):
     p = send.build_payload(CFG, rendered, datetime(2026, 11, 24, 6, 45, tzinfo=ET))
     assert p["from"] == "The 7AM <onboarding@resend.dev>" and p["to"] == ["w0skinner@gmail.com"]
     assert p["reply_to"] == "w0skinner+7am-feedback@gmail.com"
     assert p["subject"] == "Nvidia beat, and it still wasn't enough."
-    assert p["scheduled_at"] == "2026-11-24T07:00:00-05:00"
+    assert "scheduled_at" not in p  # Resend can't schedule emails with attachments
     ids = sorted(a["content_id"] for a in p["attachments"])
     assert ids == ["calendar", "cloud", "subway"]
     for a in p["attachments"]:
         assert f'src="cid:{a["content_id"]}"' in p["html"]
         assert base64.b64decode(a["content"])[:8] == b"\x89PNG\r\n\x1a\n"
     assert p["text"].startswith("The 7AM")
-
-
-def test_after_7_sends_immediately(rendered):
-    p = send.build_payload(CFG, rendered, datetime(2026, 11, 24, 7, 5, tzinfo=ET))
-    assert "scheduled_at" not in p
-
-
-def test_test_mode_sends_immediately(rendered):
-    p = send.build_payload(CFG, rendered, datetime(2026, 11, 24, 6, 45, tzinfo=ET), immediate=True)
-    assert "scheduled_at" not in p
 
 
 def test_fallback_when_render_failed(tmp_path):

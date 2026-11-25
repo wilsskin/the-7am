@@ -4,11 +4,12 @@ Sends run/issue.html (+ issue.txt) through Resend: one requests.post, no SDK.
 
 - Icons in run/render.json are attached inline (content_id), matching src="cid:<name>".
 - reply_to is config.feedback_address, so hitting Reply files feedback (BUILD_PLAN §10b).
-- Before 7:00 ET it is scheduled for 7:00 ET (scheduled_at); later, it goes now.
+- It sends the moment the run finishes. No scheduled_at: Resend can't schedule emails
+  with attachments (our inline icons), which is why the 7:00 hold silently failed (Nov 23).
 - If render failed completely, it sends a plain-text email with what exists plus the error.
   The email always sends.
 - One issue per day: the Idempotency-Key is the date, so a retried run can't double-send.
-  --test uses a unique key and sends immediately, for trying things out.
+  --test uses a unique key, for trying things out.
 
 Needs RESEND_API_KEY. --dry-run writes run/payload.json instead of sending.
 """
@@ -17,7 +18,7 @@ import base64
 import json
 import os
 import sys
-from datetime import datetime, time
+from datetime import datetime
 
 import requests
 
@@ -25,11 +26,6 @@ from brief.common import ET, ROOT, RUN_DIR, TIMEOUT, load_config, now_et
 
 API = "https://api.resend.com/emails"
 ICONS = ROOT / "templates" / "icons"
-
-
-def send_time(cfg: dict, now: datetime) -> datetime:
-    h, m = map(int, cfg["send_time"].split(":"))
-    return datetime.combine(now.date(), time(h, m), ET)
 
 
 def attachments(icons: list[str]) -> list[dict]:
@@ -58,7 +54,7 @@ def fallback_text(run_dir, error: str) -> tuple[str, str]:
     return "\n".join(lines).strip() + "\n", None
 
 
-def build_payload(cfg: dict, run_dir, now: datetime, immediate: bool = False) -> dict:
+def build_payload(cfg: dict, run_dir, now: datetime) -> dict:
     meta_path, html_path = run_dir / "render.json", run_dir / "issue.html"
     base = {"from": cfg["sender"], "to": [cfg["recipient"]], "reply_to": cfg["feedback_address"]}
     if meta_path.exists() and html_path.exists():
@@ -72,9 +68,6 @@ def build_payload(cfg: dict, run_dir, now: datetime, immediate: bool = False) ->
         error = err_path.read_text().strip() if err_path.exists() else "render produced no output"
         text, _ = fallback_text(run_dir, error)
         payload = {**base, "subject": f"{cfg['brand']['name']}, {now:%a %b} {now.day} (plain-text fallback)", "text": text}
-    at = send_time(cfg, now)
-    if not immediate and now < at:
-        payload["scheduled_at"] = at.isoformat()
     return payload
 
 
@@ -92,12 +85,12 @@ def post(payload: dict, idempotency_key: str) -> dict:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--dry-run", action="store_true", help="write run/payload.json, don't send")
-    p.add_argument("--test", action="store_true", help="send now with a one-off key (for testing)")
+    p.add_argument("--test", action="store_true", help="send with a one-off key (for testing)")
     p.add_argument("--run-dir", default=str(RUN_DIR))
     a = p.parse_args()
     from pathlib import Path
     run_dir, cfg, now = Path(a.run_dir), load_config(), now_et()
-    payload = build_payload(cfg, run_dir, now, immediate=a.test)
+    payload = build_payload(cfg, run_dir, now)
     key = f"the-7am-{now:%Y-%m-%d}" + (f"-test-{now:%H%M%S}" if a.test else "")
     if a.dry_run:
         shown = {**payload, "html": f"<{len(payload.get('html', ''))} chars>",
@@ -110,9 +103,8 @@ def main():
     except Exception as e:
         print(f"send failed: {e}", file=sys.stderr)
         sys.exit(1)
-    when = payload.get("scheduled_at", "now")
-    (run_dir / "send.json").write_text(json.dumps({"id": res.get("id"), "scheduled_at": when, "key": key}, indent=2))
-    print(f"sent: id {res.get('id')}, delivery {when}, subject: {payload['subject']}")
+    (run_dir / "send.json").write_text(json.dumps({"id": res.get("id"), "sent_at": now.isoformat(), "key": key}, indent=2))
+    print(f"sent: id {res.get('id')}, subject: {payload['subject']}")
 
 
 if __name__ == "__main__":

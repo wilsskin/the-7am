@@ -5,7 +5,7 @@ Always read `DESIGN_SYSTEM.md` before making any visual change, and `BUILD_PLAN.
 
 ## Architecture
 
-A Python script and a Claude scheduled task, nothing else. Every morning at 6:22am ET the scheduled task clones this repo, runs `python -m brief.collect` (exact numbers from free data sources), files any new feedback replies from Gmail into `feedback/FEEDBACK.md`, reads Wilson's Google Calendar through the connector, writes the stories into `run/content.json`, then runs `python -m brief.render` and `python -m brief.send`. The email lands at 7:00am ET. No servers, no database, no paid APIs, no Anthropic API key.
+A Python script and a Claude scheduled task, nothing else. Every morning at 6:28am ET the scheduled task clones this repo, runs `python -m brief.collect` (exact numbers from free data sources), files any new feedback replies from Gmail into `feedback/FEEDBACK.md`, reads Wilson's Google Calendar through the connector, writes the stories into `run/content.json`, then runs `python -m brief.render` and `python -m brief.send`. The email sends the moment the run finishes, usually around 6:35am ET. (It used to be held for 7:00 with Resend's scheduled_at, but Resend can't schedule emails with attachments, so those sends never arrived.) No servers, no database, no paid APIs, no Anthropic API key.
 
 Code owns anything that must be exact (prices, earnings, weather, scores, layout). Claude owns anything that needs judgment (which stories, how to summarize them). Claude never writes HTML and never writes a number that isn't in `run/data.json`.
 

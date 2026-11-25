@@ -25,6 +25,6 @@ You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7a
 
 5. **Render.** Run `python -m brief.render`. If it fails, read the problems, fix `run/content.json` once, and run it again. If it still fails, run `python -m brief.render --lenient`. Read any warnings; fix and re-render if a warning shows a real mistake (a number not in data.json, a duplicate).
 
-6. **Send.** Run `python -m brief.send`.
+6. **Send.** Run `python -m brief.send`. It sends right away. It prints `sent: id ...` on success; anything else (`send failed: ...` or a traceback) means no email went out.
 
-7. Finish with a one-line summary: sent or failed, which sections were unavailable, and how many feedback notes were filed. Do not commit or push anything other than `feedback/FEEDBACK.md` and, on the 1st, `data/sp500.csv`.
+7. Finish with a one-line summary: sent (with the Resend id) or failed (with the error), which sections were unavailable, and how many feedback notes were filed. Do not commit or push anything other than `feedback/FEEDBACK.md` and, on the 1st, `data/sp500.csv`.
