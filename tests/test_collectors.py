@@ -250,7 +250,7 @@ def test_week_games_monday_to_sunday():
 
 # ---------- memes ----------
 
-def test_meme_candidates_filter():
+def test_reddit_meme_candidates_filter():
     def post(**kw):
         base = {"url": "https://i.redd.it/a.jpg", "score": 1000, "over_18": False, "title": "a &amp; b",
                 "subreddit": "memes", "permalink": "/r/memes/1"}
@@ -258,8 +258,65 @@ def test_meme_candidates_filter():
         return {"data": base}
     listing = {"data": {"children": [post(), post(over_18=True), post(score=10),
                                      post(url="https://i.redd.it/x.gif"), post(url="https://example.com/a.jpg")]}}
-    out = memes.candidates(listing, 500)
-    assert len(out) == 1 and out[0]["title"] == "a & b"
+    out = memes.reddit_candidates(listing, 500)
+    assert len(out) == 1 and out[0]["title"] == "a & b" and out[0]["community"] == "memes"
+
+
+def test_lemmy_meme_candidates_filter():
+    def post(score=300, community_nsfw=False, **kw):
+        p = {"name": "a &amp; b", "url": "https://lemmy.world/pictrs/image/a.png", "nsfw": False,
+             "removed": False, "deleted": False, "ap_id": "https://lemmy.world/post/1"}
+        p.update(kw)
+        return {"post": p, "counts": {"score": score}, "community": {"name": "memes", "nsfw": community_nsfw}}
+    listing = {"posts": [post(), post(nsfw=True), post(community_nsfw=True), post(score=10),
+                         post(url="https://lemmy.world/pictrs/image/x.gif"), post(url="https://youtube.com/watch?v=1"),
+                         post(url="http://insecure.example/a.jpg"), post(featured_community=True), post(removed=True),
+                         post(url="https://sh.itjust.works/pictrs/image/b.webp?format=webp")]}
+    out = memes.lemmy_candidates(listing, 100)
+    assert [o["url"] for o in out] == ["https://lemmy.world/pictrs/image/a.png",
+                                       "https://sh.itjust.works/pictrs/image/b.webp?format=webp"]
+    assert out[0] == {"url": "https://lemmy.world/pictrs/image/a.png", "title": "a & b", "community": "memes",
+                      "score": 300, "permalink": "https://lemmy.world/post/1", "width": None, "height": None}
+
+
+SS_PAGE = """<h1>Top Reads</h1><img src="https://media.beehiiv.com/cdn-cgi/image/q=80/uploads/asset/file/aaa/notmeme.png" width="10" height="10">
+<h1><span>Memes of the Day</span></h1>
+<picture><img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto/uploads/asset/file/m1/image.png?t=1" alt="" width="1206" height="1511"/></picture>
+<img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down/uploads/asset/file/m1/image.png?t=1" width="1206" height="1511"/>
+<img src="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down/uploads/asset/file/m2/image.gif?t=1"/>
+<img src="https://other.example/x.png"/>
+<img alt="" src="https://media.beehiiv.com/cdn-cgi/image/w=1/uploads/asset/file/m3/photo.JPG"/>
+<p>Partner With Us</p><img src="https://media.beehiiv.com/cdn-cgi/image/x/uploads/asset/file/ad/ad.png"/>"""
+
+
+def test_newsletter_section_images():
+    imgs = memes.section_images(SS_PAGE, "Memes of the Day", ("Partner With Us",))
+    base = "https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,quality=80,width=1008,onerror=redirect/"
+    assert imgs == [{"url": base + "uploads/asset/file/m1/image.png", "width": 1206, "height": 1511},
+                    {"url": base + "uploads/asset/file/m3/photo.JPG", "width": None, "height": None}]
+    assert memes.section_images(SS_PAGE, "Meme Cleanser") == []          # heading missing: nothing
+
+
+def test_newsletter_freshness():
+    from datetime import datetime, timezone
+    now = datetime(2026, 11, 25, 11, 28, tzinfo=timezone.utc)             # 6:28am ET
+    assert memes.fresh(datetime(2026, 11, 25, 9, 0, tzinfo=timezone.utc), now, 26)      # today's 4am issue
+    assert memes.fresh(datetime(2026, 11, 24, 12, 0, tzinfo=timezone.utc), now, 26)     # yesterday's 7am issue
+    assert not memes.fresh(datetime(2026, 11, 23, 12, 0, tzinfo=timezone.utc), now, 26)  # already sent
+    assert not memes.fresh(datetime(2026, 11, 25, 12, 0, tzinfo=timezone.utc), now, 26)  # future
+
+
+def test_one_failing_meme_source_is_skipped(monkeypatch):
+    def boom(m, now):
+        raise RuntimeError("site down")
+    monkeypatch.setitem(memes.SOURCES, "shortsqueez", boom)
+    monkeypatch.setitem(memes.SOURCES, "lemmy", lambda m, now: [{"url": "https://a/1.png"}, {"url": "https://a/1.png"}])
+    out = memes.collect({"memes": {"sources": ["shortsqueez", "lemmy"]}}, datetime(2026, 11, 25))
+    assert out["sources"] == ["lemmy"] and out["candidates"] == [{"url": "https://a/1.png"}]
+    assert out["source_errors"][0].startswith("shortsqueez: RuntimeError")
+    monkeypatch.setitem(memes.SOURCES, "lemmy", boom)
+    with pytest.raises(RuntimeError):
+        memes.collect({"memes": {"sources": ["shortsqueez", "lemmy"]}}, datetime(2026, 11, 25))
 
 
 def test_meme_interleave():

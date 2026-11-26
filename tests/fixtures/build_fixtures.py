@@ -67,7 +67,7 @@ def data(date, edition, ts):
                 {"league": "NFL", "team": "49ers", "opponent": "Seahawks", "home": True, "day": "Thu",
                  "start": "2026-11-26T20:20:00-05:00", "time": "8:20pm"}]},
         "memes": {"ok": True, "as_of": ts, "candidates": [
-            {"url": f"https://i.redd.it/sample{i}.jpg", "title": f"Sample meme {i}", "subreddit": "memes", "score": 5000 - i,
+            {"url": f"https://i.redd.it/sample{i}.jpg", "title": f"Sample meme {i}", "community": "memes", "score": 5000 - i,
              "permalink": f"https://www.reddit.com/r/memes/{i}", "width": 1000, "height": [1200, 952, 1000, 800][i % 4]}
             for i in range(1, 7)]},
     }

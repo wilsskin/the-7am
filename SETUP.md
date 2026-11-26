@@ -29,9 +29,9 @@ Unlocks: the Earnings section.
 
 Unlocks: Milestone 4, a real email in your inbox. Free plan: 100 emails a day, we send one.
 
-## 3. Reddit (memes): ~5 minutes, then a wait
+## 3. Reddit (memes): optional, only if you want Reddit back
 
-Reddit reviews new API apps by hand now, so this can take days or weeks. If it's never approved, The 7AM ships without the Meme roundup (decided Nov 22).
+Memes come from Short Squeez, Exec Sum and Lemmy now (free, no keys, nothing to set up). Reddit reviews new API apps by hand and hasn't approved ours. If it ever does, add the keys below and set `memes.source: reddit` in `config.yaml`.
 
 1. Log in to Reddit, go to reddit.com/prefs/apps, click **create another app**.
 2. Name "the-7am", type **script**, redirect URI `http://localhost:8080`. Fill in the access request form if asked: personal, read-only, one request a day.
@@ -62,8 +62,8 @@ A scheduled task is a Claude session that starts by itself on a timer, in Anthro
 - **Prompt:** the contents of `prompts/TASK.md`.
 - **Repo:** wilsskin/the-7am.
 - **Connectors:** Google Calendar and Gmail only. Remove every other one.
-- **Network:** a custom allowlist (the only websites the task may reach): query1.finance.yahoo.com, query2.finance.yahoo.com, fc.yahoo.com, guce.yahoo.com, finnhub.io, api.open-meteo.com, api-endpoint.mta.info, site.api.espn.com, www.reddit.com, oauth.reddit.com, i.redd.it, api.resend.com, plus the default package list. If news research fails under the allowlist, switch network access to Full.
-- **Network secrets:** FINNHUB_API_KEY, RESEND_API_KEY, REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET.
+- **Network:** a custom allowlist (the only websites the task may reach): query1.finance.yahoo.com, query2.finance.yahoo.com, fc.yahoo.com, guce.yahoo.com, finnhub.io, api.open-meteo.com, api-endpoint.mta.info, site.api.espn.com, lemmy.world, www.shortsqueez.co, litquidity.co, media.beehiiv.com, api.resend.com, plus the default package list. If news research fails under the allowlist, switch network access to Full. Meme images live on many different Lemmy servers, so Claude can only open them to look before picking if network access is Full.
+- **Network secrets:** FINNHUB_API_KEY, RESEND_API_KEY (plus REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET only if Reddit is ever approved).
 
 Then: **Run now**, check the email, reply to it once, and confirm the reply shows up in `feedback/FEEDBACK.md` the next morning (`git pull` in ~/code/the-7am to see it).
 

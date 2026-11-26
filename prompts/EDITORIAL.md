@@ -70,7 +70,7 @@ Wilson reads on an iPhone, where a 16px line holds about 43 characters. **No par
 
 **emoji** (Top 3 and Off the clock only) One emoji about the story's subject, shown before its headline: ⛷️ for a ski report, 🚙 for a Rivian, 🏦 for a bank deal, 🛢️ for oil, 🗳️ for an election. Specific beats generic: pick the object or activity in the story, not a mood (no 🔥, 🚀, 📈 or faces). Never repeat one within the issue.
 
-**memes** If `data.json` has meme candidates, look at each image (download it and view it) and pick 4 that are funny, not political, not offensive, not NSFW, ideally finance or tech flavored. List their exact `url` values from data.json. If you can't view images, pick by title and score and say so in your final summary. If there are no candidates, an empty list; the section is skipped.
+**memes** If `data.json` has meme candidates, look at each image (download it and view it) and pick up to 6. Fewer is fine; never pad with weak ones. What Wilson wants, in order: (1) banking, finance and markets; (2) tech and media; (3) popular memes about current events. Most finance and tech memes come from the newsletters (`community` "Short Squeez" or "Exec Sum"); prefer those, and use Lemmy candidates to fill. Skip anything offensive, NSFW, or purely partisan. Skip near-duplicates (the newsletters often post the same joke). Order them best first. List their exact `url` values from data.json. If you can't view images, pick newsletter memes first and say so in your final summary. If there are no candidates, an empty list; the section is skipped.
 
 ## Length
 
@@ -101,7 +101,7 @@ Whole issue 1,600 to 1,900 words (weekend about 1,000). Over budget, render.py t
   "top_3": [{"emoji": "🏦", "headline": "...", "body": "...", "link": {...}}, {...}, {...}],
   "latest": {"business": [...], "tech": [...], "world": [...], "pop_culture": [...], "sports": [...]},
   "off_the_clock": [{"emoji": "⛷️", "headline": "Ski report: ...", "body": "...", "link": {...}}],
-  "memes": ["https://i.redd.it/..."]
+  "memes": ["https://media.beehiiv.com/...", "https://lemmy.world/pictrs/image/..."]
 }
 ```
 

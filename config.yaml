@@ -32,10 +32,19 @@ sports:
   also_cover: ["NFL major headlines and trades", "NBA major headlines and trades"]
 
 memes:
-  subreddits: ["wallstreetbets", "ProgrammerHumor", "memes"]   # Wilson will tune
-  count: 4
-  candidates: 12
-  min_score: 500
+  count: 6                 # Claude picks up to this many
+  # In order of preference. Any of: shortsqueez, litquidity, lemmy, reddit (needs approved API keys).
+  sources: ["shortsqueez", "litquidity", "lemmy"]
+  newsletter_max_age_hours: 26   # only issues from the last day, so nothing repeats
+  lemmy_candidates: 8      # cap on Lemmy (or Reddit) candidates
+  # Lemmy: lemmy.world reads communities on every Lemmy server. Wilson will tune.
+  lemmy_instance: lemmy.world
+  lemmy_communities: ["memes@lemmy.world", "programmer_humor@programming.dev", "memes@sopuli.xyz",
+                      "comicstrips@lemmy.world", "memes@lemmy.ml"]
+  min_score: 100           # Lemmy is smaller than Reddit, so the bar is lower
+  # Reddit, if API access is ever approved
+  subreddits: ["wallstreetbets", "ProgrammerHumor", "memes"]
+  reddit_min_score: 500
 
 sources:
   subscribed: ["wsj.com", "nytimes.com"]          # prefer these links

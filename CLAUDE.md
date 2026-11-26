@@ -24,5 +24,6 @@ The 7AM is a sibling of wilsonskinner.com: same tokens, same grayscale restraint
 
 - ESPN's scoreboard rejects date ranges (`dates=A-B` returns 400). `brief/collect/sports.py` asks one date at a time.
 - Claude's web search can't filter to WSJ, NYT, Reuters, AP, BBC, FT or The Verge, and the fetcher can't open them. EDITORIAL.md says how to cite them anyway.
+- Memes (Wilson's choice, Nov 26, 2026), up to 6 a day, from `memes.sources` in config.yaml: Short Squeez's "Memes of the Day" (homepage, then the issue page; posted ~4am ET, skips `/p/insiders-*`), Exec Sum's "Meme Cleanser" (litquidity.co WordPress API, category 1; posted ~7am ET, so it's usually yesterday's issue), and Lemmy (`lemmy.world/api/v3/post/list`, no key) to fill. Newsletter issues count only if under 26 hours old, so nothing repeats. Each source can fail alone. If either newsletter redesigns, `section_images()` finds nothing and Lemmy covers. Reddit has required manual API approval since Nov 2025 and blocks requests without a key (403/429); its code stays, add "reddit" to `sources` if it's ever approved. Ruled out: X (reading costs ~$200/mo), Instagram (Meta App Review, hashtags only), Imgflip (blank templates only), 9GAG (no official API), Bluesky (public search needs login).
 - Setup steps only Wilson can do are in `SETUP.md`.
 

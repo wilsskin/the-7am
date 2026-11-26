@@ -162,14 +162,16 @@ class Sports(Block):
 class MemeCandidate(BaseModel):
     url: HttpUrl
     title: str
-    subreddit: str
-    score: int
+    community: str           # Lemmy community, subreddit, or newsletter name
+    score: int | None = None  # upvotes; None for newsletter memes
     permalink: str
     width: int | None = None
     height: int | None = None
 
 
 class Memes(Block):
+    sources: list[str] = []
+    source_errors: list[str] = []
     candidates: list[MemeCandidate] = []
 
 
@@ -273,7 +275,7 @@ class Content(BaseModel):
     top_3: list[Story] = Field(min_length=3, max_length=3)
     latest: dict[LatestKey, list[Link]]
     off_the_clock: list[Story] = Field(default=[], max_length=3)
-    memes: list[HttpUrl] = Field(default=[], max_length=4)
+    memes: list[HttpUrl] = Field(default=[], max_length=6)
 
     @field_validator("latest")
     @classmethod

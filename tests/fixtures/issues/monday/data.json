@@ -312,7 +312,7 @@
       {
         "url": "https://i.redd.it/sample1.jpg",
         "title": "Sample meme 1",
-        "subreddit": "memes",
+        "community": "memes",
         "score": 4999,
         "permalink": "https://www.reddit.com/r/memes/1",
         "width": 1000,
@@ -321,7 +321,7 @@
       {
         "url": "https://i.redd.it/sample2.jpg",
         "title": "Sample meme 2",
-        "subreddit": "memes",
+        "community": "memes",
         "score": 4998,
         "permalink": "https://www.reddit.com/r/memes/2",
         "width": 1000,
@@ -330,7 +330,7 @@
       {
         "url": "https://i.redd.it/sample3.jpg",
         "title": "Sample meme 3",
-        "subreddit": "memes",
+        "community": "memes",
         "score": 4997,
         "permalink": "https://www.reddit.com/r/memes/3",
         "width": 1000,
@@ -339,7 +339,7 @@
       {
         "url": "https://i.redd.it/sample4.jpg",
         "title": "Sample meme 4",
-        "subreddit": "memes",
+        "community": "memes",
         "score": 4996,
         "permalink": "https://www.reddit.com/r/memes/4",
         "width": 1000,
@@ -348,7 +348,7 @@
       {
         "url": "https://i.redd.it/sample5.jpg",
         "title": "Sample meme 5",
-        "subreddit": "memes",
+        "community": "memes",
         "score": 4995,
         "permalink": "https://www.reddit.com/r/memes/5",
         "width": 1000,
@@ -357,7 +357,7 @@
       {
         "url": "https://i.redd.it/sample6.jpg",
         "title": "Sample meme 6",
-        "subreddit": "memes",
+        "community": "memes",
         "score": 4994,
         "permalink": "https://www.reddit.com/r/memes/6",
         "width": 1000,

@@ -225,3 +225,20 @@ def test_emoji_before_headline_and_bad_emoji_rejected(issue):
         c["top_3"][0]["emoji"] = "ski"
     with pytest.raises(render.RenderError):
         go(issue(edit_content=bad))
+
+
+def test_six_memes_from_mixed_sources(issue):
+    beehiiv = "https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,quality=80,width=1008,onerror=redirect/uploads/asset/file/m{}/image.png"
+    urls = [beehiiv.format(i) for i in range(5)] + ["https://lemmy.world/pictrs/image/a.webp"]
+
+    def data(d):
+        d["memes"]["candidates"] = [{"url": u, "title": "", "community": "Short Squeez", "score": None,
+                                     "permalink": "https://www.shortsqueez.co/p/x", "width": 1206 if i < 4 else None,
+                                     "height": 1511 if i < 4 else None} for i, u in enumerate(urls)]
+
+    def content(c):
+        c["memes"] = urls
+    meta, html, _ = go(issue(edit_data=data, edit_content=content))
+    assert html.count('alt="Meme"') == 6
+    assert 'height="631"' in html          # 504 * 1511 / 1206, when the size is known
+    assert "width=1008" in html and "lemmy.world/pictrs/image/a.webp" in html

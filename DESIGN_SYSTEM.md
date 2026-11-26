@@ -261,7 +261,7 @@ Fixed order. Day variants are in BUILD_PLAN.md §5 and in the three reference fi
 | 7 | Top 3 | Three stories, 32px apart: emoji + headline as the first sentence, 2 paragraphs, link inline at the end. |
 | 8 | The latest | Tag pill categories Business, Tech, World, Pop culture, then Sports last; 3–5 headline rows each. Sports: headline rows → 16px → sports card (if any results, or Monday). |
 | 9 | Off the clock | 2–3 stories, 32px apart: small headline starting with an emoji, then the topic ("Ski report: Killington opens more terrain"), body, read link. No cards, no eyebrow. |
-| 10 | Meme roundup | 4 memes stacked. No captions. |
+| 10 | Meme roundup | Up to 6 memes stacked (Wilson, Nov 26, 2026). No captions. |
 | — | Footer | As above. |
 
 ---
