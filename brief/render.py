@@ -26,7 +26,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from brief import fmt, tokens
 from brief.common import ET, ROOT, RUN_DIR, load_config, now_et
-from brief.schema import Calendar, Content, Data
+from brief.schema import Calendar, Content, Data, MoverStory
 
 MAX_BYTES = 95_000          # Gmail clips at ~102KB; fail loudly before that
 LEAD_INS = ("Why it matters:",)
@@ -39,10 +39,13 @@ ABBREVS = {"mr", "mrs", "ms", "dr", "st", "inc", "corp", "co", "ltd", "jr", "sr"
            "gen", "jan", "feb", "mar", "apr", "aug", "sept", "sep", "oct", "nov", "dec", "est", "approx"}
 LATEST_LABELS = {"business": "Business", "tech": "Tech", "world": "World",
                  "pop_culture": "Pop culture", "sports": "Sports"}
+# SF Symbol PNG shown inside each tag pill (templates/icons/tag-*.png).
+LATEST_ICONS = {"Business": "tag-business", "Tech": "tag-tech", "World": "tag-world",
+                "Pop culture": "tag-pop", "Sports": "tag-sports"}
 # Word caps (warn only). Global target 1,600–1,900 (weekend ~1,000).
 CAPS = {"big_read": 380, "top_3": 130, "holdings": 90, "off_the_clock": 90, "standout": 80, "desc": 30}
 TRIM_ABOVE = {"weekday": 2200, "monday": 2300, "holiday": 2200, "weekend": 1300}
-UNAVAILABLE_NAMES = {"markets": "Markets", "standout": "Standout", "earnings": "Earnings",
+UNAVAILABLE_NAMES = {"markets": "Markets", "standout": "Big movers", "earnings": "Earnings",
                      "weather": "Weather", "mta": "Subway alerts", "sports": "Scores",
                      "memes": "Meme roundup", "market_calendar": "Market calendar"}
 
@@ -79,7 +82,7 @@ def parse_content(raw: dict | None, lenient: bool, errors: list[str]) -> Content
         try:
             good[name] = TypeAdapter(field.annotation).validate_python(raw[name])
         except ValidationError:
-            if name in ("top_3", "holdings_news", "off_the_clock", "your_day_nyc", "memes", "on_deck_today"):
+            if name in ("top_3", "holdings_news", "off_the_clock", "your_day_nyc", "memes", "on_deck_today", "movers"):
                 good[name] = keep_valid_items(field.annotation, raw[name])
     if isinstance(good.get("top_3"), list):
         good["top_3"] = good["top_3"][:3]
@@ -88,7 +91,7 @@ def parse_content(raw: dict | None, lenient: bool, errors: list[str]) -> Content
     return Content.model_construct(**{"date": None, "edition": None, "subject": None, "intro": "",
                                       "section_desc": {}, "latest": {}, "your_day_nyc": [], "on_deck_today": [],
                                       "holdings_news": [], "top_3": [], "off_the_clock": [], "memes": [],
-                                      "standout": None, "big_read": None, **good})
+                                      "standout": None, "movers": [], "big_read": None, **good})
 
 
 def keep_valid_items(annotation, items) -> list:
@@ -141,8 +144,8 @@ def items_by_priority(c: Content):
         yield "top_3", c.top_3, i, s.link.url, s.headline
     for i, s in enumerate(c.holdings_news):
         yield "holdings", c.holdings_news, i, s.link.url, s.headline
-    if c.standout:
-        yield "standout", None, 0, c.standout.link.url, c.standout.link.title
+    for i, s in enumerate(c.movers):
+        yield "movers", c.movers, i, s.link.url, s.link.title
     for k, links in c.latest.items():
         for i, l in enumerate(links):
             yield f"latest.{k}", links, i, l.url, l.title
@@ -195,6 +198,29 @@ def check_memes(c: Content, data: Data, lenient: bool, errors: list[str]) -> Non
         c.memes = [u for u in c.memes if str(u) in allowed]
 
 
+def check_movers(c: Content, data: Data, edition: str, lenient: bool, errors: list[str]) -> None:
+    """Movers must come from the shortlist in data.json (so every number is exact), once each.
+    An old-style `standout` story becomes a mover for the top ticker."""
+    if not c.movers and c.standout and data.standout.ticker:
+        c.movers = [MoverStory(ticker=data.standout.ticker, body=c.standout.body, link=c.standout.link)]
+    c.standout = None
+    if edition == "weekend" or not data.standout.ok:
+        c.movers = []
+        return
+    known = {m.ticker for m in data.standout.movers} | ({data.standout.ticker} if data.standout.ticker else set())
+    keep, seen = [], set()
+    for m in c.movers:
+        if m.ticker not in known:
+            errors.append(f"movers: {m.ticker} is not in data.json's movers shortlist")
+        elif m.ticker in seen:
+            errors.append(f"movers: {m.ticker} appears twice")
+        else:
+            keep.append(m)
+            seen.add(m.ticker)
+    if lenient or len(keep) == len(c.movers):
+        c.movers = keep
+
+
 def check_holdings(c: Content, cfg: dict, lenient: bool, errors: list[str]) -> None:
     holdings = set(cfg["markets"]["holdings"])
     for s in c.holdings_news:
@@ -210,6 +236,7 @@ def data_percents(data: Data) -> list[float]:
     for q in m.indices + m.crypto + m.holdings:
         out += [q.change_1d_pct, q.wtd_pct, q.ytd_pct]
     out.append(data.standout.change_1d_pct)
+    out += [m.change_1d_pct for m in data.standout.movers]
     for r in data.earnings.reported:
         out += [r.revenue_surprise_pct, r.eps_surprise_pct, r.after_hours_pct]
     return [abs(p) for p in out if p is not None]
@@ -225,8 +252,8 @@ def check_numbers(c: Content, data: Data, warnings: list[str]) -> None:
         texts[f"top_3[{i}]"] = s.body
     for s in c.holdings_news:
         texts[f"holdings {s.ticker}"] = s.body
-    if c.standout:
-        texts["standout"] = c.standout.body
+    for m in c.movers:
+        texts[f"movers {m.ticker}"] = m.body
     for where, text in texts.items():
         for n in re.findall(r"(\d+(?:\.\d+)?)\s?(?:%|percent)", text):
             v, dec = float(n), len(n.split(".")[1]) if "." in n else 0
@@ -310,6 +337,8 @@ def story_view(s, headline=None, inline=False) -> dict:
     """inline: the headline is the paragraph's first sentence (Big read, Top 3), Morning Brew style.
     The link (article title + ↗) always ends the last paragraph."""
     head = headline or s.headline
+    if getattr(s, "emoji", None):
+        head = f"{s.emoji} {head}"
     inline_head = head if head.endswith((".", "?", "!")) else head + "."
     link_len = len(s.link.title) + 3
     raw = [p.strip() for p in s.body.split("\n\n") if p.strip()]
@@ -383,18 +412,19 @@ def bell_view(data: Data, c: Content, edition: str) -> dict:
     closure = cal.closure_line if (cal.ok and not weekend) else None
     if not m.ok:
         return {"label": "Markets" if weekend else "Before the bell", "period_label": period,
-                "desc": join("Market data unavailable this morning.", closure), "rows": [], "standout": None,
+                "desc": join("Market data unavailable this morning.", closure), "rows": [], "movers": [],
                 "on_deck": [] if weekend else [o.model_dump() for o in c.on_deck_today]}
     rows = [quote_view(q, True, period) for q in m.crypto] if weekend else \
         [quote_view(q, False, period) for q in m.indices] + [quote_view(q, True, period) for q in m.crypto]
-    standout = None
     s = data.standout
-    if not weekend and s.ok and c.standout:
-        standout = {"ticker": s.ticker, "move": fmt.move(s.change_1d_pct),
-                    **story_view(c.standout, headline=s.ticker)}
+    pct_of = {m.ticker: m.change_1d_pct for m in s.movers}
+    if s.ticker:
+        pct_of.setdefault(s.ticker, s.change_1d_pct)
+    movers = [{"ticker": m.ticker, "move": fmt.move(pct_of[m.ticker]), **story_view(m, headline=m.ticker)}
+              for m in c.movers if m.ticker in pct_of] if (not weekend and s.ok) else []
     return {"label": "Markets" if weekend else "Before the bell", "period_label": period,
             "desc": join(c.section_desc.get("before_the_bell", ""), closure), "rows": rows,
-            "standout": standout, "on_deck": [] if weekend else [o.model_dump() for o in c.on_deck_today]}
+            "movers": movers, "on_deck": [] if weekend else [o.model_dump() for o in c.on_deck_today]}
 
 
 def earnings_view(data: Data, c: Content, edition: str) -> dict | None:
@@ -426,7 +456,7 @@ def holdings_view(data: Data, c: Content, edition: str) -> dict | None:
 
 
 def latest_view(data: Data, c: Content, edition: str) -> dict | None:
-    groups = [{"label": LATEST_LABELS[k], "links": [{"title": l.title, "url": str(l.url), "source": l.source} for l in v]}
+    groups = [{"label": LATEST_LABELS[k], "icon": LATEST_ICONS[LATEST_LABELS[k]], "links": [{"title": l.title, "url": str(l.url), "source": l.source} for l in v]}
               for k, v in c.latest.items() if v]
     card = None
     sp = data.sports
@@ -488,7 +518,7 @@ def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: dat
 
 def check_paragraphs(v: dict, warnings: list[str]) -> None:
     """Warn about any paragraph still over 6 phone lines after splitting (one very long sentence)."""
-    stories = [v["bell"]["standout"]] if v["bell"]["standout"] else []
+    stories = list(v["bell"]["movers"])
     stories += (v["holdings"] or {}).get("stories", []) + ([v["big_read"]["story"]] if v["big_read"] else [])
     stories += (v["top_3"] or {}).get("stories", []) + (v["off_the_clock"] or {}).get("stories", [])
     for st in stories:
@@ -501,7 +531,12 @@ def check_paragraphs(v: dict, warnings: list[str]) -> None:
 
 
 def icons_used(v: dict) -> list[str]:
-    return sorted({r["icon"] for r in v["your_day"]["rows"] if r.get("icon")})
+    used = {r["icon"] for r in v["your_day"]["rows"] if r.get("icon")}
+    if v["latest"]:
+        used |= {g["icon"] for g in v["latest"]["groups"]}
+        if v["latest"]["sports_card"] and not any(g["label"] == "Sports" for g in v["latest"]["groups"]):
+            used.add(LATEST_ICONS["Sports"])
+    return sorted(used)
 
 
 # ---------- rendering ----------
@@ -562,6 +597,7 @@ def render(run_dir: Path, lenient: bool = False, icon_src: str = "cid:{}", now: 
     check_links(c, cfg, lenient, errors)
     check_memes(c, data, lenient, errors)
     check_holdings(c, cfg, lenient, errors)
+    check_movers(c, data, data.edition, lenient, errors)
     if errors and not lenient:
         raise RenderError("\n".join(errors))
     dedupe(c, warnings)

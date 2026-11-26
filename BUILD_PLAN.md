@@ -116,13 +116,14 @@ subway_lines: ["4", "5"]
 markets:
   indices:
     - { symbol: "^GSPC", label: "S&P 500" }
+    - { symbol: "^DJI",  label: "Dow" }
     - { symbol: "^IXIC", label: "Nasdaq" }
-    - { symbol: "SOXX",  label: "SOXX" }
   crypto:
     - { symbol: "BTC-USD", label: "Bitcoin" }
     - { symbol: "ETH-USD", label: "Ether" }
-  holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS"]
+  holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS", "SOXX"]
   standout_min_market_cap: 100_000_000_000
+  movers_shortlist: 8
   big_earnings_universe: top_50_sp500_by_market_cap   # plus holdings
 
 sports:
@@ -158,7 +159,7 @@ Verify each endpoint at build time. Free tiers and unofficial endpoints change. 
 | Earnings results + calendar | Finnhub `/calendar/earnings` (free key) | EPS est/actual, revenue est/actual, timing (bmo/amc). Filter to the big universe. Code computes the surprise % for each: (actual − estimate) / |estimate|, rounded to 0.1% (positive = beat, negative = miss). After-hours / premarket move from `yfinance` (prepost). Also return the big-universe companies reporting the next trading day (company names); on Tue–Fri render.py appends "Deere reports tomorrow." / "Dell and Salesforce report tomorrow." (Friday: "report Monday") to the Earnings description. Nobody → no sentence. |
 | Market closures / early closes | `exchange_calendars` (XNYS) | Any closure or early close today or later this week → a fixed sentence ("Markets close Thursday for Thanksgiving, early close Friday at 1pm.") that render.py appends to the Before the bell description. |
 | Weather | Open-Meteo `/v1/forecast` (no key) | High/low °F, conditions, hourly precip probability → "rain likely after 4pm". The WMO weather code also picks the icon: `sun` (0–1), `cloud` (2–48), `rain` (51–67, 80–82, 95–99), `snow` (71–77, 85–86). |
-| Subway alerts | MTA GTFS-RT alerts JSON (`api-endpoint.mta.info`, camsys subway-alerts feed, no key) | Active alerts where informed entity route is 4 or 5. Header text only, max 2. |
+| Subway alerts | MTA GTFS-RT alerts JSON (`api-endpoint.mta.info`, camsys subway-alerts feed, no key) | Active alerts where informed entity route is 4 or 5 and that touch the Fulton St–14 St-Union Sq ride (config `subway_stops`): alerts scoped "In the Bronx/Brooklyn/Queens" or listing only stations off the ride are dropped; line-wide delays stay. Header text only, max 2. |
 | Last night's scores | ESPN public scoreboard JSON (`site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard`) | Only followed teams, only games that finished since the previous morning's run (Monday too: since Sunday's run). One request per date; ESPN rejects date ranges. Return W/L, both scores, league. |
 | This week's games (Mondays) | ESPN team schedule JSON (`site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams/{team}/schedule`) | 49ers and Warriors games Monday through Sunday: day, opponent, home/away, start time ET. |
 | Meme candidates | Reddit API (script app, OAuth) | Top of day, image posts only, `over_18 == false`, score threshold. Return ~12 candidates with image URLs. Claude picks the final 4 (§6). |
@@ -180,14 +181,14 @@ Every section has a header: label plus a one-line description Claude writes that
 | # | Section | Source | Spec |
 |---|---|---|---|
 | 1 | Subject line + intro | Claude | Subject: punchy hook from the top story, Exec Sum style, under 60 chars. Intro: 2–5 sentences, aim for 3. The first sentence is the one thing to know today. |
-| 2 | Your Day | data.json + calendar.json + Claude | Weather line. Subway alerts for 4/5 if any. Today's calendar events (time + title). Birthdays: any event today whose title contains "birthday" (case-insensitive) or eventType BIRTHDAY → "Lily Bien's birthday 🎂". Event titled "Happy birthday!" is Wilson's own birthday → render a special greeting. US holidays from the holidays calendar. Monday only: "This week" preview of the rest of the week's events. Then "Around NYC": 1–2 linked NYC news items that affect his day (transit, weather, city news). An empty calendar is simply left out; never mention that it's empty. |
-| 3 | Before the Bell | data.json + Claude | One market card: S&P 500, Nasdaq, SOXX, Bitcoin, Ether (price at 4pm ET close, 1D %, WTD % or YTD %). Standout: "NVDA −6.40%" on one line (no "Standout" label), then Claude's 2–3 sentence why, with a link. "On deck today": econ releases, Fed speakers, notable events (Claude, from search). |
+| 2 | Your Day | data.json + calendar.json + Claude | Weather line. Subway alerts for 4/5 if any. Today's calendar events (time + title). Birthdays: any event today whose title contains "birthday" (case-insensitive) or eventType BIRTHDAY → "Lily Bien's birthday 🎂". Event titled "Happy birthday!" is Wilson's own birthday → render a special greeting. US holidays from the holidays calendar. Monday only: "This week" preview of the rest of the week's events. Then "NYC today": up to 3 linked items, the fun and big stuff in the city (big events, the biggest NYC sports news, city news that changes his day). An empty calendar is simply left out; never mention that it's empty. |
+| 3 | Before the Bell | data.json + Claude | One market card: S&P 500, Dow, Nasdaq, Bitcoin, Ether (price at 4pm ET close, 1D %, WTD % or YTD %). Big movers: code shortlists the ~8 biggest 1-day moves among $100B+ companies; Claude picks 2–3 that led the selloff or rally. Each is "NVDA −6.40%" on one line, then 1–2 sentences on why, with a link. "On deck today": econ releases, Fed speakers, notable events (Claude, from search). |
 | 3b | Earnings | data.json | Right after Before the Bell, ahead of Holdings. Table of yesterday's big reporters: Revenue and EPS each on one line as the actual plus the surprise vs estimate in colored parentheses ("57.0B (+3.3%)"), and the after-hours move. Numbers only, no notes. No "Reporting today" on weekdays. Mondays: "Reporting this week" instead, one row per day with company names only (no tickers, no before/after timing). Skip the section if empty. |
 | 4 | Your Holdings | data.json + Claude | One row per holding (price, 1D %, WTD % or YTD %). Then a story (2–3 sentences, linked) for **every** holding with relevant, recent news in the last 24h. No cap: on a big day, cover them all. Headline starts with the ticker ("PLTR: Army expands its software contract"). No news → no story. Never pad. |
 | 5 | The Big Read | Claude | Single most important story. ~300 words, 6–8 short paragraphs (max 6 phone lines each), Morning Brew structure and length. Headline printed as the first sentence. Tone: clear, concise, direct. Not jokey. Ends with a link. |
 | 6 | Top 3 | Claude | 3 more big stories, ~100 words each in 2 paragraphs, headline as the first sentence, link inline at the end. |
 | 7 | The Latest | Claude + data.json | Headlines only, one line each, linked, 3–5 per category, in this order: **Business** (deals, Wall Street, Goldman; keep to 3), **Tech**, **World/Politics**, **Pop Culture**, then **Sports** last. Each category label is a tag pill. Sports: headlines first, then the score card from data.json below them (last night's results; Mondays also this week's 49ers/Warriors games; no results and not Monday → no card). Sports headlines: 49ers, Warriors, Giants news, big NFL/NBA headlines and trades, and major NFL injuries (starters out for multiple games or the season). |
-| 8 | Off the Clock | Claude | 2–3 brief items, rotating: ski conditions (Nov–Apr, Northeast + Tahoe), things to do in NYC this week, outdoors/backpacking, cars (Rivian etc.), AI tools. Short. Topic goes at the start of the headline ("Ski report: Killington opens more terrain"), no eyebrow. |
+| 8 | Off the Clock | Claude | 2–3 brief items, rotating: ski conditions (Nov–Apr, Northeast + Tahoe), outdoors/backpacking, cars (Rivian etc.), AI tools, food. NYC events go in NYC today. Each story gets one emoji before its headline (Top 3 too). Short. Topic goes at the start of the headline ("Ski report: Killington opens more terrain"), no eyebrow. |
 | 9 | Meme Roundup | data.json + Claude | 4 images, Exec Sum style, no captions needed. |
 
 Global target: 1,600–1,900 words (weekend ~1,000).
@@ -196,9 +197,9 @@ Global target: 1,600–1,900 words (weekend ~1,000).
 
 ## 6. Editorial rules (put these in prompts/EDITORIAL.md)
 
-**Each story appears once.** Priority order for placement: Big Read > Top 3 > Holdings > Earnings > Before the Bell > The Latest > Around NYC > Off the Clock. render.py enforces this by URL and by near-duplicate headline check, and drops the lower-priority duplicate.
+**Each story appears once.** Priority order for placement: Big Read > Top 3 > Holdings > Earnings > Before the Bell > The Latest > NYC today > Off the Clock. render.py enforces this by URL and by near-duplicate headline check, and drops the lower-priority duplicate.
 
-**Around NYC vs Off the Clock.** Around NYC is news that affects Wilson's day: transit, weather, city government, things happening today. Off the Clock is leisure: events to go to, ski, outdoors, cars, AI tools. An NYC event belongs in Off the Clock unless it changes his commute or plans today. Never the same item, venue or event in both.
+**NYC today vs Off the Clock.** NYC today owns the city: big events, the biggest NYC sports news, city news that changes his day. Off the Clock is leisure outside that: ski, outdoors, cars, AI tools, food. Never the same item, venue or event in both. (Decided Nov 25, 2026.)
 
 **Section descriptions.** One line (two at most) under every section label, summarizing that section today: "Nvidia beat on both lines and still fell after hours. Walmart missed on revenue." Concrete, not generic ("Here are today's headlines" is not allowed). Any number must come from data.json. Don't repeat the closure line in Before the bell or the next-reporters line in Earnings; render.py adds both.
 
@@ -246,8 +247,8 @@ class Content(BaseModel):
     intro: str                              # 2-5 sentences, aim for 3
     section_desc: dict[Literal["your_day","before_the_bell","earnings","holdings","big_read",
                                "top_3","latest","off_the_clock","memes"], str]   # one line each
-    your_day_nyc: list[Link]                # 0-2, rendered under "Around NYC"
-    standout: StandoutStory | None          # {body, link}; headline is built by code ("NVDA −6.40%")
+    your_day_nyc: list[Link]                # 0-3, rendered under "NYC today"
+    movers: list[MoverStory]                # 0-3 {ticker, body, link}, ticker from data.json standout.movers; headline built by code
     on_deck_today: list[OnDeck]             # {time: "8:30" | None, text}; the time fills the left column
     holdings_news: list[HoldingStory]       # any number; HoldingStory = Story + ticker; headline starts "PLTR: "
     big_read: Story

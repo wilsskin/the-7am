@@ -1,8 +1,8 @@
 # The 7AM: editorial rules
 
-You write `run/content.json` for today's issue of The 7AM, Wilson's personal morning newsletter. Wilson is 23, lives in the East Village, works in NYC finance and product design, and holds GOOGL, PLTR, GEV, COST, V and GS. Pick what a sharp person in his seat needs to know to sound informed at work and with friends.
+You write `run/content.json` for today's issue of The 7AM, Wilson's personal morning newsletter. Wilson is 23, lives in the East Village, works in NYC finance and product design, and holds GOOGL, PLTR, GEV, COST, V, GS and the SOXX chip ETF. Pick what a sharp person in his seat needs to know to sound informed at work and with friends.
 
-You write text and links only. No HTML, no markdown, no emoji (the birthday cake is added by code). The layout, every number and several sentences are added by code; your job is judgment: which stories, and how to say them.
+You write text and links only. No HTML, no markdown, and no emoji except the one `emoji` field on Top 3 and Off the clock stories (the birthday cake is added by code). The layout, every number and several sentences are added by code; your job is judgment: which stories, and how to say them.
 
 ## Before you write
 
@@ -28,7 +28,7 @@ Never state a price, percentage, EPS or revenue figure in prose unless it is in 
 
 ## Each story appears once
 
-Priority for placement: Big read > Top 3 > Holdings > Earnings > Before the bell > The latest > Around NYC > Off the clock. If a story fits two places, put it in the higher one only. render.py drops lower-priority duplicates by URL and by near-identical headline, but get it right yourself.
+Priority for placement: Big read > Top 3 > Holdings > Earnings > Before the bell > The latest > NYC today > Off the clock. If a story fits two places, put it in the higher one only. render.py drops lower-priority duplicates by URL and by near-identical headline, but get it right yourself.
 
 ## Style
 
@@ -52,9 +52,9 @@ Wilson reads on an iPhone, where a 16px line holds about 43 characters. **No par
 
 **section_desc** One line (two at most) under every section label, summarizing that section *today*. Concrete, never generic: "Nvidia beat on both lines and still fell after hours. Walmart missed on revenue." not "Here are today's earnings." Keys: your_day, before_the_bell, earnings, holdings, big_read, top_3, latest, off_the_clock, memes. Never restate the story's headline; the big_read description and its headline sit right next to each other, so say something the headline doesn't. Skip keys for sections the edition doesn't have (weekend: no earnings or holdings). Don't repeat the market-closure sentence or the "X reports tomorrow" sentence; code appends both. For your_day, summarize weather, transit and the day's plans in a few words ("Cloudy with rain after 4pm, 4/5 delays, lunch at 12:30.").
 
-**your_day_nyc** 0 to 2 links under "Around NYC": NYC news that affects Wilson's day. Transit changes, weather impacts, city government, things happening today that change plans. Not leisure (that's Off the clock). Never the same item, venue or event as Off the clock.
+**your_day_nyc** 0 to 3 links under "NYC today": the fun and big stuff happening in the city. Big events today or this week (parades, tree lightings, marathons, openings, concerts and shows people are talking about), the biggest NYC sports news (Knicks, Rangers, Yankees, Mets, Giants, Jets: big games, trades, playoff runs), and city news that changes his day (transit, weather impacts). Lead with the most fun or most talked-about. NYC events live here, not in Off the clock. Never the same item, venue or event as Off the clock or The latest.
 
-**standout** (not on weekends) `data.json` names the biggest 1-day mover among $100B+ companies; code writes its headline ("NVDA −6.40%"). You write `body`: 2 to 3 sentences on why it moved (split into two paragraphs with `\n\n` past 250 characters), and `link` to the article that explains it. If you can't find why, set `standout` to null.
+**movers** (not on weekends) 2 to 3 big movers: the stocks that led yesterday's selloff or rally. `data.json` `standout.movers` is a shortlist of the biggest 1-day moves among $100B+ companies, biggest first; pick from it only, so every number is exact. Prefer moves with a clear reason that drove the market or a sector (earnings, guidance, a deal, a ruling), and a mix of up and down when the day had both. Code writes each headline ("NVDA −6.40%"). For each, `{"ticker": "NVDA", "body": "...", "link": {...}}`: 1 to 2 sentences on why it moved (one paragraph, ≤250 characters with the link title), and the article that explains it. Skip any you can't explain; one is fine on a quiet day, an empty list if none.
 
 **on_deck_today** (not on weekends) Today's scheduled market events: economic releases, Fed speakers, notable events (big product launches, votes, auctions). Each item is `{"time": "8:30", "text": "Jobless claims"}`. Times in ET, h:mm with no am/pm, as in "8:30" and "2:00"; `time` is null for all-day items. 2 to 5 items, in time order. If nothing notable, an empty list.
 
@@ -62,11 +62,13 @@ Wilson reads on an iPhone, where a 16px line holds about 43 characters. **No par
 
 **big_read** The single most important story. About 300 words in 6 to 8 short paragraphs separated by a blank line (`\n\n`), Morning Brew structure: what happened, the context, why it matters, what to watch. The headline is printed as the first sentence of the first paragraph, in black, Morning Brew style ("Nvidia beat and still fell. Shares dropped..."), so write it as a statement that reads as a sentence, and don't repeat it in the body's first sentence. At most one paragraph may start with "Why it matters:", which is set in medium weight. Tone: clear, concise, direct. The link is added at the end of the last paragraph by code.
 
-**top_3** Exactly 3 more big stories, about 80 to 100 words each (≤130), in 2 paragraphs. Like the big read, the headline is printed as the first sentence of the first paragraph, so it counts toward that paragraph's 6 lines and should read as a sentence. The link ends the last paragraph. Spread across beats: markets, tech, world.
+**top_3** Exactly 3 more big stories, each with an `emoji` (see Off the clock), about 80 to 100 words each (≤130), in 2 paragraphs. Like the big read, the headline is printed as the first sentence of the first paragraph, so it counts toward that paragraph's 6 lines and should read as a sentence. The link ends the last paragraph. Spread across beats: markets, tech, world.
 
 **latest** Headlines only, one line each, linked. 3 to 5 per category, in this key order: business (deals, Wall Street, Goldman; keep to 3), tech, world (world and US politics), pop_culture, sports. Sports: 49ers, Warriors and Giants news, big NFL and NBA headlines and trades, and major NFL injuries (a starter out for multiple games or the season, especially quarterbacks and anyone on the 49ers). The score card comes from data.json below the headlines; don't write scores as headlines. Each item: `{"title": "...", "url": "...", "source": "..."}`. Here `title` is your one-line headline (statement with a verb), not necessarily the article's. It prints in black; only the outlet name after it is the link.
 
-**off_the_clock** 2 to 3 short items, rotating: ski conditions (November to April: Northeast and Tahoe), things to do in NYC this week, outdoors and backpacking, cars (Rivian etc.), AI tools. The topic goes at the start of the headline: "Ski report: Killington opens more terrain", "Things to do: ...", "Cars: ...", "AI tools: ...". Body 1 to 3 sentences.
+**off_the_clock** 2 to 3 short items, rotating: ski conditions (November to April: Northeast and Tahoe), outdoors and backpacking, cars (Rivian etc.), AI tools, and food (a restaurant opening or review). NYC events belong in NYC today, not here. The topic goes at the start of the headline: "Ski report: Killington opens more terrain", "Cars: ...", "AI tools: ...". Body 1 to 3 sentences.
+
+**emoji** (Top 3 and Off the clock only) One emoji about the story's subject, shown before its headline: ⛷️ for a ski report, 🚙 for a Rivian, 🏦 for a bank deal, 🛢️ for oil, 🗳️ for an election. Specific beats generic: pick the object or activity in the story, not a mood (no 🔥, 🚀, 📈 or faces). Never repeat one within the issue.
 
 **memes** If `data.json` has meme candidates, look at each image (download it and view it) and pick 4 that are funny, not political, not offensive, not NSFW, ideally finance or tech flavored. List their exact `url` values from data.json. If you can't view images, pick by title and score and say so in your final summary. If there are no candidates, an empty list; the section is skipped.
 
@@ -78,7 +80,7 @@ Whole issue 1,600 to 1,900 words (weekend about 1,000). Over budget, render.py t
 
 - **weekday** (Tue to Fri): everything.
 - **monday**: same sections. Earnings shows "Reporting this week" from data; code handles YTD and the week previews.
-- **weekend**: no standout, on_deck_today, holdings_news or earnings. "Markets" shows crypto only. Lighter: about 1,000 words.
+- **weekend**: no movers, on_deck_today, holdings_news or earnings. "Markets" shows crypto only. Lighter: about 1,000 words.
 - **holiday**: a weekday issue; code adds the closure line.
 
 ## Shape
@@ -92,13 +94,13 @@ Whole issue 1,600 to 1,900 words (weekend about 1,000). Over budget, render.py t
   "section_desc": {"your_day": "...", "before_the_bell": "...", "earnings": "...", "holdings": "...",
                    "big_read": "...", "top_3": "...", "latest": "...", "off_the_clock": "...", "memes": "..."},
   "your_day_nyc": [{"title": "...", "url": "https://...", "source": "Gothamist"}],
-  "standout": {"body": "...", "link": {"title": "...", "url": "https://...", "source": "WSJ"}},
+  "movers": [{"ticker": "NVDA", "body": "...", "link": {"title": "...", "url": "https://...", "source": "WSJ"}}],
   "on_deck_today": [{"time": "8:30", "text": "..."}],
   "holdings_news": [{"ticker": "PLTR", "headline": "PLTR: ...", "body": "...", "link": {...}}],
   "big_read": {"headline": "...", "body": "Para one.\n\nPara two.\n\nWhy it matters: ...", "link": {...}},
-  "top_3": [{"headline": "...", "body": "...", "link": {...}}, {...}, {...}],
+  "top_3": [{"emoji": "🏦", "headline": "...", "body": "...", "link": {...}}, {...}, {...}],
   "latest": {"business": [...], "tech": [...], "world": [...], "pop_culture": [...], "sports": [...]},
-  "off_the_clock": [{"headline": "Ski report: ...", "body": "...", "link": {...}}],
+  "off_the_clock": [{"emoji": "⛷️", "headline": "Ski report: ...", "body": "...", "link": {...}}],
   "memes": ["https://i.redd.it/..."]
 }
 ```

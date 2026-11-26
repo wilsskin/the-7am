@@ -1,6 +1,6 @@
 # The 7AM Design System
 
-**Version:** 1.8
+**Version:** 1.9
 **Last Updated:** November 25, 2026
 **Parent system:** [wms-portfolio DESIGN_SYSTEM.md](https://github.com/wilsskin/wms-portfolio/blob/main/DESIGN_SYSTEM.md) v3.0
 
@@ -17,7 +17,8 @@ The reference issues are the visual source of truth. `build_reference.py` genera
 A holiday issue is a weekday issue whose Before the bell description ends with the closure line. Icons live in `templates/icons/`. Build `templates/email.html.j2` by turning the helpers in `build_reference.py` into Jinja macros, not by designing from scratch.
 
 ### Changelog
-- **1.8 (Nov 25, 2026), Wilson's first-issue review:** masthead name and date share one vertical center line. All external links are Apple blue (`#007AFF`) at body size, no underline, ending in ↗; stories end with the article title as an inline link in the last paragraph ("Read on WSJ →" is gone); in The latest and Around NYC the headline is black text and only the outlet name is the link. Paragraphs max 6 lines on a phone (250 characters; render.py splits at a sentence break). The big read and Top 3 headlines are the first sentence of the first paragraph (Morning Brew style), still 500 and primary. Icons are SF Symbols in `#424245`, with Apple Weather's condition set. Weather row keeps the current temperature (theme color) in the left column, then "H53° L41° – Cloudy until 4pm, then rain" with the high in Apple red and the low in Apple blue. Text colors move to apple.com's: primary `#1D1D1F`, a new tertiary `#424245` (icons), secondary `#6E6E73`.
+- **1.9 (Nov 25, 2026):** section labels (h2) 22px (20px on phones). The latest's tag pills use tertiary text with an 18px SF Symbol inside (briefcase, apple.terminal, globe.americas, popcorn, sportscourt). Top 3 and Off the clock headlines start with one emoji chosen by Claude. "Around NYC" is now "NYC today" (up to 3). Before the bell shows 2–3 big movers instead of one standout. Market card adds the Dow; SOXX moves to holdings.
+- **1.8 (Nov 25, 2026), Wilson's first-issue review:** masthead name and date share one vertical center line. All external links are Apple blue (`#007AFF`) at body size, no underline, ending in ↗; stories end with the article title as an inline link in the last paragraph ("Read on WSJ →" is gone); in The latest and Around NYC the headline is black text and only the outlet name is the link. Paragraphs max 6 lines on a phone (250 characters; render.py splits at a sentence break). The big read and Top 3 headlines are the first sentence of the first paragraph (Morning Brew style), still 500 and primary. Icons are SF Symbols in `#424245`, with Apple Weather's condition set. Weather row keeps the current temperature (primary) in the left column, then "H53° L41° – Cloudy until 4pm, then rain" with the high in Apple red and the low in Apple blue. Text colors move to apple.com's: primary `#1D1D1F`, a new tertiary `#424245` (icons), secondary `#6E6E73`.
 - **1.7 (Nov 22, 2026):** Feedback section removed from the issue. Feedback still works by replying to the email (BUILD_PLAN.md §10b); nothing in the layout points to it.
 - **1.6 (Nov 22, 2026):** feedback is now a reply to the email. The Feedback section is just its header (label + fixed description telling Wilson to reply); the button is gone, so the theme pill is used only for Wilson's birthday.
 - **1.5 (Nov 22, 2026):** The latest's category labels (Business, Tech, World, Pop culture, Sports) are tag pills again; the sports card moves below the sports headlines; the Earnings description ends with who reports next on Tue–Fri.
@@ -42,7 +43,7 @@ A holiday issue is a weekday issue whose Before the bell description ends with t
 | Theme color | `#0079AF` · `--color-theme` |
 | Links | `#007AFF` · `--color-link` (Apple systemBlue) |
 | Issue title | `title` · 26px · 500 |
-| Section label | `heading` · 20px · 500 · sentence case · primary |
+| Section label | 22px (20px phones) · 500 · sentence case · primary |
 | Section description | `body` · 16px · 400 · secondary, 2px under the label |
 | Story headline | small headline · 16px · 500 · primary |
 | Body text | `body` · 16px · 400 · secondary (16px on mobile too) |
@@ -104,9 +105,9 @@ That gives SF Pro in Gmail on iPhone, Apple Mail and Chrome on a Mac. No `<link>
 | Variant | Recipe | Use |
 |---|---|---|
 | Two-tone title | `title`, first sentence primary, the rest in a secondary `<span>` | The intro. Mirrors the portfolio hero h1. One per issue. |
-| Section label | `heading` (20px, 500, −0.01em), sentence case, primary | Every section: "Your day", "Before the bell", "Top 3"... Same as the portfolio's `.subtitle-global` ("CarGurus finance calculator"). |
+| Section label | 22px/28px (20px/26px ≤480px), 500, −0.01em, sentence case, primary | Every section: "Your day", "Before the bell", "Top 3"... Same as the portfolio's `.subtitle-global` ("CarGurus finance calculator"). |
 | Section description | `body`, secondary, 2px under the label | One line (two at most) under every section label, summarizing that section today. Written by Claude. |
-| Small headline | `body` size, 500, primary | Every story headline (Big read, Top 3, Holdings, Off the clock), the standout line ("NVDA −6.40%"), "On deck today", "Reported yesterday", "Reporting this week". |
+| Small headline | `body` size, 500, primary | Every story headline (Big read, Top 3, Holdings, Off the clock), the standout line ("NVDA −6.40%"), "On deck today", "NYC today", "Reported yesterday", "Reporting this week". |
 | Value text | `body`, primary | Calendar event titles, subway alert text, headline links in The latest. Same idea as `.caption-primary`. |
 | Lead-in | `body`, 500, primary, inline | "Why it matters:" at the start of a paragraph. Max one per story. |
 | Masthead date | monospace (SF Mono), 14px, +0.02em, uppercase, secondary | The one intentional style break, echoing the portfolio's hero caption. Nowhere else. |
@@ -126,7 +127,7 @@ That gives SF Pro in Gmail on iPhone, Apple Mail and Chrome on a Mac. No `<link>
 | `--color-text-secondary` | `#6E6E73` | `#9A9A9A` | Body, descriptions, sub-labels, meta |
 | `--color-surface` | `#F0F0F0` | `#1A1A1A` | Cards, tag pills, meme placeholders |
 | `--color-border-subtle` | `#EBEBEB` | `#2A2A2A` | Row lines inside cards only |
-| `--color-theme` | `#0079AF` | `#4FB3E3` | Hero number (temperature) only |
+| `--color-theme` | `#0079AF` | `#4FB3E3` | Theme pill only (via its tint and line) |
 | `--color-theme-tint` | `#D3E5ED` | `#0F2A38` | Theme pill fill (theme at 15% on bg) |
 | `--color-theme-line` | `#7CB9D4` | `#1F5E7D` | Theme pill border (theme at 50% on bg) |
 | `--color-up` | `#1B7A5E` | `#3DD6A8` | Positive moves and beats, W. JumboCode green (`#28A07E`) darkened to pass AA on cards. |
@@ -204,7 +205,7 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 **Link.** Apple blue, inherits the surrounding text size (16px), no underline, text then `&nbsp;↗`. In stories the text is the article's title; in headline rows it is the outlet name, kept on one line.
 
-**Tag pill.** The portfolio's `.tag-pill`: `meta`, secondary, `--color-surface` fill, 2px 4px padding, `--radius-sm`. Used only for the category labels in The latest (Business, Tech, World, Pop culture, Sports), on their own line, 24px above (0 when first) and 10px below.
+**Tag pill.** The portfolio's `.tag-pill`: `meta`, tertiary (`#424245`), `--color-surface` fill, 2px 6px 2px 4px padding, `--radius-sm`, with an 18px SF Symbol 4px before the text (`tag-business` briefcase, `tag-tech` apple.terminal, `tag-world` globe.americas, `tag-pop` popcorn, `tag-sports` sportscourt). Used only for the category labels in The latest, on their own line, 24px above (0 when first) and 10px below.
 
 **Ticker in a card.** Inside a surface card a pill would vanish, so tickers are plain `meta` text at 500, primary.
 
@@ -212,17 +213,17 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 **Icon.** SF Symbols, regular weight, outline, in `#424245`, rendered to 60px PNGs (3x of 20px) with a transparent background by `templates/icons/make_icons.swift`. Set: `sun` (sun.max), `partly` (cloud.sun), `cloud`, `fog` (cloud.fog), `drizzle` (cloud.drizzle), `rain` (cloud.rain), `snow` (cloud.snow), `storm` (cloud.bolt.rain), picked from the WMO code the way Apple Weather does; `subway` (tram); `calendar`. PNG because Gmail strips SVG. `alt=""` because the text next to it carries the meaning. The dark gray is low-contrast on a dark-mode card.
 
-**Your day card.** Surface card holding a three-column table: 32px icon column, 64px left column (route bullets, or a time, "All day" or day name in `meta` primary), then value text with an optional `meta` detail. The weather row has the current temperature in the left column (20px, 500, theme color) and "H53° L41° – Cloudy until 4pm, then rain" as value text, with H in `--color-hi` and L in `--color-lo` at 500. The outlook comes from the hourly forecast: up to three spells of at least 2 hours. Every cell is vertically centered (`valign=\"middle\"`), so the icon, left value and text share one center line. 12px vertical padding per row, 1px `--color-border-subtle` line between rows. Order: weather (weather icon), subway (subway icon), today's calendar events and birthdays (calendar icon). Monday adds a "This week" `meta` header row inside the card, then one calendar row per event (day name left, time as `meta` detail after the title).
+**Your day card.** Surface card holding a three-column table: 32px icon column, 64px left column (route bullets, or a time, "All day" or day name in `meta` primary), then value text with an optional `meta` detail. The weather row has the current temperature in the left column (20px, 500, primary) and "H53° L41° – Cloudy until 4pm, then rain" as value text, with H in `--color-hi` and L in `--color-lo` at 500. The outlook comes from the hourly forecast: up to three spells of at least 2 hours. Every cell is vertically centered (`valign=\"middle\"`), so the icon, left value and text share one center line. 12px vertical padding per row, 1px `--color-border-subtle` line between rows. Order: weather (weather icon), subway (subway icon), today's calendar events and birthdays (calendar icon). Monday adds a "This week" `meta` header row inside the card, then one calendar row per event (day name left, time as `meta` detail after the title).
 
 **Data card.** Surface card, 8px 16px padding (the only card padding). Header row in `meta` secondary, first column headed "Asset". Data rows in numbers style, 10px vertical padding, 1px `--color-border-subtle` line above each row. First column left-aligned, numbers right-aligned.
 
-**Market card.** One data card for indices and crypto together: S&P 500, Nasdaq, SOXX, Bitcoin, Ether. Columns: Asset, Price, 1D, WTD (Mondays YTD). Prices are from the 4pm ET close; crypto uses the same snapshot, not a 24-hour window.
+**Market card.** One data card for indices and crypto together: S&P 500, Dow, Nasdaq, Bitcoin, Ether. Columns: Asset, Price, 1D, WTD (Mondays YTD). Prices are from the 4pm ET close; crypto uses the same snapshot, not a 24-hour window.
 
 **Holdings card.** Data card: Asset, Price, 1D, WTD (Mondays YTD).
 
 **Earnings card.** Data card: Asset, Revenue, EPS, After hrs. Revenue and EPS cells are one line: the actual (primary), a space, then the surprise vs the estimate in parentheses colored up/down: "57.0B (+3.3%)", "179.5B (−0.3%)". No Beat/Miss word, no notes.
 
-**Standout.** One small headline line, just the ticker and its move: "NVDA −6.40%" with the move in up/down. No "Standout" label. Then 2–3 sentences of body explaining why, then a read link.
+**Big movers.** 2–3 per day, 24px apart. Each is one small headline line, just the ticker and its move: "NVDA −6.40%" with the move in up/down, then one paragraph on why ending in the link. No label.
 
 **Move.** Numbers style with sign, colored up/down; `0.00%` in secondary.
 
@@ -230,7 +231,7 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 **Headline row.** Value text (primary, 400, not a link), then the outlet as a link ("Gothamist ↗") on the same line. 12px between rows. No bullets.
 
-**Sub-label.** `meta`, secondary, sentence case ("Around NYC"). 24px above (0 when first), 8px below.
+**Sub-heading.** "🏙️ NYC today" (the one fixed emoji, written by code) uses the small headline (`<h3>`, 16px, 500, primary), like "On deck today": 24px above (0 when first), 8px below.
 
 **Route bullet.** 20px circle, `--color-mta-45`, white 12px 500 number. The only place a non-system color appears, because the color is the information.
 
@@ -252,14 +253,14 @@ Fixed order. Day variants are in BUILD_PLAN.md §5 and in the three reference fi
 |---|---|---|
 | — | Subject line | ≤60 chars, sentence case, no emoji, no prefix. "Nvidia beat, and it still wasn't enough." |
 | 1 | Masthead + Title | Masthead row, then two-tone title. No section label. |
-| 2 | Your day | Your day card (weather, subway, calendar, birthdays; Monday adds "This week") → "Around NYC" sub-label + up to 2 headline rows. Skip any empty row or part. Never write "No events today." |
-| 3 | Before the bell | Description ends with the closure line when the market is closed or closes early this week → market card → Standout (24px) → "On deck today" small headline + meta rows (24px). Weekend: label "Markets", Bitcoin and Ether only. |
+| 2 | Your day | Your day card (weather, subway, calendar, birthdays; Monday adds "This week") → "NYC today" small headline + up to 3 headline rows. Skip any empty row or part. Never write "No events today." |
+| 3 | Before the bell | Description ends with the closure line when the market is closed or closes early this week → market card → 2–3 big movers (24px) → "On deck today" small headline + meta rows (24px). Weekend: label "Markets", Bitcoin and Ether only. |
 | 4 | Earnings | Description on Tue–Fri ends with who reports the next trading day (Friday: Monday), added by code. → "Reported yesterday" small headline + earnings card. No "Reporting today". Monday: "Reporting this week" small headline + one meta row per day (day name left, company names right, comma-separated, no tickers or timing) instead. Empty → skip the section. Not on weekends. |
 | 5 | Your holdings | Holdings card. Then a story for every holding with relevant, recent news (no cap), headline starting with the ticker: "PLTR: Army expands its software contract". 32px between stories. No news → card only. Not on weekends. |
 | 6 | The big read | Small headline, 3–4 body paragraphs, optional one lead-in, read link. No image. |
-| 7 | Top 3 | Three stories, small headline + one paragraph (~100 words) + read link, 32px apart. |
+| 7 | Top 3 | Three stories, 32px apart: emoji + headline as the first sentence, 2 paragraphs, link inline at the end. |
 | 8 | The latest | Tag pill categories Business, Tech, World, Pop culture, then Sports last; 3–5 headline rows each. Sports: headline rows → 16px → sports card (if any results, or Monday). |
-| 9 | Off the clock | 2–3 stories, 32px apart: small headline starting with the topic ("Ski report: Killington opens more terrain"), body, read link. No cards, no eyebrow. |
+| 9 | Off the clock | 2–3 stories, 32px apart: small headline starting with an emoji, then the topic ("Ski report: Killington opens more terrain"), body, read link. No cards, no eyebrow. |
 | 10 | Meme roundup | 4 memes stacked. No captions. |
 | — | Footer | As above. |
 

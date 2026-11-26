@@ -1,7 +1,12 @@
 """Subway alerts for Wilson's lines (MTA GTFS-RT alerts as JSON, no key).
 
-Only alerts active right now that name one of config.subway_lines. Header text only,
-max 2. Unplanned problems (delays, suspensions) come before planned work.
+Only alerts active right now that name one of config.subway_lines, and only ones that
+touch Wilson's ride (config.subway_stops, Fulton St to Union Sq):
+  - an alert whose text says it is somewhere else ("In the Bronx, ...", "In Brooklyn, ...")
+    never counts;
+  - an alert that lists stations counts only if one of them is on the ride;
+  - an alert with no stations (live delays, "5 runs every 20 minutes") counts.
+Header text only, max 2. Unplanned problems (delays, suspensions) come before planned work.
 """
 import re
 from datetime import datetime
@@ -30,7 +35,20 @@ def is_active(alert: dict, ts: int) -> bool:
     return any(p.get("start", 0) <= ts < p.get("end", 2**40) for p in periods)
 
 
-def parse(feed: dict, lines: list[str], now: datetime) -> list[dict]:
+ELSEWHERE = re.compile(r"^\s*In (the Bronx|Brooklyn|Queens)\b", re.I)
+
+
+def on_my_ride(alert: dict, text: str, stops: set[str] | None) -> bool:
+    """True if the alert could touch the ride (see the module docstring)."""
+    if not stops:
+        return True
+    if ELSEWHERE.match(text):              # the MTA's own scope wins, even if it lists the whole line
+        return False
+    listed = {str(x["stop_id"]).rstrip("NS") for x in alert.get("informed_entity", []) if x.get("stop_id")}
+    return bool(listed & stops) if listed else True
+
+
+def parse(feed: dict, lines: list[str], now: datetime, stops: set[str] | None = None) -> list[dict]:
     ts = int(now.timestamp())
     found = []
     for e in feed.get("entity", []):
@@ -41,7 +59,7 @@ def parse(feed: dict, lines: list[str], now: datetime) -> list[dict]:
             continue
         kind = (a.get("transit_realtime.mercury_alert") or {}).get("alert_type", "")
         text = clean(_english(a.get("header_text")))
-        if not text or any(f["text"] == text for f in found):
+        if not text or any(f["text"] == text for f in found) or not on_my_ride(a, text, stops):
             continue
         found.append({"lines": mine, "type": kind, "text": text,
                       "planned": kind.lower().startswith("planned"),
@@ -53,4 +71,4 @@ def parse(feed: dict, lines: list[str], now: datetime) -> list[dict]:
 
 def collect(cfg: dict, now: datetime) -> dict:
     return {"as_of": now.isoformat(), "lines": cfg["subway_lines"],
-            "alerts": parse(get_json(URL), cfg["subway_lines"], now)}
+            "alerts": parse(get_json(URL), cfg["subway_lines"], now, set(cfg.get("subway_stops") or {}))}

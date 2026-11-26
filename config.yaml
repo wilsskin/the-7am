@@ -6,17 +6,21 @@ sender: "The 7AM <onboarding@resend.dev>"     # Resend test sender until a domai
 timezone: America/New_York
 location: { name: "New York", lat: 40.7306, lon: -73.9866 }   # East Village
 subway_lines: ["4", "5"]
+# Wilson's ride: Fulton St to 14 St-Union Sq on the 4/5 express (GTFS stop ids, decided Nov 25, 2026).
+# Alerts that name stations only count if they touch one of these; elsewhere (the Bronx, Brooklyn) is dropped.
+subway_stops: { "418": "Fulton St", "640": "Brooklyn Bridge-City Hall", "635": "14 St-Union Sq" }
 
 markets:
   indices:
     - { symbol: "^GSPC", label: "S&P 500" }
+    - { symbol: "^DJI",  label: "Dow" }
     - { symbol: "^IXIC", label: "Nasdaq" }
-    - { symbol: "SOXX",  label: "SOXX" }
   crypto:
     - { symbol: "BTC-USD", label: "Bitcoin" }
     - { symbol: "ETH-USD", label: "Ether" }
-  holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS"]
+  holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS", "SOXX"]   # SOXX moved here from indices Nov 25, 2026
   standout_min_market_cap: 100_000_000_000
+  movers_shortlist: 8        # biggest 1-day moves passed to Claude, who writes up 2-3
   big_earnings_universe: top_200_sp500_by_market_cap   # plus holdings. Decided Nov 22, 2026 (was top 50); any top_N works, or all_sp500
 
 sports:

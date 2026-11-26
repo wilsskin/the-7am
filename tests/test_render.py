@@ -47,7 +47,7 @@ def test_weekday_has_code_owned_sentences(issue):
     assert "NVDA <span" in html and "−6.40%" in html
     assert "57.0B" in html and "(+3.3%)" in html and "(−0.3%)" in html
     assert ">WTD<" in html and ">YTD<" not in html
-    assert meta["icons"] == ["calendar", "cloud", "subway"] and 'src="cid:cloud"' in html
+    assert meta["icons"] == ["calendar", "cloud", "subway", "tag-business", "tag-pop", "tag-sports", "tag-tech", "tag-world"] and 'src="cid:cloud"' in html
     assert "All sections delivered." in html
 
 
@@ -75,7 +75,7 @@ def test_unavailable_states(issue):
     assert "Earnings data unavailable this morning." in html
     assert "Holdings data unavailable this morning." in html
     assert "Meme roundup" not in html.split("Unavailable this morning")[0]   # section skipped entirely
-    assert "Unavailable this morning: Markets, Standout, Earnings, Weather, Meme roundup, Calendar." in html
+    assert "Unavailable this morning: Markets, Big movers, Earnings, Weather, Meme roundup, Calendar." in html
 
 
 def test_disallowed_domain_fails_strict_then_drops_lenient(issue):
@@ -195,3 +195,33 @@ def test_long_paragraph_splits_at_a_sentence_break():
     assert " ".join(chunks) == text
     assert not any(c.endswith("U.S.") for c in chunks)
     assert render.split_paragraph("Short one.", 0) == ["Short one."]
+
+
+def test_movers_render_and_must_come_from_the_shortlist(issue):
+    meta, html, _ = go(issue())
+    assert "NVDA <span" in html and "WMT <span" in html and "AVGO <span" in html and "+4.12%" in html
+
+    def bad(c):
+        c["movers"][1]["ticker"] = "TSLA"
+    with pytest.raises(render.RenderError, match="TSLA is not in data.json's movers shortlist"):
+        go(issue(edit_content=bad))
+    meta, html, _ = go(issue(edit_content=bad), lenient=True)
+    assert "TSLA <span" not in html and "NVDA <span" in html
+
+
+def test_old_standout_field_still_renders(issue):
+    def old(c):
+        m = c.pop("movers")[0]
+        c["standout"] = {"body": m["body"], "link": m["link"]}
+    meta, html, _ = go(issue(edit_content=old))
+    assert "NVDA <span" in html and "WMT <span" not in html
+
+
+def test_emoji_before_headline_and_bad_emoji_rejected(issue):
+    meta, html, _ = go(issue())
+    assert "⛷️ Ski report: Killington" in html and "🏦 Sample story one headline with a verb." in html
+
+    def bad(c):
+        c["top_3"][0]["emoji"] = "ski"
+    with pytest.raises(render.RenderError):
+        go(issue(edit_content=bad))

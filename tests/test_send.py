@@ -29,7 +29,7 @@ def test_payload_sends_now_with_inline_icons(rendered):
     assert p["subject"] == "Nvidia beat, and it still wasn't enough."
     assert "scheduled_at" not in p  # Resend can't schedule emails with attachments
     ids = sorted(a["content_id"] for a in p["attachments"])
-    assert ids == ["calendar", "cloud", "subway"]
+    assert ids == ["calendar", "cloud", "subway", "tag-business", "tag-pop", "tag-sports", "tag-tech", "tag-world"]
     for a in p["attachments"]:
         assert f'src="cid:{a["content_id"]}"' in p["html"]
         assert base64.b64decode(a["content"])[:8] == b"\x89PNG\r\n\x1a\n"

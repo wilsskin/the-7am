@@ -75,17 +75,21 @@ def row(symbol: str, label: str, prices: dict[date, float], refs: dict) -> dict:
     }
 
 
-def pick_standout(closes: dict[str, dict[date, float]], refs: dict, names: dict[str, str]) -> dict | None:
-    """Biggest absolute 1-day move among the big names."""
-    best = None
+def pick_movers(closes: dict[str, dict[date, float]], refs: dict, names: dict[str, str], n: int = 8) -> list[dict]:
+    """The n biggest absolute 1-day moves among the big names, biggest first."""
+    out = []
     for t, prices in closes.items():
         p = pct(prices.get(refs["last"]), prices.get(refs["prev"]))
-        if p is None:
-            continue
-        if best is None or abs(p) > abs(best["change_1d_pct"]):
-            best = {"ticker": t, "name": names.get(t, t), "change_1d_pct": p,
-                    "price": round(prices[refs["last"]], 2)}
-    return best
+        if p is not None:
+            out.append({"ticker": t, "name": names.get(t, t), "change_1d_pct": p,
+                        "price": round(prices[refs["last"]], 2)})
+    return sorted(out, key=lambda r: abs(r["change_1d_pct"]), reverse=True)[:n]
+
+
+def pick_standout(closes: dict[str, dict[date, float]], refs: dict, names: dict[str, str]) -> dict | None:
+    """Biggest absolute 1-day move among the big names."""
+    top = pick_movers(closes, refs, names, 1)
+    return top[0] if top else None
 
 
 # ---------- collectors ----------
@@ -118,8 +122,9 @@ def collect_standout(cfg: dict, now: datetime) -> dict:
     big = [r for r in sp500.load() if r["market_cap"] >= cfg["markets"]["standout_min_market_cap"]]
     names = {r["ticker"]: r["name"] for r in big}
     closes = fetch_daily_closes(list(names), refs["prev"] - timedelta(days=5), refs["last"])
-    pick = pick_standout(closes, refs, names)
-    if pick is None:
+    movers = pick_movers(closes, refs, names, cfg["markets"].get("movers_shortlist", 8))
+    if not movers:
         raise RuntimeError("no 1-day moves found")
+    # Top-level fields are the single biggest mover; `movers` is the shortlist Claude picks 2-3 from.
     return {"as_of": datetime.combine(refs["last"], time(16, 0), ET).isoformat(),
-            "universe_size": len(names), **pick}
+            "universe_size": len(names), **movers[0], "movers": movers}

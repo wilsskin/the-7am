@@ -93,6 +93,15 @@ def test_crypto_price_at_4pm_et():
     assert markets.price_at_4pm([], d) is None
 
 
+def test_movers_shortlist_sorted_by_absolute_move():
+    closes = {"AAA": {REFS["prev"]: 100, REFS["last"]: 103},
+              "BBB": {REFS["prev"]: 100, REFS["last"]: 93.6},
+              "DDD": {REFS["prev"]: 100, REFS["last"]: 100.5},
+              "CCC": {REFS["prev"]: 100}}
+    ms = markets.pick_movers(closes, REFS, {}, 2)
+    assert [m["ticker"] for m in ms] == ["BBB", "AAA"]
+
+
 def test_standout_is_biggest_absolute_move():
     closes = {"AAA": {REFS["prev"]: 100, REFS["last"]: 103},
               "BBB": {REFS["prev"]: 100, REFS["last"]: 93.6},
@@ -191,6 +200,25 @@ def test_mta_unplanned_first():
                        alert("5", "Delays", "[5] trains are delayed")]}
     out = mta.parse(feed, ["4", "5"], et(2026, 11, 24))
     assert [a["text"] for a in out] == ["5 trains are delayed", "planned"]
+
+
+def test_mta_only_alerts_on_my_ride():
+    def alert(text, stops=(), route="4", kind="Planned - Stops Skipped"):
+        ie = [{"route_id": route}] + [{"route_id": route, "stop_id": st} for st in stops]
+        return {"alert": {"active_period": [{"start": 0}], "informed_entity": ie,
+                          "header_text": {"translation": [{"language": "en", "text": text}]},
+                          "transit_realtime.mercury_alert": {"alert_type": kind}}}
+    ride = {"418", "640", "635"}
+    feed = {"entity": [
+        alert("In the Bronx, Manhattan-bound [4] skips 176 St", ["408", "410"]),
+        alert("No [5] between E 180 St, Bronx and Bowling Green, Manhattan", ["416", "418", "420"], "5"),
+        alert("In Manhattan, downtown [4][5][6] skip 86 St", ["626"]),
+        alert("In the Bronx, [4] runs every 16 minutes", [], kind="Reduced Service"),
+        alert("In the Bronx, [4] runs every 20 minutes", ["401", "418", "640"], kind="Reduced Service"),
+        alert("Downtown [4] trains are running with delays", [], kind="Delays")]}
+    out = mta.parse(feed, ["4", "5"], et(2026, 11, 24), ride)
+    assert [a["text"] for a in out] == ["Downtown 4 trains are running with delays",
+                                        "No 5 between E 180 St, Bronx and Bowling Green, Manhattan"]
 
 
 # ---------- sports ----------

@@ -9,7 +9,7 @@
 {%- endmacro -%}
 
 {%- macro label(text, desc, top=section_gap) -%}
-<tr><td class="px sec" style="padding:{{top}}px 24px 16px 24px;"><h2 class="c-primary t-heading" style="margin:0;font-family:{{S}};font-size:20px;line-height:27px;font-weight:500;letter-spacing:-0.01em;color:{{T.primary}};">{{text}}</h2><p class="c-secondary" style="margin:0;padding-top:2px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{{desc}}</p></td></tr>
+<tr><td class="px sec" style="padding:{{top}}px 24px 16px 24px;"><h2 class="c-primary t-h2" style="margin:0;font-family:{{S}};font-size:22px;line-height:28px;font-weight:500;letter-spacing:-0.01em;color:{{T.primary}};">{{text}}</h2><p class="c-secondary" style="margin:0;padding-top:2px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{{desc}}</p></td></tr>
 {%- endmacro -%}
 
 {%- macro row(top=0) -%}
@@ -41,12 +41,12 @@
 
 {%- macro tk(text) -%}<span style="font-weight:500;">{{text}}</span>{%- endmacro -%}
 
-{%- macro pill(text) -%}
-<span class="pill" style="font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;font-weight:400;color:{{T.secondary}};background-color:{{T.surface}};border-radius:4px;padding:2px 4px;">{{text}}</span>
+{%- macro pill(text, icon_name=None) -%}
+<span class="pill" style="font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;font-weight:400;color:{{T.tertiary}};background-color:{{T.surface}};border-radius:4px;padding:2px 6px 2px 4px;white-space:nowrap;">{% if icon_name %}<img src="{{ icon_src.format(icon_name) }}" width="18" height="18" alt="" style="display:inline-block;width:18px;height:18px;border:0;vertical-align:-4px;margin-right:4px;">{% endif %}{{text}}</span>
 {%- endmacro -%}
 
-{%- macro badge_label(text, top=24) -%}
-<p style="margin:0;padding:{{top}}px 0 10px 0;line-height:19px;">{{ pill(text) }}</p>
+{%- macro badge_label(text, top=24, icon_name=None) -%}
+<p style="margin:0;padding:{{top}}px 0 10px 0;line-height:19px;">{{ pill(text, icon_name) }}</p>
 {%- endmacro -%}
 
 {%- macro theme_pill(text) -%}
@@ -81,10 +81,6 @@
 {%- for l in items %}<p class="c-primary" style="margin:0;padding-bottom:{{ 0 if loop.last else 12 }}px;font-family:{{S}};font-size:16px;line-height:22px;color:{{T.primary}};">{{l.title}} {{ extlink(l.source, l.url, true) }}</p>{% endfor -%}
 {%- endmacro -%}
 
-{%- macro sublabel(text, top=24) -%}
-<p class="c-secondary" style="margin:0;padding:{{top}}px 0 8px 0;font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;color:{{T.secondary}};">{{text}}</p>
-{%- endmacro -%}
-
 {%- macro gap(px) -%}<div style="height:{{px}}px;line-height:{{px}}px;font-size:1px;">&nbsp;</div>{%- endmacro -%}
 
 {%- macro icon(name) -%}
@@ -99,7 +95,7 @@
 
 {#- Weather: "H60° L53° – Foggy until 10am, then partly cloudy", high in Apple red, low in Apple blue. -#}
 {%- macro temp(text) -%}
-<span class="c-theme" style="font-family:{{S}};font-size:20px;line-height:22px;font-weight:500;letter-spacing:-0.01em;color:{{T.theme}};">{{text}}</span>
+<span class="c-primary" style="font-family:{{S}};font-size:20px;line-height:22px;font-weight:500;letter-spacing:-0.01em;color:{{T.primary}};">{{text}}</span>
 {%- endmacro -%}
 
 {%- macro weather_line(r) -%}
@@ -169,6 +165,7 @@
     .px { padding-left:16px !important; padding-right:16px !important; }
     .t-title { font-size:22px !important; line-height:25px !important; }
     .t-heading { font-size:18px !important; line-height:24px !important; }
+    .t-h2 { font-size:20px !important; line-height:26px !important; }
     .card { border-radius:8px !important; }
   }
   @media (prefers-color-scheme: dark) {
@@ -182,7 +179,7 @@
     .c-link, .c-lo { color:{{D.link}} !important; }
     .c-hi { color:{{D.hi}} !important; }
     .b-subtle { border-color:{{D.subtle}} !important; }
-    .pill { background-color:{{D.subtle}} !important; color:{{D.secondary}} !important; }
+    .pill { background-color:{{D.subtle}} !important; color:{{D.tertiary}} !important; }
     .tpill { background-color:{{D.theme_tint}} !important; border-color:{{D.theme_line}} !important; color:{{D.primary}} !important; }
   }
 </style>
@@ -208,7 +205,7 @@
 {% call row() %}{% call card() %}{{ icon_table(yd.rows) }}{% endcall %}{% endcall %}
 {%- endif %}
 {%- if yd.nyc %}
-{% call row() %}{{ sublabel("Around NYC", 24 if (yd.rows or yd.birthday_pill) else 0) }}{{ headline_rows(yd.nyc) }}{% endcall %}
+{% call row() %}{{ subtitle("🏙️ NYC today", 24 if (yd.rows or yd.birthday_pill) else 0) }}{{ gap(8) }}{{ headline_rows(yd.nyc) }}{% endcall %}
 {%- endif %}
 
 {#- ---------- Before the bell / Markets ---------- #}
@@ -218,12 +215,12 @@
 {%- set trs = [] %}{% for q in bb.rows %}{% do trs.append([q.label, q.price, move(q.d1), move(q.period)]) %}{% endfor %}
 {% call row() %}{% call card() %}{{ table(["Asset", "Price", "1D", bb.period_label], trs) }}{% endcall %}{% endcall %}
 {%- endif %}
-{%- if bb.standout %}
-{% call row(24 if bb.rows else 0) %}{{ subtitle(standout_line(bb.standout.ticker, bb.standout.move)) }}{{ paras(bb.standout) }}{% endcall %}
-{%- endif %}
+{%- for m in bb.movers %}
+{% call row((24 if bb.rows else 0) if loop.first else 24) %}{{ subtitle(standout_line(m.ticker, m.move)) }}{{ paras(m) }}{% endcall %}
+{%- endfor %}
 {%- if bb.on_deck %}
 {%- set items = [] %}{% for o in bb.on_deck %}{% do items.append((caption(o.time or ""), body16(o.text))) %}{% endfor %}
-{% call row(24 if (bb.rows or bb.standout) else 0) %}{{ subtitle("On deck today") }}{{ gap(8) }}{{ meta_rows(items, 48, "middle") }}{% endcall %}
+{% call row(24 if (bb.rows or bb.movers) else 0) %}{{ subtitle("On deck today") }}{{ gap(8) }}{{ meta_rows(items, 48, "middle") }}{% endcall %}
 {%- endif %}
 
 {#- ---------- Earnings ---------- #}
@@ -268,10 +265,10 @@
 {%- if v.latest %}
 {{ label("The latest", v.latest.desc) }}
 {% call row() %}
-{%- for g in v.latest.groups %}{{ badge_label(g.label, 0 if loop.first else 24) }}{{ headline_rows(g.links) }}{% endfor %}
+{%- for g in v.latest.groups %}{{ badge_label(g.label, 0 if loop.first else 24, g.icon) }}{{ headline_rows(g.links) }}{% endfor %}
 {%- set sp = v.latest.sports_card %}
 {%- if sp %}
-{%- if not v.latest.groups or v.latest.groups[-1].label != "Sports" %}{{ badge_label("Sports", 0 if not v.latest.groups else 24) }}{% else %}{{ gap(16) }}{% endif %}
+{%- if not v.latest.groups or v.latest.groups[-1].label != "Sports" %}{{ badge_label("Sports", 0 if not v.latest.groups else 24, "tag-sports") }}{% else %}{{ gap(16) }}{% endif %}
 {%- call card() %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 {%- for g in sp.results %}{{ sports_row(wl(g.result), g.line, g.league, loop.first) }}{% endfor %}
 {%- if sp.week %}<tr><td colspan="3" class="c-secondary" style="padding:{{ 16 if sp.results else 10 }}px 0 4px 0;{{num}}color:{{T.secondary}};">This week</td></tr>

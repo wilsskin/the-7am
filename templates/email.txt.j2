@@ -26,7 +26,7 @@ YOUR DAY
 {% endfor %}
 {% if v.your_day.nyc %}
 
-Around NYC
+🏙️ NYC today
 {% for l in v.your_day.nyc %}
 - {{ l.title }} ({{ l.source }}) {{ l.url }}
 {% endfor %}
@@ -39,14 +39,14 @@ Around NYC
 {% for q in v.bell.rows %}
 {{ q.label }}: {{ q.price }}  {{ q.d1.text }} 1D, {{ q.period.text }} {{ v.bell.period_label }}
 {% endfor %}
-{% if v.bell.standout %}
+{% for m in v.bell.movers %}
 
-{{ v.bell.standout.ticker }} {{ v.bell.standout.move.text }}
-{% for p in v.bell.standout.paragraphs %}{{ p.text }}
+{{ m.ticker }} {{ m.move.text }}
+{% for p in m.paragraphs %}{{ p.text }}
 
 {% endfor %}
-{{ v.bell.standout.link_title }}: {{ v.bell.standout.url }}
-{% endif %}
+{{ m.link_title }} ({{ m.source }}): {{ m.url }}
+{% endfor %}
 {% if v.bell.on_deck %}
 
 On deck today

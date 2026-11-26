@@ -39,12 +39,20 @@ class Markets(Block):
     holdings: list[Quote] = []
 
 
+class Mover(BaseModel):
+    ticker: str
+    name: str
+    price: float
+    change_1d_pct: float
+
+
 class Standout(Block):
     ticker: str | None = None
     name: str | None = None
     price: float | None = None
     change_1d_pct: float | None = None
     universe_size: int | None = None
+    movers: list[Mover] = []                 # shortlist, biggest move first
 
 
 class Reported(BaseModel):
@@ -213,6 +221,17 @@ class Story(BaseModel):
     headline: str
     body: str                                # plain text, paragraphs split by \n\n
     link: Link
+    emoji: str | None = None                 # Top 3 and Off the clock: one emoji, shown before the headline
+
+    @field_validator("emoji")
+    @classmethod
+    def one_emoji(cls, v):
+        v = (v or "").strip()
+        if not v:
+            return None
+        if len(v) > 8 or any(ch.isalnum() for ch in v):
+            raise ValueError("emoji must be a single emoji")
+        return v
 
 
 class HoldingStory(Story):
@@ -230,6 +249,10 @@ class StandoutStory(BaseModel):
     link: Link
 
 
+class MoverStory(StandoutStory):
+    ticker: str                              # must be in data.json standout.movers
+
+
 class OnDeck(BaseModel):
     time: str | None = None                  # "8:30", shown in the left column
     text: str
@@ -241,8 +264,9 @@ class Content(BaseModel):
     subject: str = Field(max_length=70)
     intro: str
     section_desc: dict[SectionKey, str]
-    your_day_nyc: list[Link] = Field(default=[], max_length=2)
-    standout: StandoutStory | None = None
+    your_day_nyc: list[Link] = Field(default=[], max_length=3)   # "NYC today"
+    movers: list[MoverStory] = Field(default=[], max_length=3)
+    standout: StandoutStory | None = None    # old single-mover field; still read if movers is empty
     on_deck_today: list[OnDeck] = []
     holdings_news: list[HoldingStory] = []
     big_read: Story

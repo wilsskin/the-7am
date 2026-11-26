@@ -24,16 +24,42 @@
       "title": "Rockefeller Center tree lighting set for December 2",
       "source": "Gothamist",
       "url": "https://gothamist.com/news/rockefeller-tree-lighting"
+    },
+    {
+      "title": "Knicks host the Celtics at the Garden tonight",
+      "source": "ESPN",
+      "url": "https://www.espn.com/nba/story/knicks-celtics"
     }
   ],
-  "standout": {
-    "body": "Record quarter on every line, but data center guidance came in under what investors were hoping for. It was the biggest one-day drop among $100B+ companies and pulled the rest of the chip sector down with it.",
-    "link": {
-      "title": "Nvidia falls despite record quarter",
-      "source": "WSJ",
-      "url": "https://www.wsj.com/tech/nvidia-earnings-guidance"
+  "movers": [
+    {
+      "ticker": "NVDA",
+      "body": "Record quarter on every line, but data center guidance came in under what investors were hoping for. It pulled the rest of the chip sector down with it.",
+      "link": {
+        "title": "Nvidia falls despite record quarter",
+        "source": "WSJ",
+        "url": "https://www.wsj.com/tech/nvidia-earnings-guidance"
+      }
+    },
+    {
+      "ticker": "WMT",
+      "body": "Placeholder. Holiday sales guidance came in ahead of the street and traffic rose for a sixth quarter.",
+      "link": {
+        "title": "Walmart raises its holiday outlook",
+        "source": "CNBC",
+        "url": "https://www.cnbc.com/2026/11/23/walmart-outlook.html"
+      }
+    },
+    {
+      "ticker": "AVGO",
+      "body": "Placeholder. Sold off alongside Nvidia as investors pulled back from AI chip names.",
+      "link": {
+        "title": "Chip stocks slide after Nvidia guidance",
+        "source": "Reuters",
+        "url": "https://www.reuters.com/markets/chips-slide"
+      }
     }
-  },
+  ],
   "on_deck_today": [
     {
       "time": "8:30",
@@ -83,7 +109,8 @@
         "title": "Sample article",
         "source": "Reuters",
         "url": "https://www.reuters.com/markets/sample-one"
-      }
+      },
+      "emoji": "🏦"
     },
     {
       "headline": "Sample story two headline with a verb",
@@ -92,7 +119,8 @@
         "title": "Sample article",
         "source": "WSJ",
         "url": "https://www.wsj.com/economy/sample-two"
-      }
+      },
+      "emoji": "💾"
     },
     {
       "headline": "Sample story three headline with a verb",
@@ -101,7 +129,8 @@
         "title": "Sample article",
         "source": "BBC",
         "url": "https://www.bbc.com/news/sample-three"
-      }
+      },
+      "emoji": "🌍"
     }
   ],
   "latest": {
@@ -184,16 +213,18 @@
         "title": "Sample article",
         "source": "NYT",
         "url": "https://www.nytimes.com/2026/11/23/travel/killington-ski.html"
-      }
+      },
+      "emoji": "⛷️"
     },
     {
-      "headline": "Things to do: a market or show worth the trip",
-      "body": "Placeholder. Where, when, why it's worth it. Never the same item as Around NYC.",
+      "headline": "Cars: Rivian opens R2 test drives",
+      "body": "Placeholder. What it is, why it's worth a look.",
       "link": {
         "title": "Sample article",
-        "source": "Gothamist",
-        "url": "https://gothamist.com/arts-entertainment/things-to-do"
-      }
+        "source": "The Verge",
+        "url": "https://www.theverge.com/cars/rivian-r2-test-drives"
+      },
+      "emoji": "🚙"
     }
   ],
   "memes": []
