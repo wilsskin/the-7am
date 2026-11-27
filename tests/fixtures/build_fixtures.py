@@ -7,7 +7,11 @@ states that were never mocked up, BUILD_PLAN.md §14).
 """
 import copy
 import json
+import sys
+from datetime import date, datetime
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))   # run as a script from anywhere
 
 OUT = Path(__file__).parent / "issues"
 CLOSURE = "Markets close Thursday for Thanksgiving, early close Friday at 1pm."
@@ -22,14 +26,14 @@ def data(date, edition, ts):
         "date": date, "edition": edition, "generated_at": ts,
         "markets": {"ok": True, "as_of": ts, "close_date": date,
                     "indices": [q("^GSPC", "S&P 500", 6812.40, -0.62, -0.62, 14.80),
-                                q("^DJI", "Dow", 46890.12, -0.21, -0.21, 10.47),
-                                q("^IXIC", "Nasdaq", 23104.77, -1.08, -1.08, 19.42)],
+                                q("^IXIC", "Nasdaq", 23104.77, -1.08, -1.08, 19.42),
+                                q("^DJI", "Dow", 46890.12, -0.21, -0.21, 10.47)],
                     "crypto": [q("BTC-USD", "Bitcoin", 97420, 1.84, 3.10 if edition == "weekend" else 1.84, 4.95),
                                q("ETH-USD", "Ether", 3512, 0.0, -1.25 if edition == "weekend" else 0.0, -6.30)],
-                    "holdings": [q("GOOGL", "GOOGL", 312.48, 0.92, 0.92, 38.20), q("PLTR", "PLTR", 186.10, -3.17, -3.17, 141.05),
-                                 q("GEV", "GEV", 642.05, 1.40, 1.40, 92.64), q("COST", "COST", 958.30, 0.15, 0.15, 4.71),
-                                 q("V", "V", 348.72, -0.44, -0.44, 10.33), q("GS", "GS", 812.66, 0.58, 0.58, 41.90),
-                                 q("SOXX", "SOXX", 284.15, -2.31, -2.31, 22.06)]},
+                    "holdings": [q("SOXX", "SOXX", 284.15, -2.31, -2.31, 22.06), q("PLTR", "PLTR", 186.10, -3.17, -3.17, 141.05),
+                                 q("GOOGL", "GOOGL", 312.48, 0.92, 0.92, 38.20), q("GEV", "GEV", 642.05, 1.40, 1.40, 92.64),
+                                 q("COST", "COST", 958.30, 0.15, 0.15, 4.71), q("V", "V", 348.72, -0.44, -0.44, 10.33),
+                                 q("GS", "GS", 812.66, 0.58, 0.58, 41.90)]},
         "standout": {"ok": True, "as_of": ts, "ticker": "NVDA", "name": "Nvidia", "price": 160.2,
                      "change_1d_pct": -6.40, "universe_size": 107,
                      "movers": [{"ticker": "NVDA", "name": "Nvidia", "price": 160.2, "change_1d_pct": -6.40},
@@ -201,10 +205,35 @@ def write(name, d, cal, c):
         (folder / fname).write_text(json.dumps(obj, indent=2, ensure_ascii=False) + "\n")
 
 
+# A made-up inflation series, so the sample chart draws offline. Real charts fetch live data.
+SAMPLE_CPI = [2.9, 3.0, 2.8, 2.4, 2.3, 2.4, 2.7, 2.7, 2.9, 3.0, 2.8, 2.7, 2.7, 2.4, 2.4, 3.3, 3.8, 4.2, 3.5, 3.4, 3.4, 3.7]
+
+
+def add_sample_chart(name):
+    """Top 3 story two gets a supporting chart: the request in content.json, plus the
+    charts.json and PNG that brief.charts would write."""
+    from brief.charts import make
+    from brief.schema import ChartRequest
+    folder = OUT / name
+    c = json.loads((folder / "content.json").read_text())
+    req = {"source": "bls", "id": "CUUR0000SA0", "title": "Inflation, year over year", "transform": "yoy", "period": "2y"}
+    c["top_3"][1]["chart"] = req
+    (folder / "content.json").write_text(json.dumps(c, indent=2, ensure_ascii=False) + "\n")
+    months = [date(2025 + (i + 0) // 12, i % 12 + 1, 1) for i in range(len(SAMPLE_CPI))]
+    series = {"kind": "lines", "unit": "%", "monthly": True, "x": months,
+              "lines": [{"name": req["id"], "values": SAMPLE_CPI}]}
+    ch = make(ChartRequest(**req), "chart1", folder / "charts", datetime(2026, 11, 24, 6, 41),
+              fetch=lambda r, now: series)
+    assert ch["ok"], ch
+    ch["as_of"] = "2026-11-24T06:41:00-05:00"
+    (folder / "charts.json").write_text(json.dumps({"charts": [{"where": "top_3[1]", **ch}]}, indent=2) + "\n")
+
+
 def main():
-    for name, (date, edition) in ISSUES.items():
-        ts = f"{date}T06:41:00-05:00"
-        write(name, data(date, edition, ts), calendar(date, edition), content(date, edition))
+    for name, (day, edition) in ISSUES.items():
+        ts = f"{day}T06:41:00-05:00"
+        write(name, data(day, edition, ts), calendar(day, edition), content(day, edition))
+    add_sample_chart("weekday")
     # Wilson's own birthday: a weekday with a "Happy birthday!" event.
     d, cal, c = data("2026-11-24", "weekday", "2026-11-24T06:41:00-05:00"), calendar("2026-11-24", "weekday"), content("2026-11-24", "weekday")
     cal["today"].insert(0, {"start": None, "all_day": True, "title": "Happy birthday!", "kind": "own_birthday"})

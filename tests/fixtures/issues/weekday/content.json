@@ -120,7 +120,14 @@
         "source": "WSJ",
         "url": "https://www.wsj.com/economy/sample-two"
       },
-      "emoji": "💾"
+      "emoji": "💾",
+      "chart": {
+        "source": "bls",
+        "id": "CUUR0000SA0",
+        "title": "Inflation, year over year",
+        "transform": "yoy",
+        "period": "2y"
+      }
     },
     {
       "headline": "Sample story three headline with a verb",

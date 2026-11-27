@@ -12,13 +12,14 @@ subway_stops: { "418": "Fulton St", "640": "Brooklyn Bridge-City Hall", "635": "
 
 markets:
   indices:
+  # Card order: S&P 500, Nasdaq, Dow (Wilson, Nov 27, 2026)
     - { symbol: "^GSPC", label: "S&P 500" }
-    - { symbol: "^DJI",  label: "Dow" }
     - { symbol: "^IXIC", label: "Nasdaq" }
+    - { symbol: "^DJI",  label: "Dow" }
   crypto:
     - { symbol: "BTC-USD", label: "Bitcoin" }
     - { symbol: "ETH-USD", label: "Ether" }
-  holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS", "SOXX"]   # SOXX moved here from indices Nov 25, 2026
+  holdings: ["SOXX", "PLTR", "GOOGL", "GEV", "COST", "V", "GS"]   # card order; SOXX, PLTR, GOOGL, GEV first (Wilson, Nov 27, 2026)
   standout_min_market_cap: 100_000_000_000
   movers_shortlist: 8        # biggest 1-day moves passed to Claude, who writes up 2-3
   big_earnings_universe: top_200_sp500_by_market_cap   # plus holdings. Decided Nov 22, 2026 (was top 50); any top_N works, or all_sp500

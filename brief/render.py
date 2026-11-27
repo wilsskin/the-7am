@@ -24,7 +24,7 @@ from urllib.parse import urlparse
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic import TypeAdapter, ValidationError
 
-from brief import fmt, tokens
+from brief import fmt, previous, tokens
 from brief.common import ET, ROOT, RUN_DIR, load_config, now_et
 from brief.schema import Calendar, Content, Data, MoverStory
 
@@ -189,6 +189,48 @@ def check_links(c: Content, cfg: dict, lenient: bool, errors: list[str]) -> None
                 lst.pop(i)
 
 
+def same_story(a: str, b: str) -> bool:
+    """Looser than similar(): the same story reworded ("Purdy hurts his ankle and sits out practice" /
+    "Purdy hurts his ankle and is day to day"). Only ever a warning, for Claude to judge."""
+    wa = {w for w in re.findall(r"[a-z0-9]+", a.lower()) if w not in STOPWORDS}
+    wb = {w for w in re.findall(r"[a-z0-9]+", b.lower()) if w not in STOPWORDS}
+    shared = wa & wb
+    return len(shared) >= 3 and len(shared) / min(len(wa), len(wb)) >= 0.5
+
+
+def check_repeats(c: Content, prev: "previous.Previous", lenient: bool, errors: list[str],
+                  warnings: list[str]) -> None:
+    """Nothing from the last issues again (Wilson, Nov 27, 2026). The same link or headline is an
+    error (strict: Claude replaces it; lenient: dropped). A reworded version of an old headline is a
+    warning: fine only if there's a real new development, told as the new fact with a new link."""
+    if not prev.issues:
+        return
+    bad = []
+    for section, lst, i, url, title in items_by_priority(c):
+        if previous.norm_url(url) in prev.urls:
+            errors.append(f'{section}: "{title}" links to an article already in {prev.label()}. '
+                          "Replace it with fresh news.")
+            bad.append((section, lst, i))
+        elif any(similar(title, old) for old in prev.sentences):
+            errors.append(f'{section}: "{title}" repeats a headline from {prev.label()}. Replace it with fresh news.')
+            bad.append((section, lst, i))
+        else:
+            old = next((h for h in prev.heads if same_story(title, h)), None)
+            if old:
+                warnings.append(f'{section}: "{title}" may repeat "{old}" from {prev.label()}. Keep it only if '
+                                "there is a real new development, written as the new fact.")
+    if lenient:
+        for section, lst, i in reversed(bad):
+            if lst is None:
+                setattr(c, section, None)
+            else:
+                lst.pop(i)
+    again = [u for u in c.memes if previous.norm_url(u) in prev.urls]
+    if again:
+        warnings.append(f"memes: dropped {len(again)} already in {prev.label()}")
+        c.memes = [u for u in c.memes if u not in again]
+
+
 def check_memes(c: Content, data: Data, lenient: bool, errors: list[str]) -> None:
     allowed = {str(m.url) for m in data.memes.candidates}
     bad = [u for u in c.memes if str(u) not in allowed]
@@ -242,9 +284,9 @@ def data_percents(data: Data) -> list[float]:
     return [abs(p) for p in out if p is not None]
 
 
-def check_numbers(c: Content, data: Data, warnings: list[str]) -> None:
-    """Flag any % in prose that doesn't match a number in data.json (any rounding)."""
-    known = data_percents(data)
+def check_numbers(c: Content, data: Data, warnings: list[str], charts: dict | None = None) -> None:
+    """Flag any % in prose that doesn't match a number in data.json or a drawn chart (any rounding)."""
+    known = data_percents(data) + [abs(n) for ch in (charts or {}).values() if ch.get("ok") for n in ch["numbers"]]
     texts = {"intro": c.intro or "", **{f"section_desc.{k}": v for k, v in c.section_desc.items()}}
     if c.big_read:
         texts["big_read"] = c.big_read.body
@@ -333,14 +375,23 @@ def split_paragraph(text: str, extra: int, limit: int = MAX_PARA_CHARS) -> list[
     return chunks
 
 
-def story_view(s, headline=None, inline=False) -> dict:
+def chart_view(charts: dict, where: str, s) -> dict | None:
+    """The drawn chart for this story, if brief.charts made one for this exact request."""
+    req, ch = getattr(s, "chart", None), charts.get(where)
+    if not req or not ch or not ch.get("ok") or (ch["source"], ch["id"]) != (req.source, req.id):
+        return None
+    return {"key": ch["key"], "file": ch["file"], "title": ch["title"], "alt": ch["alt"],
+            "width": ch["width"], "height": ch["height"], "source": f"Source: {ch['source_label']}"}
+
+
+def story_view(s, headline=None, inline=False, chart=None) -> dict:
     """inline: the headline is the paragraph's first sentence (Big read, Top 3), Morning Brew style.
-    The link (article title + ↗) always ends the last paragraph."""
+    The link (outlet name + ↗) always ends the last paragraph."""
     head = headline or s.headline
     if getattr(s, "emoji", None):
         head = f"{s.emoji} {head}"
     inline_head = head if head.endswith((".", "?", "!")) else head + "."
-    link_len = len(s.link.title) + 3
+    link_len = len(s.link.source) + 3
     raw = [p.strip() for p in s.body.split("\n\n") if p.strip()]
     paras = []
     for i, p in enumerate(raw):
@@ -354,9 +405,10 @@ def story_view(s, headline=None, inline=False) -> dict:
         paras = [{"lead_in": None, "text": "", "head": None, "link": None}]
     if inline:
         paras[0]["head"] = inline_head
-    paras[-1]["link"] = {"title": s.link.title, "url": str(s.link.url)}
+    # Every link reads as the outlet ("WSJ ↗"), never the article title (Wilson, Nov 27, 2026).
+    paras[-1]["link"] = {"text": s.link.source, "url": str(s.link.url)}
     return {"headline": head, "paragraphs": paras, "inline": inline,
-            "url": str(s.link.url), "source": s.link.source, "link_title": s.link.title}
+            "url": str(s.link.url), "source": s.link.source, "chart": chart}
 
 
 def quote_view(q, crypto: bool, period: str) -> dict:
@@ -405,7 +457,35 @@ def your_day_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, editi
     return {"desc": c.section_desc.get("your_day", ""), "rows": rows, "birthday_pill": pill, "nyc": nyc}
 
 
-def bell_view(data: Data, c: Content, edition: str) -> dict:
+ALL_DAY_MARK = "–"   # en dash in the time column for an all-day item (Wilson, Nov 27, 2026)
+
+
+def on_deck_minutes(t: str | None) -> int | None:
+    """Minutes after midnight for an On deck time. Times are written "8:30" / "2:00" with no am/pm,
+    so an hour of 1 to 6 means the afternoon (no market events happen at 2am). "2:00pm" also works."""
+    m = re.fullmatch(r"\s*(\d{1,2})(?::(\d{2}))?\s*([ap]\.?m\.?)?\s*", (t or "").lower())
+    if not m:
+        return None
+    h, mins, ampm = int(m.group(1)), int(m.group(2) or 0), (m.group(3) or "").replace(".", "")
+    if ampm == "pm" and h < 12:
+        h += 12
+    elif ampm == "am" and h == 12:
+        h = 0
+    elif not ampm and 1 <= h <= 6:
+        h += 12
+    return h * 60 + mins
+
+
+def on_deck_view(items) -> list[dict]:
+    """Today's events in the order they happen; items without a time go last, marked "–"."""
+    timed = [(on_deck_minutes(o.time), i, o) for i, o in enumerate(items)]
+    ordered = sorted((x for x in timed if x[0] is not None), key=lambda x: (x[0], x[1])) + \
+        [x for x in timed if x[0] is None]
+    return [{"time": o.time.strip() if mins is not None else ALL_DAY_MARK, "text": o.text} for mins, _, o in ordered]
+
+
+def bell_view(data: Data, c: Content, edition: str, charts: dict | None = None) -> dict:
+    charts = charts or {}
     m, cal = data.markets, data.market_calendar
     weekend = edition == "weekend"
     period = "YTD" if edition == "monday" else "WTD"
@@ -413,18 +493,19 @@ def bell_view(data: Data, c: Content, edition: str) -> dict:
     if not m.ok:
         return {"label": "Markets" if weekend else "Before the bell", "period_label": period,
                 "desc": join("Market data unavailable this morning.", closure), "rows": [], "movers": [],
-                "on_deck": [] if weekend else [o.model_dump() for o in c.on_deck_today]}
+                "on_deck": [] if weekend else on_deck_view(c.on_deck_today)}
     rows = [quote_view(q, True, period) for q in m.crypto] if weekend else \
         [quote_view(q, False, period) for q in m.indices] + [quote_view(q, True, period) for q in m.crypto]
     s = data.standout
     pct_of = {m.ticker: m.change_1d_pct for m in s.movers}
     if s.ticker:
         pct_of.setdefault(s.ticker, s.change_1d_pct)
-    movers = [{"ticker": m.ticker, "move": fmt.move(pct_of[m.ticker]), **story_view(m, headline=m.ticker)}
+    movers = [{"ticker": m.ticker, "move": fmt.move(pct_of[m.ticker]),
+               **story_view(m, headline=m.ticker, chart=chart_view(charts, f"movers[{m.ticker}]", m))}
               for m in c.movers if m.ticker in pct_of] if (not weekend and s.ok) else []
     return {"label": "Markets" if weekend else "Before the bell", "period_label": period,
             "desc": join(c.section_desc.get("before_the_bell", ""), closure), "rows": rows,
-            "movers": movers, "on_deck": [] if weekend else [o.model_dump() for o in c.on_deck_today]}
+            "movers": movers, "on_deck": [] if weekend else on_deck_view(c.on_deck_today)}
 
 
 def earnings_view(data: Data, c: Content, edition: str) -> dict | None:
@@ -445,14 +526,15 @@ def earnings_view(data: Data, c: Content, edition: str) -> dict | None:
     return {"desc": join(c.section_desc.get("earnings", ""), line), "week": [], "reported": rep}
 
 
-def holdings_view(data: Data, c: Content, edition: str) -> dict | None:
+def holdings_view(data: Data, c: Content, edition: str, charts: dict | None = None) -> dict | None:
+    charts = charts or {}
     if edition == "weekend":
         return None
     period = "YTD" if edition == "monday" else "WTD"
     m = data.markets
     rows = [quote_view(q, False, period) for q in m.holdings] if m.ok else []
     desc = c.section_desc.get("holdings", "") if m.ok else "Holdings data unavailable this morning."
-    return {"desc": desc, "period_label": period, "rows": rows, "stories": [story_view(s) for s in c.holdings_news]}
+    return {"desc": desc, "period_label": period, "rows": rows, "stories": [story_view(s, chart=chart_view(charts, f"holdings[{s.ticker}]", s)) for s in c.holdings_news]}
 
 
 def latest_view(data: Data, c: Content, edition: str) -> dict | None:
@@ -483,7 +565,9 @@ def memes_view(data: Data, c: Content) -> dict | None:
     return {"desc": c.section_desc.get("memes", ""), "images": images}
 
 
-def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: datetime) -> dict:
+def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: datetime,
+               charts: dict | None = None) -> dict:
+    charts = charts or {}
     edition = data.edition
     lead, rest = split_lead(c.intro or "")
     desc = c.section_desc
@@ -491,11 +575,13 @@ def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: dat
         "brand": cfg["brand"]["name"], "subject": c.subject or f"{cfg['brand']['name']}, {fmt.masthead_date(data.date)}",
         "date_label": fmt.masthead_date(data.date), "lead": lead, "rest": rest, "year": data.date.year,
         "your_day": your_day_view(data, cal, c, cfg, edition),
-        "bell": bell_view(data, c, edition),
+        "bell": bell_view(data, c, edition, charts),
         "earnings": earnings_view(data, c, edition),
-        "holdings": holdings_view(data, c, edition),
-        "big_read": {"desc": desc.get("big_read", ""), "story": story_view(c.big_read, inline=True)} if c.big_read else None,
-        "top_3": {"desc": desc.get("top_3", ""), "stories": [story_view(s, inline=True) for s in c.top_3]} if c.top_3 else None,
+        "holdings": holdings_view(data, c, edition, charts),
+        "big_read": {"desc": desc.get("big_read", ""), "story": story_view(c.big_read, inline=True, chart=chart_view(charts, "big_read", c.big_read))}
+                     if c.big_read else None,
+        "top_3": {"desc": desc.get("top_3", ""), "stories": [story_view(s, inline=True, chart=chart_view(charts, f"top_3[{i}]", s))
+                                                              for i, s in enumerate(c.top_3)]} if c.top_3 else None,
         "latest": latest_view(data, c, edition),
         "off_the_clock": {"desc": desc.get("off_the_clock", ""), "stories": [story_view(s) for s in c.off_the_clock]}
                          if c.off_the_clock else None,
@@ -524,10 +610,17 @@ def check_paragraphs(v: dict, warnings: list[str]) -> None:
     for st in stories:
         for p in st["paragraphs"]:
             n = sum(len(x) + 1 for x in (p.get("head"), p["lead_in"], p["text"]) if x)
-            n += len(p["link"]["title"]) + 3 if p.get("link") else 0
+            n += len(p["link"]["text"]) + 3 if p.get("link") else 0
             if n > MAX_PARA_CHARS + 30:
                 warnings.append(f'"{st["headline"]}": a {n}-character paragraph runs past 6 lines on a phone; '
                                 "shorten its sentences")
+
+
+def charts_used(v: dict) -> list[dict]:
+    """The chart PNGs this issue shows, for brief.send to attach inline (cid:<key>)."""
+    stories = list(v["bell"]["movers"]) + (v["holdings"] or {}).get("stories", [])
+    stories += ([v["big_read"]["story"]] if v["big_read"] else []) + (v["top_3"] or {}).get("stories", [])
+    return [{"cid": s["chart"]["key"], "file": s["chart"]["file"]} for s in stories if s.get("chart")]
 
 
 def icons_used(v: dict) -> list[str]:
@@ -547,11 +640,11 @@ def env() -> Environment:
     return e
 
 
-def render_html(v: dict, icon_src: str) -> str:
+def render_html(v: dict, icon_src: str, chart_src: str = "cid:{}") -> str:
     t = env().get_template("email.html.j2")
     html = t.render(v=v, T=tokens.COLORS, D=tokens.DARK, sans=tokens.SANS, mono=tokens.MONO, num=tokens.NUM,
                     section_gap=tokens.SECTION_GAP, content_width=tokens.CONTENT_WIDTH, icon_src=icon_src,
-                    arrow=ARROW)
+                    chart_src=chart_src, arrow=ARROW)
     html = re.sub(r"\n\s*\n+", "\n", html)
     size = len(html.encode())
     if size > MAX_BYTES:
@@ -567,8 +660,21 @@ def render_text(v: dict) -> str:
     return re.sub(r"\n{3,}", "\n\n", txt).strip() + "\n"
 
 
+def load_charts(run_dir: Path, warnings: list[str]) -> dict:
+    """run/charts.json from brief.charts, keyed by the story it belongs to. Missing is fine."""
+    raw = load_json(run_dir / "charts.json") or {}
+    out = {}
+    for ch in raw.get("charts", []):
+        if ch.get("ok") and not (run_dir / ch["file"]).exists():
+            ch = {**ch, "ok": False, "error": f"{ch['file']} is missing"}
+        if not ch.get("ok"):
+            warnings.append(f"chart for {ch.get('where')} left out: {ch.get('error')}")
+        out[ch["where"]] = ch
+    return out
+
+
 def render(run_dir: Path, lenient: bool = False, icon_src: str = "cid:{}", now: datetime | None = None,
-           out_name: str = "issue", cfg: dict | None = None) -> dict:
+           out_name: str = "issue", cfg: dict | None = None, chart_src: str = "cid:{}") -> dict:
     cfg = cfg or load_config()
     now = now or now_et()
     errors, warnings = [], []
@@ -598,19 +704,22 @@ def render(run_dir: Path, lenient: bool = False, icon_src: str = "cid:{}", now: 
     check_memes(c, data, lenient, errors)
     check_holdings(c, cfg, lenient, errors)
     check_movers(c, data, data.edition, lenient, errors)
+    check_repeats(c, previous.load(run_dir, cfg["brand"]["name"], data.date), lenient, errors, warnings)
     if errors and not lenient:
         raise RenderError("\n".join(errors))
     dedupe(c, warnings)
     check_lengths(c, data.edition, warnings)
-    check_numbers(c, data, warnings)
+    charts = load_charts(run_dir, warnings)
+    check_numbers(c, data, warnings, charts)
 
-    v = build_view(data, cal, c, cfg, now)
+    v = build_view(data, cal, c, cfg, now, charts)
     check_paragraphs(v, warnings)
-    html = render_html(v, icon_src)
+    html = render_html(v, icon_src, chart_src)
     text = render_text(v)
     (run_dir / f"{out_name}.html").write_text(html)
     (run_dir / f"{out_name}.txt").write_text(text)
-    meta = {"subject": v["subject"], "preheader": v["lead"], "icons": icons_used(v), "bytes": len(html.encode()),
+    meta = {"subject": v["subject"], "preheader": v["lead"], "icons": icons_used(v), "charts": charts_used(v),
+            "bytes": len(html.encode()),
             "edition": data.edition, "missing": v["missing"], "warnings": warnings, "errors_dropped": errors}
     (run_dir / "render.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False))
     return meta
@@ -624,7 +733,7 @@ def main():
     a = p.parse_args()
     src = "../templates/icons/{}.png" if a.preview else "cid:{}"
     try:
-        meta = render(Path(a.run_dir), a.lenient, src)
+        meta = render(Path(a.run_dir), a.lenient, src, chart_src="charts/{}.png" if a.preview else "cid:{}")
     except Exception as e:
         # brief.send turns this into the plain-text fallback email if nothing renders.
         (Path(a.run_dir) / "render_error.txt").write_text(f"{type(e).__name__}: {e}\n")

@@ -16,20 +16,20 @@
         "ytd_pct": 14.8
       },
       {
-        "symbol": "^DJI",
-        "label": "Dow",
-        "price": 46890.12,
-        "change_1d_pct": -0.21,
-        "wtd_pct": -0.21,
-        "ytd_pct": 10.47
-      },
-      {
         "symbol": "^IXIC",
         "label": "Nasdaq",
         "price": 23104.77,
         "change_1d_pct": -1.08,
         "wtd_pct": -1.08,
         "ytd_pct": 19.42
+      },
+      {
+        "symbol": "^DJI",
+        "label": "Dow",
+        "price": 46890.12,
+        "change_1d_pct": -0.21,
+        "wtd_pct": -0.21,
+        "ytd_pct": 10.47
       }
     ],
     "crypto": [
@@ -52,12 +52,12 @@
     ],
     "holdings": [
       {
-        "symbol": "GOOGL",
-        "label": "GOOGL",
-        "price": 312.48,
-        "change_1d_pct": 0.92,
-        "wtd_pct": 0.92,
-        "ytd_pct": 38.2
+        "symbol": "SOXX",
+        "label": "SOXX",
+        "price": 284.15,
+        "change_1d_pct": -2.31,
+        "wtd_pct": -2.31,
+        "ytd_pct": 22.06
       },
       {
         "symbol": "PLTR",
@@ -66,6 +66,14 @@
         "change_1d_pct": -3.17,
         "wtd_pct": -3.17,
         "ytd_pct": 141.05
+      },
+      {
+        "symbol": "GOOGL",
+        "label": "GOOGL",
+        "price": 312.48,
+        "change_1d_pct": 0.92,
+        "wtd_pct": 0.92,
+        "ytd_pct": 38.2
       },
       {
         "symbol": "GEV",
@@ -98,14 +106,6 @@
         "change_1d_pct": 0.58,
         "wtd_pct": 0.58,
         "ytd_pct": 41.9
-      },
-      {
-        "symbol": "SOXX",
-        "label": "SOXX",
-        "price": 284.15,
-        "change_1d_pct": -2.31,
-        "wtd_pct": -2.31,
-        "ytd_pct": 22.06
       }
     ]
   },

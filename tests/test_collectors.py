@@ -332,3 +332,59 @@ def test_company_short_names():
     assert sp500.short_name("Apple Inc.") == "Apple"
     names = [r["name"] for r in sp500.load()]
     assert not [n for n in names if n.endswith("&") or "(" in n]
+
+
+# ---------- weather backup: National Weather Service (Nov 27, 2026) ----------
+
+def test_nws_descriptions_map_to_wmo_codes():
+    c = weather.nws_code
+    assert c("Sunny") == 0 and c("Mostly Clear") == 1 and c("Partly Cloudy") == 2 and c("Mostly Cloudy") == 3
+    assert c("Chance Rain Showers") == 3 and c("Slight Chance Light Rain") == 3     # probably won't rain
+    assert c("Rain Showers Likely") == 63 and c("Light Rain") == 61 and c("Snow") == 73
+    assert c("Chance Rain And Snow Likely") == 73 and c("Thunderstorms") == 95 and c("Patchy Fog") == 45
+    assert c("Something New") == 3
+
+
+def test_nws_parse_matches_open_meteo_shape():
+    hourly = {"properties": {"periods": [
+        {"startTime": f"2026-11-22T{h:02d}:00:00-05:00", "temperature": t, "temperatureUnit": "F",
+         "shortForecast": f, "probabilityOfPrecipitation": {"value": p}}
+        for h, t, f, p in [(6, 41, "Mostly Cloudy", 5), (7, 42, "Mostly Cloudy", 5), (8, 44, "Mostly Cloudy", 10),
+                           (9, 47, "Mostly Cloudy", 10)] + [(h, 50, "Mostly Cloudy", 20) for h in range(10, 16)]
+        + [(h, 48, "Rain Likely", 70) for h in range(16, 24)]
+        ] + [{"startTime": "2026-11-23T00:00:00-05:00", "temperature": 30, "temperatureUnit": "F",
+               "shortForecast": "Snow", "probabilityOfPrecipitation": {"value": 90}}]}}   # tomorrow: ignored
+    daily = {"properties": {"periods": [{"startTime": "2026-11-22T06:00:00-05:00", "isDaytime": True, "temperature": 53}]}}
+    w = weather.parse_nws(hourly, et(2026, 11, 22), daily)
+    assert (w["temp_now"], w["high"], w["low"]) == (41, 53, 41)
+    assert w["icon"] == "rain" and w["outlook"] == "Cloudy until 4pm, then rain"
+    assert w["precip"] == "Rain likely after 4pm." and w["summary"] == "Rain, high 53°, low 41°."
+
+
+def test_nws_fixture_parses():
+    w = weather.parse_nws(load("nws_hourly.json"), et(2026, 11, 27, 12))
+    assert w["icon"] in ("cloud", "rain", "partly", "sun", "drizzle") and w["outlook"]
+
+
+def test_weather_falls_back_to_the_weather_service(monkeypatch):
+    def fake(url, params=None, headers=None):
+        if "open-meteo" in url:
+            raise RuntimeError("429 Client Error: Too Many Requests")
+        if "/points/" in url:
+            return {"properties": {"forecastHourly": "https://api.weather.gov/h", "forecast": "https://api.weather.gov/d"}}
+        if url.endswith("/h"):
+            return load("nws_hourly.json")
+        raise RuntimeError("daily down")         # the daily forecast is optional
+    monkeypatch.setattr(weather, "get_json", fake)
+    w = weather.collect({"location": {"name": "New York", "lat": 40.7306, "lon": -73.9866},
+                         "timezone": "America/New_York"}, et(2026, 11, 27, 12))
+    assert w["source"] == "nws" and w["temp_now"] and w["location"] == "New York"
+
+
+def test_weather_fails_only_when_both_fail(monkeypatch):
+    def down(url, params=None, headers=None):
+        raise RuntimeError("down")
+    monkeypatch.setattr(weather, "get_json", down)
+    with pytest.raises(RuntimeError, match="Open-Meteo: down; Weather Service: down"):
+        weather.collect({"location": {"name": "NY", "lat": 40.7, "lon": -74.0}, "timezone": "America/New_York"},
+                        et(2026, 11, 27, 12))

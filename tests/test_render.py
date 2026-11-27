@@ -242,3 +242,102 @@ def test_six_memes_from_mixed_sources(issue):
     assert html.count('alt="Meme"') == 6
     assert 'height="631"' in html          # 504 * 1511 / 1206, when the size is known
     assert "width=1008" in html and "lemmy.world/pictrs/image/a.webp" in html
+
+
+def test_story_links_read_as_the_outlet_not_the_article_title(issue):
+    def titled(c):
+        c["top_3"][0]["link"]["title"] = "An article title nobody should see"
+    meta, html, txt = go(issue(edit_content=titled))
+    src = json.loads((ISSUES / "weekday" / "content.json").read_text())["top_3"][0]["link"]["source"]
+    assert "An article title nobody should see" not in html and "An article title nobody should see" not in txt
+    assert f'white-space:nowrap;">{src}&nbsp;' in html
+
+
+def test_on_deck_runs_in_time_order_with_all_day_items_last(issue):
+    def deck(c):
+        c["on_deck_today"] = [{"time": None, "text": "Black Friday"}, {"time": "2:00", "text": "Fed minutes"},
+                              {"time": "10:00", "text": "Consumer sentiment"}, {"time": "8:30", "text": "Jobless claims"}]
+    _, html, txt = go(issue(edit_content=deck))
+    order = [html.index(t) for t in ("Jobless claims", "Consumer sentiment", "Fed minutes", "Black Friday")]
+    assert order == sorted(order)
+    assert "–  Black Friday" in txt and "2:00  Fed minutes" in txt
+
+
+def test_on_deck_time_parsing():
+    m = render.on_deck_minutes
+    assert m("8:30") == 510 and m("2:00") == 840 and m("12:00") == 720 and m("2:00pm") == 840
+    assert m("11:30am") == 690 and m(None) is None and m("All day") is None
+
+
+def test_card_order_follows_config(issue):
+    _, html, _ = go(issue())
+    assert html.index(">S&amp;P 500<") < html.index(">Nasdaq<") < html.index(">Dow<")
+    pos = [html.index(f">{t}</span>") for t in ("SOXX", "PLTR", "GOOGL", "GEV", "COST", "V", "GS")]
+    assert pos == sorted(pos)
+
+
+# ---------- no repeats from the last issues (Wilson, Nov 27, 2026) ----------
+
+def write_previous(d, body, day="2026-11-23", subject="Yesterday's issue"):
+    (d / "previous.json").write_text(json.dumps([{"id": "x", "date": day, "subject": subject, "body": body}]))
+
+
+def test_repeat_link_or_headline_fails_strict_and_drops_lenient(issue):
+    d = issue()
+    c = json.loads((d / "content.json").read_text())
+    old_link = c["latest"]["tech"][0]
+    old_head = c["top_3"][2]["headline"]
+    write_previous(d, f"The 7AM · Mon Nov 23\n\n- Some other wording ({old_link['source']}) {old_link['url']}\n\n"
+                      f"🌍 {old_head}. Placeholder text.\n")
+    with pytest.raises(render.RenderError, match="already in 2026-11-23"):
+        render.render(d, now=NOW)
+    meta = render.render(d, lenient=True, now=NOW)
+    html = (d / "issue.html").read_text()
+    assert old_link["title"] not in html and old_head not in html
+    assert sum("Replace it with fresh news" in e for e in meta["errors_dropped"]) == 2
+
+
+def test_reworded_repeat_is_a_warning(issue):
+    def ski(c):
+        c["off_the_clock"][0]["headline"] = "Ski report: Killington hosts the World Cup this weekend"
+    d = issue(edit_content=ski)
+    write_previous(d, "The 7AM · Mon Nov 23\n\n⛷️ Ski report: Killington gets the green light for World Cup weekend\n")
+    meta = render.render(d, now=NOW)
+    assert any("may repeat" in w and "Killington" in w for w in meta["warnings"])
+
+
+def test_previous_ignores_today_and_non_issues(issue):
+    d = issue()
+    c = json.loads((d / "content.json").read_text())
+    url = c["latest"]["tech"][0]["url"]
+    (d / "previous.json").write_text(json.dumps([
+        {"date": "2026-11-24", "subject": "today's test send", "body": f"The 7AM · Tue Nov 24\n- x (NYT) {url}\n"},
+        {"date": "2026-11-23", "subject": "not an issue", "body": f"Some other email {url}\n"}]))
+    meta = render.render(d, now=NOW)
+    assert c["latest"]["tech"][0]["title"] in (d / "issue.html").read_text()
+
+
+def test_no_previous_file_is_fine(issue):
+    meta = render.render(issue(), now=NOW)
+    assert not any("repeat" in w for w in meta["warnings"])
+
+
+def test_tag_icons_draw_close_to_one_pixel_lines():
+    from PIL import Image
+    import statistics
+    for n in ("business", "tech", "world", "pop", "sports"):
+        im = Image.open(Path(render.ROOT) / "templates" / "icons" / f"tag-{n}.png").convert("RGBA")
+        a, (W, H) = im.load(), im.size
+        runs = []
+        for rows in (True, False):
+            for j in range(H):
+                k = 0.0
+                for i in range(W):
+                    v = (a[i, j] if rows else a[j, i])[3] / 255
+                    if v > 0.05:
+                        k += v
+                    elif k:
+                        runs.append(k)
+                        k = 0
+        stroke = statistics.median([r for r in runs if r >= 1]) * 18 / 60     # shown at 18px
+        assert 0.85 <= stroke <= 1.1, (n, stroke)

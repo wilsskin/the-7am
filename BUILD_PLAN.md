@@ -97,7 +97,7 @@ the-7am/
   run/                      # gitignored, per-run output
 ```
 
-Python 3.12. Dependencies, kept deliberately short: `yfinance`, `exchange_calendars`, `requests`, `pydantic`, `jinja2`, `pyyaml`, `pytest` (Playwright for screenshot checks in dev only). No CSS inliner: the Jinja macros write inline styles from `tokens.py`. No Resend SDK: one `requests.post` call. Ask Wilson before adding anything else.
+Python 3.12. Dependencies, kept deliberately short: `yfinance`, `exchange_calendars`, `requests`, `pydantic`, `jinja2`, `pyyaml`, `matplotlib` (charts, added Nov 27, 2026), `pytest` (Playwright for screenshot checks in dev only). No CSS inliner: the Jinja macros write inline styles from `tokens.py`. No Resend SDK: one `requests.post` call. Ask Wilson before adding anything else.
 
 Local dev note: clone the repo outside iCloud Drive (e.g. `~/code/the-7am`). iCloud syncing a `.git` folder causes corruption.
 
@@ -116,12 +116,12 @@ subway_lines: ["4", "5"]
 markets:
   indices:
     - { symbol: "^GSPC", label: "S&P 500" }
-    - { symbol: "^DJI",  label: "Dow" }
     - { symbol: "^IXIC", label: "Nasdaq" }
+    - { symbol: "^DJI",  label: "Dow" }
   crypto:
     - { symbol: "BTC-USD", label: "Bitcoin" }
     - { symbol: "ETH-USD", label: "Ether" }
-  holdings: ["GOOGL", "PLTR", "GEV", "COST", "V", "GS", "SOXX"]
+  holdings: ["SOXX", "PLTR", "GOOGL", "GEV", "COST", "V", "GS"]   # card order
   standout_min_market_cap: 100_000_000_000
   movers_shortlist: 8
   big_earnings_universe: top_50_sp500_by_market_cap   # plus holdings
@@ -158,10 +158,11 @@ Verify each endpoint at build time. Free tiers and unofficial endpoints change. 
 | Standout stock | `yfinance` over `data/sp500.csv` | Biggest absolute 1-day % move among names over $100B market cap. Return ticker, name, % move. Claude writes the 2–3 sentence "why" and finds a link. |
 | Earnings results + calendar | Finnhub `/calendar/earnings` (free key) | EPS est/actual, revenue est/actual, timing (bmo/amc). Filter to the big universe. Code computes the surprise % for each: (actual − estimate) / |estimate|, rounded to 0.1% (positive = beat, negative = miss). After-hours / premarket move from `yfinance` (prepost). Also return the big-universe companies reporting the next trading day (company names); on Tue–Fri render.py appends "Deere reports tomorrow." / "Dell and Salesforce report tomorrow." (Friday: "report Monday") to the Earnings description. Nobody → no sentence. |
 | Market closures / early closes | `exchange_calendars` (XNYS) | Any closure or early close today or later this week → a fixed sentence ("Markets close Thursday for Thanksgiving, early close Friday at 1pm.") that render.py appends to the Before the bell description. |
-| Weather | Open-Meteo `/v1/forecast` (no key) | High/low °F, conditions, hourly precip probability → "rain likely after 4pm". The WMO weather code also picks the icon: `sun` (0–1), `cloud` (2–48), `rain` (51–67, 80–82, 95–99), `snow` (71–77, 85–86). |
+| Weather | Open-Meteo `/v1/forecast` (no key); backup: National Weather Service `api.weather.gov` (no key, needs a User-Agent) | High/low °F, conditions, hourly precip probability → "rain likely after 4pm". The WMO weather code also picks the icon: `sun` (0–1), `cloud` (2–48), `rain` (51–67, 80–82, 95–99), `snow` (71–77, 85–86). |
 | Subway alerts | MTA GTFS-RT alerts JSON (`api-endpoint.mta.info`, camsys subway-alerts feed, no key) | Active alerts where informed entity route is 4 or 5 and that touch the Fulton St–14 St-Union Sq ride (config `subway_stops`): alerts scoped "In the Bronx/Brooklyn/Queens" or listing only stations off the ride are dropped; line-wide delays stay. Header text only, max 2. |
 | Last night's scores | ESPN public scoreboard JSON (`site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard`) | Only followed teams, only games that finished since the previous morning's run (Monday too: since Sunday's run). One request per date; ESPN rejects date ranges. Return W/L, both scores, league. |
 | This week's games (Mondays) | ESPN team schedule JSON (`site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams/{team}/schedule`) | 49ers and Warriors games Monday through Sunday: day, opponent, home/away, start time ET. |
+| Supporting charts (on request) | Kalshi public API (`api.elections.kalshi.com/trade-api/v2`: event odds, daily candlesticks), Polymarket (`gamma-api.polymarket.com` events and search, `clob.polymarket.com/prices-history`), BLS public API v2 (`api.bls.gov`, no key: 25 requests a day, plenty for a few charts), Yahoo via yfinance. All free, no keys. | Not a daily collector. Claude adds a `chart` request to a story when one supports it; `python -m brief.charts` fetches the numbers and draws the PNG (matplotlib), so chart numbers never come from Claude. Verified Nov 27, 2026. FRED's CSV download timed out from Wilson's Mac, so it isn't used. BLS skipped October 2025 CPI (the 2025 shutdown), so year-over-year CPI has no October 2026 point. |
 | Meme candidates | Short Squeez and Exec Sum meme sections, Lemmy public API (no key); Reddit API if ever approved | Newsletter issues from the last 26 hours; Lemmy top of day, image posts only, not NSFW, score threshold. Return ~12 candidates with image URLs. Claude picks the final 4 (§6). |
 
 `data.json` must include `as_of` timestamps per block and an `ok: true/false` flag per collector.
@@ -182,7 +183,7 @@ Every section has a header: label plus a one-line description Claude writes that
 |---|---|---|---|
 | 1 | Subject line + intro | Claude | Subject: punchy hook from the top story, Exec Sum style, under 60 chars. Intro: 2–5 sentences, aim for 3. The first sentence is the one thing to know today. |
 | 2 | Your Day | data.json + calendar.json + Claude | Weather line. Subway alerts for 4/5 if any. Today's calendar events (time + title). Birthdays: any event today whose title contains "birthday" (case-insensitive) or eventType BIRTHDAY → "Lily Bien's birthday 🎂". Event titled "Happy birthday!" is Wilson's own birthday → render a special greeting. US holidays from the holidays calendar. Monday only: "This week" preview of the rest of the week's events. Then "NYC today": up to 3 linked items, the fun and big stuff in the city (big events, the biggest NYC sports news, city news that changes his day). An empty calendar is simply left out; never mention that it's empty. |
-| 3 | Before the Bell | data.json + Claude | One market card: S&P 500, Dow, Nasdaq, Bitcoin, Ether (price at 4pm ET close, 1D %, WTD % or YTD %). Big movers: code shortlists the ~8 biggest 1-day moves among $100B+ companies; Claude picks 2–3 that led the selloff or rally. Each is "NVDA −6.40%" on one line, then 1–2 sentences on why, with a link. "On deck today": econ releases, Fed speakers, notable events (Claude, from search). |
+| 3 | Before the Bell | data.json + Claude | One market card: S&P 500, Nasdaq, Dow, Bitcoin, Ether (price at 4pm ET close, 1D %, WTD % or YTD %). Big movers: code shortlists the ~8 biggest 1-day moves among $100B+ companies; Claude picks 2–3 that led the selloff or rally. Each is "NVDA −6.40%" on one line, then 1–2 sentences on why, with a link. "On deck today": econ releases, Fed speakers, notable events (Claude, from search), sorted by time in code; items with no set time go last with "–". Every link in the issue reads as the outlet name ("WSJ ↗"). |
 | 3b | Earnings | data.json | Right after Before the Bell, ahead of Holdings. Table of yesterday's big reporters: Revenue and EPS each on one line as the actual plus the surprise vs estimate in colored parentheses ("57.0B (+3.3%)"), and the after-hours move. Numbers only, no notes. No "Reporting today" on weekdays. Mondays: "Reporting this week" instead, one row per day with company names only (no tickers, no before/after timing). Skip the section if empty. |
 | 4 | Your Holdings | data.json + Claude | One row per holding (price, 1D %, WTD % or YTD %). Then a story (2–3 sentences, linked) for **every** holding with relevant, recent news in the last 24h. No cap: on a big day, cover them all. Headline starts with the ticker ("PLTR: Army expands its software contract"). No news → no story. Never pad. |
 | 5 | The Big Read | Claude | Single most important story. ~300 words, 6–8 short paragraphs (max 6 phone lines each), Morning Brew structure and length. Headline printed as the first sentence. Tone: clear, concise, direct. Not jokey. Ends with a link. |
@@ -190,6 +191,7 @@ Every section has a header: label plus a one-line description Claude writes that
 | 7 | The Latest | Claude + data.json | Headlines only, one line each, linked, 3–5 per category, in this order: **Business** (deals, Wall Street, Goldman; keep to 3), **Tech**, **World/Politics**, **Pop Culture**, then **Sports** last. Each category label is a tag pill. Sports: headlines first, then the score card from data.json below them (last night's results; Mondays also this week's 49ers/Warriors games; no results and not Monday → no card). Sports headlines: 49ers, Warriors, Giants news, big NFL/NBA headlines and trades, and major NFL injuries (starters out for multiple games or the season). |
 | 8 | Off the Clock | Claude | 2–3 brief items, rotating: ski conditions (Nov–Apr, Northeast + Tahoe), outdoors/backpacking, cars (Rivian etc.), AI tools, food. NYC events go in NYC today. Each story gets one emoji before its headline (Top 3 too). Short. Topic goes at the start of the headline ("Ski report: Killington opens more terrain"), no eyebrow. |
 | 9 | Meme Roundup | data.json + Claude | 4 images, Exec Sum style, no captions needed. |
+| — | Charts | Claude picks, code draws | Optional supporting chart under a Big read, Top 3, Holdings or Movers story when the news calls for it (data releases, rate expectations, prediction-market odds). Max 3 an issue, usually 0–1. Never forced. (Wilson, Nov 27, 2026.) |
 
 Global target: 1,600–1,900 words (weekend ~1,000).
 
@@ -210,6 +212,8 @@ Global target: 1,600–1,900 words (weekend ~1,000).
 **Intro.** 2–5 sentences, aim for 3. The first sentence is the hook and also becomes the inbox preview. Don't spend a sentence on the calendar; if the calendar is empty, say nothing about it.
 
 **Sources.** Only domains in `config.sources.allowed`. Prefer WSJ and NYT links when they cover the story (Wilson subscribes). Use FT or Bloomberg only if no other allowed source has it. Every item has a link to the actual article, not a homepage. Never invent a URL; if an article can't be found, drop the item.
+
+**No repeats (Wilson, Nov 27, 2026).** The Nov 27 issue re-ran at least 8 stories from Nov 26, because each run starts with no memory. Now the task copies the plain text of the last two issues from Gmail (search fixed to the issue sender and Wilson, read only) into `run/previous.json`; EDITORIAL.md bans repeats, and render.py (`brief/previous.py`) blocks any repeated link or near-identical headline and warns on reworded ones. A follow-up is allowed only as a genuine new development with a new article. Gmail instead of a history file in the repo, because the task has never been confirmed to push to GitHub.
 
 **Recency.** News from the last ~24 hours (since the previous 7am issue). Monday covers only what happened since Sunday's issue (decided Nov 22, 2026).
 
@@ -284,7 +288,7 @@ Draft. Keep it self-contained, because each run starts fresh.
 > 5. Run `python -m brief.send`.
 > 6. Finish with a one-line summary: sent or failed, which sections were unavailable, and how many feedback notes were filed. Do not commit or push anything other than `feedback/FEEDBACK.md`.
 
-Task settings: connectors = Google Calendar and Gmail only (remove all others). Network: custom allowlist with the collector hosts (query1/query2.finance.yahoo.com, finnhub.io, api.open-meteo.com, api-endpoint.mta.info, site.api.espn.com, oauth.reddit.com, www.reddit.com, i.redd.it, api.resend.com) plus the default package list. If article fetching fails under the custom allowlist, switch to Full. API keys (FINNHUB_API_KEY, RESEND_API_KEY, REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET) go in as **network secrets**, not plain environment variables.
+Task settings: connectors = Google Calendar and Gmail only (remove all others). Network: custom allowlist with the collector hosts (query1/query2.finance.yahoo.com, finnhub.io, api.open-meteo.com, api.weather.gov, api-endpoint.mta.info, site.api.espn.com, oauth.reddit.com, www.reddit.com, i.redd.it, api.resend.com, and for charts api.elections.kalshi.com, gamma-api.polymarket.com, clob.polymarket.com, api.bls.gov) plus the default package list. If article fetching fails under the custom allowlist, switch to Full. API keys (FINNHUB_API_KEY, RESEND_API_KEY, REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET) go in as **network secrets**, not plain environment variables.
 
 ---
 

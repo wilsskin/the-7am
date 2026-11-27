@@ -26,9 +26,9 @@
 {%- endmacro -%}
 
 {#- A body paragraph. head: the story headline as its first sentence (Big read, Top 3).
-    link: {title, url}, which ends the paragraph inline. -#}
+    link: {text, url}, the outlet name, which ends the paragraph inline. -#}
 {%- macro para(text, top=2, lead_in=None, head=None, link=None) -%}
-<p class="c-secondary" style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{% if head %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{head}}</span> {% endif %}{% if lead_in %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{lead_in}}</span> {% endif %}{{text}}{% if link %} {{ extlink(link.title, link.url) }}{% endif %}</p>
+<p class="c-secondary" style="margin:0;padding-top:{{top}}px;font-family:{{S}};font-size:16px;line-height:22px;font-weight:400;color:{{T.secondary}};">{% if head %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{head}}</span> {% endif %}{% if lead_in %}<span class="c-primary" style="color:{{T.primary}};font-weight:500;">{{lead_in}}</span> {% endif %}{{text}}{% if link %} {{ extlink(link.text, link.url, true) }}{% endif %}</p>
 {%- endmacro -%}
 
 {%- macro paras(s) -%}
@@ -145,9 +145,17 @@
 <tr><td width="40" valign="top"{{cls|safe}} style="width:40px;padding:10px 0;{{line}}{{num}}color:{{T.primary}};">{{left}}</td><td valign="top"{{cls|safe}} style="padding:10px 0;{{line}}{{num}}color:{{T.primary}};" class="c-primary">{{mid}}</td><td align="right" valign="top"{{cls|safe}} style="padding:10px 0;{{line}}{{num}}color:{{T.secondary}};" class="c-secondary">{{right}}</td></tr>
 {%- endmacro -%}
 
+{#- A supporting chart under a story (brief/charts.py): small headline, the PNG on the card
+    fill, then the source in meta. The alt text carries the numbers when images are off. -#}
+{%- macro chart(ch) -%}
+{%- if ch -%}
+{{ subtitle(ch.title, 24) }}{{ gap(8) }}<img src="{{ chart_src.format(ch.key) }}" width="{{ch.width}}" height="{{ch.height}}" alt="{{ch.alt}}" class="chart" style="display:block;width:100%;max-width:{{ch.width}}px;height:auto;border:0;border-radius:16px;background-color:{{T.surface}};"><p class="c-secondary" style="margin:0;padding-top:8px;font-family:{{S}};font-size:14px;line-height:19px;letter-spacing:0.01em;color:{{T.secondary}};">{{ch.source}}</p>
+{%- endif -%}
+{%- endmacro -%}
+
 {%- macro story(s, top=0) -%}
 {%- call row(top) -%}
-{% if not s.inline %}{{ subtitle(s.headline) }}{% endif %}{{ paras(s) }}
+{% if not s.inline %}{{ subtitle(s.headline) }}{% endif %}{{ paras(s) }}{{ chart(s.chart) }}
 {%- endcall -%}
 {%- endmacro -%}
 
@@ -166,7 +174,7 @@
     .t-title { font-size:22px !important; line-height:25px !important; }
     .t-heading { font-size:18px !important; line-height:24px !important; }
     .t-h2 { font-size:20px !important; line-height:26px !important; }
-    .card { border-radius:8px !important; }
+    .card, .chart { border-radius:8px !important; }
   }
   @media (prefers-color-scheme: dark) {
     .bg { background-color:{{D.bg}} !important; }
@@ -216,10 +224,10 @@
 {% call row() %}{% call card() %}{{ table(["Asset", "Price", "1D", bb.period_label], trs) }}{% endcall %}{% endcall %}
 {%- endif %}
 {%- for m in bb.movers %}
-{% call row((24 if bb.rows else 0) if loop.first else 24) %}{{ subtitle(standout_line(m.ticker, m.move)) }}{{ paras(m) }}{% endcall %}
+{% call row((24 if bb.rows else 0) if loop.first else 24) %}{{ subtitle(standout_line(m.ticker, m.move)) }}{{ paras(m) }}{{ chart(m.chart) }}{% endcall %}
 {%- endfor %}
 {%- if bb.on_deck %}
-{%- set items = [] %}{% for o in bb.on_deck %}{% do items.append((caption(o.time or ""), body16(o.text))) %}{% endfor %}
+{%- set items = [] %}{% for o in bb.on_deck %}{% do items.append((caption(o.time), body16(o.text))) %}{% endfor %}
 {% call row(24 if (bb.rows or bb.movers) else 0) %}{{ subtitle("On deck today") }}{{ gap(8) }}{{ meta_rows(items, 48, "middle") }}{% endcall %}
 {%- endif %}
 

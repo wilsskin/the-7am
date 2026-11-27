@@ -1,4 +1,11 @@
-"""East Village weather (Open-Meteo /v1/forecast, no key).
+"""East Village weather. Open-Meteo /v1/forecast (no key), and if that fails, the National
+Weather Service (api.weather.gov, no key) as a backup (Wilson, Nov 27, 2026).
+
+Why a backup: the morning task runs on shared cloud servers, and Open-Meteo's free limit is
+per internet address, so other people's traffic can get us a 429 "Too Many Requests" (that
+blanked the weather on Nov 27). The Weather Service is a separate system. Its hourly
+descriptions ("Chance Rain Showers") are translated to the same WMO codes Open-Meteo uses,
+so both produce the same fields and the same weather line.
 
 temp_now   the big theme-color number in Your day, the temperature when the task runs
 summary    "Cloudy, high 53°, low 41°."
@@ -7,11 +14,13 @@ precip     "Rain likely after 4pm." / "Snow likely until 11am." / "Rain likely a
 icon       the SF Symbol for today's WMO weather code, as Apple Weather picks it:
            sun, partly, cloud, fog, drizzle, rain, snow or storm
 """
+import re
 from datetime import datetime
 
 from brief.common import get_json
 
 URL = "https://api.open-meteo.com/v1/forecast"
+NWS = "https://api.weather.gov"
 LIKELY = 50          # % chance of precipitation that counts as "likely"
 DAY_HOURS = range(6, 24)
 
@@ -136,13 +145,88 @@ def parse(data: dict, now: datetime) -> dict:
     }
 
 
+# ---------- National Weather Service backup ----------
+
+def nws_code(short: str) -> int:
+    """A Weather Service hourly description as the WMO code Open-Meteo would give.
+    "Chance" / "Slight Chance" (under 50%) means it probably won't, so those hours count as cloudy."""
+    t = short.lower()
+    if "chance" in t and "likely" not in t:
+        return 3
+    if "thunder" in t:
+        return 95
+    if re.search(r"snow|flurr|sleet|wintry|ice pellets", t):
+        return 73
+    if "freezing" in t:
+        return 66
+    if "drizzle" in t:
+        return 53
+    if "rain" in t or "shower" in t:
+        return 61 if "light" in t else 63
+    if re.search(r"fog|haze|smoke|mist", t):
+        return 45
+    if t in ("sunny", "clear", "mostly sunny", "mostly clear"):
+        return 0 if t in ("sunny", "clear") else 1
+    if t in ("partly sunny", "partly cloudy"):
+        return 2
+    return 3                                     # mostly cloudy, cloudy, overcast, anything new
+
+
+def parse_nws(hourly: dict, now: datetime, daily: dict | None = None) -> dict:
+    """Today's hours from the Weather Service's hourly forecast, in the same shape as parse().
+    The hourly forecast starts at the current hour, so the high also checks the daily forecast's
+    "Today" high, and the low is the coolest hour left (at 6:30am that's close to the day's low)."""
+    today = [p for p in hourly["properties"]["periods"]
+             if datetime.fromisoformat(p["startTime"]).date() == now.date()]
+    if not today:
+        raise RuntimeError("Weather Service returned no hours for today")
+    hours = [datetime.fromisoformat(p["startTime"]).hour for p in today]
+    codes = [nws_code(p["shortForecast"]) for p in today]
+    probs = [(p.get("probabilityOfPrecipitation") or {}).get("value") or 0 for p in today]
+    temps = [p["temperature"] if p.get("temperatureUnit", "F") == "F" else round(p["temperature"] * 9 / 5 + 32)
+             for p in today]
+    day = [c for h, c in zip(hours, codes) if h in DAY_HOURS] or codes
+    code = max(day)                              # like Open-Meteo's daily code: the day's most severe weather
+    day_high = [p["temperature"] for p in (daily or {}).get("properties", {}).get("periods", [])
+                if p.get("isDaytime") and datetime.fromisoformat(p["startTime"]).date() == now.date()]
+    hi, lo, cond = max(temps + day_high[:1]), min(temps), CONDITIONS.get(max(day), "Cloudy")
+    return {
+        "temp_now": temps[0],                    # the forecast for the current hour
+        "high": hi, "low": lo, "code": code, "conditions": cond, "icon": icon_for(code),
+        "outlook": outlook_line(hours, codes, now.hour),
+        "summary": f"{cond}, high {hi}°, low {lo}°.",
+        "precip": precip_line(hours, probs, codes, now.hour),
+    }
+
+
+def collect_nws(loc: dict, now: datetime) -> dict:
+    point = get_json(f"{NWS}/points/{loc['lat']:.4f},{loc['lon']:.4f}")
+    hourly = get_json(point["properties"]["forecastHourly"], headers={"Accept": "application/geo+json"})
+    try:
+        daily = get_json(point["properties"]["forecast"], headers={"Accept": "application/geo+json"})
+    except Exception:
+        daily = None                             # the hourly forecast alone is enough
+    return parse_nws(hourly, now, daily)
+
+
 def collect(cfg: dict, now: datetime) -> dict:
     loc = cfg["location"]
+    base = {"as_of": now.isoformat(), "location": loc["name"]}
+    try:
+        return {**base, "source": "open-meteo", **collect_open_meteo(loc, cfg["timezone"], now)}
+    except Exception as first:
+        try:
+            return {**base, "source": "nws", **collect_nws(loc, now)}
+        except Exception as second:
+            raise RuntimeError(f"Open-Meteo: {first}; Weather Service: {second}") from second
+
+
+def collect_open_meteo(loc: dict, tz: str, now: datetime) -> dict:
     data = get_json(URL, params={
         "latitude": loc["lat"], "longitude": loc["lon"],
         "current": "temperature_2m,weather_code",
         "daily": "temperature_2m_max,temperature_2m_min,weather_code",
         "hourly": "precipitation_probability,weather_code",
-        "temperature_unit": "fahrenheit", "timezone": cfg["timezone"], "forecast_days": 1,
+        "temperature_unit": "fahrenheit", "timezone": tz, "forecast_days": 1,
     })
-    return {"as_of": now.isoformat(), "location": loc["name"], **parse(data, now)}
+    return parse(data, now)

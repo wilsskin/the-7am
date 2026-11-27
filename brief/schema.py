@@ -7,6 +7,7 @@ content.json   written by Claude: text and links only, no HTML, no markdown
 Every data.json block has ok / as_of / error. A failed block keeps only those three,
 and its section renders "... unavailable this morning."
 """
+import re
 from datetime import date, datetime
 from typing import Literal
 
@@ -107,6 +108,7 @@ class MarketCalendar(Block):
 
 
 class Weather(Block):
+    source: Literal["open-meteo", "nws"] | None = None   # nws = National Weather Service backup
     location: str | None = None
     temp_now: int | None = None
     high: int | None = None
@@ -219,10 +221,51 @@ class Link(BaseModel):
     source: str                              # "WSJ", "NYT", "Reuters"...
 
 
+class ChartRequest(BaseModel):
+    """A chart Claude asks for; brief/charts.py fetches the numbers and draws it (EDITORIAL.md)."""
+    source: Literal["kalshi", "polymarket", "bls", "yahoo"]
+    id: str                                  # Kalshi event ticker, Polymarket event slug, BLS series id, Yahoo symbol
+    title: str = Field(max_length=70)        # shown above the chart, e.g. "Odds for the Fed's December decision"
+    view: Literal["odds", "history"] = "history"         # prediction markets: odds now, or how they moved
+    transform: Literal["level", "yoy", "mom"] = "level"  # BLS: the value, % change from a year ago, monthly change
+    period: Literal["1m", "3m", "6m", "1y", "2y", "5y"] = "1y"
+    unit: Literal["%", ""] | None = None     # override, e.g. "%" for the unemployment rate
+
+    @field_validator("title")
+    @classmethod
+    def no_numbers_in_title(cls, v):
+        if re.search(r"\d+(\.\d+)?\s?%", v):
+            raise ValueError("chart title can't contain a percentage; the chart shows the numbers")
+        return v
+
+
+# Only real, standard color emoji, one character (Wilson, Nov 27, 2026). The big emoji blocks in
+# Unicode's supplementary plane, plus the common older ones that live in the BMP. No combined
+# emoji (ZWJ sequences like 🧑‍💻, skin tones, flags, keycaps): some apps draw those as two
+# pictures. No plain symbols (✓, ★, ↗).
+EMOJI_BLOCKS = [(0x1F300, 0x1F5FF), (0x1F600, 0x1F64F), (0x1F680, 0x1F6FF), (0x1F900, 0x1F9FF), (0x1FA70, 0x1FAFF)]
+EMOJI_BMP = set("☀☁☂☃☄☎☕☘☝☠☢☣☦☪☮☯☸☹☺♈♉♊♋♌♍♎♏♐♑♒♓♟♠♣♥♦♨♻♾♿⚒⚓⚔⚕⚖⚗⚙⚛⚜⚠⚡⚧⚪⚫⚰⚱⚽⚾⛄⛅⛈⛎⛏⛑⛓⛔⛩⛪⛰⛱⛲⛳⛴⛵⛷⛸⛹⛺⛽"
+                "✂✅✈✉✊✋✌✍✏✒✔✖✝✡✨✳✴❄❇❌❎❓❔❕❗❣❤➕➖➗➡➰➿⌚⌛⌨⏏⏩⏪⏫⏬⏭⏮⏯⏰⏱⏲⏳⏸⏹⏺⬅⬆⬇⬛⬜⭐⭕🀄🃏")
+SKIN_TONES = range(0x1F3FB, 0x1F400)
+
+
+def standard_emoji(v: str) -> str:
+    """One standard emoji, returned with the emoji (color) presentation selector where it needs one."""
+    base = v.replace("\ufe0f", "").replace("\ufe0e", "")
+    if len(base) != 1:
+        raise ValueError(f"emoji must be exactly one standard emoji, got {v!r} (no combined emoji, flags or skin tones)")
+    cp = ord(base)
+    if cp in SKIN_TONES or not (base in EMOJI_BMP or any(lo <= cp <= hi for lo, hi in EMOJI_BLOCKS)):
+        raise ValueError(f"emoji must be a standard emoji, not a symbol: {v!r}")
+    # Older emoji default to a black-and-white text glyph; FE0F asks for the color emoji.
+    return base + "\ufe0f" if (cp < 0x10000 or "\ufe0f" in v) else base
+
+
 class Story(BaseModel):
     headline: str
     body: str                                # plain text, paragraphs split by \n\n
     link: Link
+    chart: ChartRequest | None = None        # optional supporting chart (Big read, Top 3, Holdings)
     emoji: str | None = None                 # Top 3 and Off the clock: one emoji, shown before the headline
 
     @field_validator("emoji")
@@ -231,9 +274,7 @@ class Story(BaseModel):
         v = (v or "").strip()
         if not v:
             return None
-        if len(v) > 8 or any(ch.isalnum() for ch in v):
-            raise ValueError("emoji must be a single emoji")
-        return v
+        return standard_emoji(v)
 
 
 class HoldingStory(Story):
@@ -249,6 +290,7 @@ class HoldingStory(Story):
 class StandoutStory(BaseModel):
     body: str                                # headline ("NVDA −6.40%") is built by code
     link: Link
+    chart: ChartRequest | None = None
 
 
 class MoverStory(StandoutStory):

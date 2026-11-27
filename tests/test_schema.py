@@ -58,3 +58,11 @@ def test_calendar():
         {"start": "2026-11-24T12:30:00-05:00", "title": "Team lunch", "location": "200 West St"},
         {"all_day": True, "title": "Lily Bien's birthday", "kind": "birthday"}]})
     assert cal.today[1].kind == "birthday" and cal.this_week == []
+
+
+def test_emoji_must_be_one_standard_emoji():
+    from brief.schema import standard_emoji
+    assert standard_emoji("🚢") == "🚢" and standard_emoji("⛷") == "⛷️" and standard_emoji("🛢️") == "🛢️"
+    for bad in ("🧑‍💻", "✓", "↗", "🇺🇸", "👍🏽", "🔥🔥", "ski", "★"):
+        with pytest.raises(ValueError):
+            standard_emoji(bad)

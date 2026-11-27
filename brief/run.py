@@ -31,7 +31,8 @@ def render_fixture(name: str) -> dict:
     shutil.copytree(FIXTURES / name, work)
     date = (work / "data.json").read_text().split('"date": "')[1][:10]
     now = datetime.fromisoformat(f"{date}T06:41:00").replace(tzinfo=ET)
-    meta = render.render(work, lenient=True, icon_src="../" + PREVIEW_ICONS, now=now, out_name="preview")
+    meta = render.render(work, lenient=True, icon_src="../" + PREVIEW_ICONS, now=now, out_name="preview",
+                         chart_src=f"fixtures/{name}/charts/{{}}.png")
     html = (work / "preview.html").read_text()
     for i in range(1, 7):
         svg = work / f"meme{i}.svg"
@@ -62,7 +63,8 @@ def main():
         import json
         data = collect(now_et())
         (RUN_DIR / "data.json").write_text(json.dumps(data, indent=2, ensure_ascii=False))
-        meta = render.render(RUN_DIR, lenient=True, icon_src=PREVIEW_ICONS, out_name="preview")
+        meta = render.render(RUN_DIR, lenient=True, icon_src=PREVIEW_ICONS, out_name="preview",
+                             chart_src="charts/{}.png")
         print(f"run/preview.html: {meta['bytes']:,} bytes; warnings: {len(meta['warnings'])}")
 
 

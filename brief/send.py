@@ -28,9 +28,11 @@ API = "https://api.resend.com/emails"
 ICONS = ROOT / "templates" / "icons"
 
 
-def attachments(icons: list[str]) -> list[dict]:
-    return [{"filename": f"{n}.png", "content": base64.b64encode((ICONS / f"{n}.png").read_bytes()).decode(),
-             "content_type": "image/png", "content_id": n} for n in icons]
+def attachments(icons: list[str], charts: list[dict] | None = None, run_dir=None) -> list[dict]:
+    """Icons from templates/icons/ and the day's chart PNGs from run/charts/, all inline (cid)."""
+    files = [(n, ICONS / f"{n}.png") for n in icons] + [(c["cid"], run_dir / c["file"]) for c in charts or []]
+    return [{"filename": f"{n}.png", "content": base64.b64encode(path.read_bytes()).decode(),
+             "content_type": "image/png", "content_id": n} for n, path in files]
 
 
 def fallback_text(run_dir, error: str) -> tuple[str, str]:
@@ -61,8 +63,8 @@ def build_payload(cfg: dict, run_dir, now: datetime) -> dict:
         meta = json.loads(meta_path.read_text())
         payload = {**base, "subject": meta["subject"], "html": html_path.read_text(),
                    "text": (run_dir / "issue.txt").read_text()}
-        if meta["icons"]:
-            payload["attachments"] = attachments(meta["icons"])
+        if meta["icons"] or meta.get("charts"):
+            payload["attachments"] = attachments(meta["icons"], meta.get("charts"), run_dir)
     else:
         err_path = run_dir / "render_error.txt"
         error = err_path.read_text().strip() if err_path.exists() else "render produced no output"
