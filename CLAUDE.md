@@ -29,5 +29,6 @@ The 7AM is a sibling of wilsonskinner.com: same tokens, same grayscale restraint
 - No repeats (Nov 27, 2026): the task saves the last two issues' plain text from Gmail to `run/previous.json` (TASK.md step 1a); `brief/previous.py` + render.py block repeated links and headlines. Plain text, because issues before Nov 28, 2026 went out with Resend's click tracking, which rewrote the HTML links.
 - Emoji: Gmail on the web (computer browser) redraws every emoji in Google's style; nothing in the email can stop that. The Gmail iPhone app and Apple Mail show Apple's (confirmed by Wilson, Nov 27, 2026). Not a bug.
 - Weather: Open-Meteo first; on any failure, the National Weather Service (`api.weather.gov`, points → forecastHourly, plus the daily forecast for today's high). Open-Meteo returned 429 Too Many Requests on Nov 27, 2026: its free limit is per IP and the cloud task shares IPs. `data.json` weather `source` says which one answered.
+- Reminders (Nov 27, 2026): `reminders` in config.yaml adds a line to the footer on set days before a date (render.py `reminders_due`). Used for the daylight-saving cron changes (the routine's cron is UTC: `28 10 * * *` during EDT, `28 11 * * *` during EST). Add next year's dates after each change.
 - Setup steps only Wilson can do are in `SETUP.md`.
 

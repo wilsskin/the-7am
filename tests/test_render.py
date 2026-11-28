@@ -341,3 +341,14 @@ def test_tag_icons_draw_close_to_one_pixel_lines():
                         k = 0
         stroke = statistics.median([r for r in runs if r >= 1]) * 18 / 60     # shown at 18px
         assert 0.85 <= stroke <= 1.1, (n, stroke)
+
+
+def test_reminders_due_on_countdown_days_only():
+    from datetime import date
+    cfg = {"reminders": [{"date": date(2027, 3, 8), "days_before": [14, 7, 3, 2, 1], "text": "Move the cron."}]}
+    due = lambda d: render.reminders_due(cfg, d)
+    assert due(date(2027, 2, 22)) == ["Reminder. In 2 weeks: Move the cron."]
+    assert due(date(2027, 3, 1)) == ["Reminder. In 1 week: Move the cron."]
+    assert due(date(2027, 3, 5)) == ["Reminder. In 3 days: Move the cron."]
+    assert due(date(2027, 3, 7)) == ["Reminder. Tomorrow: Move the cron."]
+    assert due(date(2027, 2, 23)) == [] and due(date(2027, 3, 8)) == [] and render.reminders_due({}, date(2027, 3, 7)) == []

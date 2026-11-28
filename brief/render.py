@@ -565,6 +565,19 @@ def memes_view(data: Data, c: Content) -> dict | None:
     return {"desc": c.section_desc.get("memes", ""), "images": images}
 
 
+def reminders_due(cfg: dict, today) -> list[str]:
+    """config.reminders entries whose countdown lands on today, e.g. "In 1 week: <text>"."""
+    from datetime import date as _date
+    out = []
+    for r in cfg.get("reminders") or []:
+        when = r["date"] if isinstance(r["date"], _date) else _date.fromisoformat(str(r["date"]))
+        left = (when - today).days
+        if left in r.get("days_before", []):
+            label = {1: "Tomorrow"}.get(left) or (f"In {left // 7} week{'s' if left > 7 else ''}" if left % 7 == 0 else f"In {left} days")
+            out.append(f"Reminder. {label}: {r['text']}")
+    return out
+
+
 def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: datetime,
                charts: dict | None = None) -> dict:
     charts = charts or {}
@@ -599,6 +612,8 @@ def build_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, now: dat
     made = f"Generated {t.hour % 12 or 12}:{t.minute:02d}{'am' if t.hour < 12 else 'pm'} ET."
     v["footer"] = f"{made} All sections delivered." if not missing else f"{made} Unavailable this morning: {', '.join(missing)}."
     v["missing"] = missing
+    if due := reminders_due(cfg, data.date):
+        v["footer"] += " " + " ".join(due)
     return v
 
 

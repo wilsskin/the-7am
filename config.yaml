@@ -59,3 +59,13 @@ sources:
                         "timeout.com", "theinfatuation.com", "eater.com", "nymag.com", "secretnyc.co",
                         "outsideonline.com", "backpacker.com", "caranddriver.com", "motortrend.com",
                         "electrek.co", "rivian.com", "simonwillison.net"]
+
+# Reminders for Wilson, shown in the footer on the given days before `date` (Wilson, Nov 27, 2026).
+# The routine's cron is UTC with no timezone, so it must move an hour on each clock change.
+reminders:
+  - date: 2027-03-08
+    days_before: [14, 7, 3, 2, 1]
+    text: "Daylight saving starts Sun, Mar 8. Ask Claude to change the 7AM's schedule to 28 10 * * * (UTC), or issues will arrive an hour late."
+  - date: 2027-11-07
+    days_before: [14, 7, 3, 2, 1]
+    text: "Daylight saving ends Sun, Nov 7. Ask Claude to change the 7AM's schedule back to 28 11 * * * (UTC), or issues will arrive an hour early."
