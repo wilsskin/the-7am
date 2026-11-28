@@ -16,6 +16,11 @@ from brief.common import ET, pct
 
 # ---------- fetching (network) ----------
 
+def column(frame, symbol: str):
+    """One symbol's column from a yfinance frame (a single-symbol download has no per-symbol columns)."""
+    return frame[symbol] if hasattr(frame, "columns") and symbol in frame.columns else frame
+
+
 def fetch_daily_closes(symbols: list[str], start: date, end: date) -> dict[str, dict[date, float]]:
     """Official daily closes, {symbol: {session date: close}}."""
     import yfinance as yf
@@ -24,12 +29,7 @@ def fetch_daily_closes(symbols: list[str], start: date, end: date) -> dict[str, 
                      interval="1d", auto_adjust=False, progress=False, threads=True)
     if df is None or df.empty:
         raise RuntimeError("Yahoo returned no daily data")
-    close = df["Close"]
-    out = {}
-    for s in symbols:
-        col = close[s] if hasattr(close, "columns") and s in close.columns else close
-        out[s] = {ts.date(): float(v) for ts, v in col.dropna().items()}
-    return out
+    return {s: {ts.date(): float(v) for ts, v in column(df["Close"], s).dropna().items()} for s in symbols}
 
 
 def fetch_hourly(symbol: str, start: date) -> list[tuple[datetime, float, float]]:
@@ -84,12 +84,6 @@ def pick_movers(closes: dict[str, dict[date, float]], refs: dict, names: dict[st
             out.append({"ticker": t, "name": names.get(t, t), "change_1d_pct": p,
                         "price": round(prices[refs["last"]], 2)})
     return sorted(out, key=lambda r: abs(r["change_1d_pct"]), reverse=True)[:n]
-
-
-def pick_standout(closes: dict[str, dict[date, float]], refs: dict, names: dict[str, str]) -> dict | None:
-    """Biggest absolute 1-day move among the big names."""
-    top = pick_movers(closes, refs, names, 1)
-    return top[0] if top else None
 
 
 # ---------- collectors ----------

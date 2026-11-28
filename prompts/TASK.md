@@ -23,7 +23,7 @@ You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7a
    ```
    `kind`: "own_birthday" for an event titled "Happy birthday!" (Wilson's own); "birthday" for any other event whose title contains "birthday" (any case) or whose eventType is birthday; "holiday" for events from the holidays calendar; otherwise "event". All-day events: `"all_day": true` and `start` is the date at midnight or null. Skip declined events. Keep `location` short (venue or address), null if none or if it's a video link. If the connector fails, don't write the file.
 
-4. **Write.** Read `prompts/EDITORIAL.md` and follow it. Read `run/data.json`, research the news with web search, and write `run/content.json`.
+4. **Write.** Follow `prompts/EDITORIAL.md` to research the news and write `run/content.json`.
 
 4b. **Charts.** If any story in `run/content.json` has a `chart`, run `python -m brief.charts`. It fetches the numbers and draws `run/charts/*.png`. Then follow the chart steps in EDITORIAL.md: look at each PNG, drop any chart that failed or doesn't support its story, and if you removed or changed one, run `python -m brief.charts` again. If the command itself fails, delete every `chart` field and continue; the email must still send.
 

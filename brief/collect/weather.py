@@ -17,6 +17,7 @@ icon       the SF Symbol for today's WMO weather code, as Apple Weather picks it
 import re
 from datetime import datetime
 
+from brief import fmt
 from brief.common import get_json
 
 URL = "https://api.open-meteo.com/v1/forecast"
@@ -53,8 +54,6 @@ def kind_for(code: int) -> str:
         return "storm"
     return "cloud"
 
-
-icon_for = kind_for
 
 OUTLOOK_WORDS = {"sun": "Sunny", "partly": "Partly cloudy", "cloud": "Cloudy", "fog": "Foggy",
                  "drizzle": "Drizzle", "rain": "Rain", "snow": "Snow", "storm": "Thunderstorms"}
@@ -95,15 +94,11 @@ def outlook_line(hours: list[int], codes: list[int], now_hour: int) -> str | Non
     words = ["Clear" if k == "sun" and h >= 18 else OUTLOOK_WORDS[k] for k, h, _ in spells]
     if len(spells) == 1:
         return words[0]
-    parts = [f"{words[0]} until {_hour_label(spells[1][1])}"]
+    parts = [f"{words[0]} until {fmt.hour(spells[1][1])}"]
     for i in range(1, len(spells)):
         w = words[i].lower()
-        parts.append(f"then {w} until {_hour_label(spells[i + 1][1])}" if i + 1 < len(spells) else f"then {w}")
+        parts.append(f"then {w} until {fmt.hour(spells[i + 1][1])}" if i + 1 < len(spells) else f"then {w}")
     return ", ".join(parts)
-
-
-def _hour_label(h: int) -> str:
-    return f"{h % 12 or 12}{'am' if h < 12 else 'pm'}"
 
 
 def precip_line(hours: list[int], probs: list[int], codes: list[int], now_hour: int) -> str | None:
@@ -118,8 +113,8 @@ def precip_line(hours: list[int], probs: list[int], codes: list[int], now_hour: 
         dry = [h for h, p, c in day if h > first and p < LIKELY]
         if not dry:
             return f"{kind} likely all day."
-        return f"{kind} likely until {_hour_label(dry[0])}."
-    return f"{kind} likely after {_hour_label(first)}."
+        return f"{kind} likely until {fmt.hour(dry[0])}."
+    return f"{kind} likely after {fmt.hour(first)}."
 
 
 def parse(data: dict, now: datetime) -> dict:
@@ -137,7 +132,7 @@ def parse(data: dict, now: datetime) -> dict:
         "low": lo,
         "code": code,
         "conditions": cond,
-        "icon": icon_for(code),
+        "icon": kind_for(code),
         "outlook": outlook_line(hours, [h["weather_code"][i] for i in idx], now.hour),
         "summary": f"{cond}, high {hi}°, low {lo}°.",
         "precip": precip_line(hours, [h["precipitation_probability"][i] for i in idx],
@@ -189,10 +184,10 @@ def parse_nws(hourly: dict, now: datetime, daily: dict | None = None) -> dict:
     code = max(day)                              # like Open-Meteo's daily code: the day's most severe weather
     day_high = [p["temperature"] for p in (daily or {}).get("properties", {}).get("periods", [])
                 if p.get("isDaytime") and datetime.fromisoformat(p["startTime"]).date() == now.date()]
-    hi, lo, cond = max(temps + day_high[:1]), min(temps), CONDITIONS.get(max(day), "Cloudy")
+    hi, lo, cond = max(temps + day_high[:1]), min(temps), CONDITIONS.get(code, "Cloudy")
     return {
         "temp_now": temps[0],                    # the forecast for the current hour
-        "high": hi, "low": lo, "code": code, "conditions": cond, "icon": icon_for(code),
+        "high": hi, "low": lo, "code": code, "conditions": cond, "icon": kind_for(code),
         "outlook": outlook_line(hours, codes, now.hour),
         "summary": f"{cond}, high {hi}°, low {lo}°.",
         "precip": precip_line(hours, probs, codes, now.hour),
@@ -211,7 +206,7 @@ def collect_nws(loc: dict, now: datetime) -> dict:
 
 def collect(cfg: dict, now: datetime) -> dict:
     loc = cfg["location"]
-    base = {"as_of": now.isoformat(), "location": loc["name"]}
+    base = {"location": loc["name"]}
     try:
         return {**base, "source": "open-meteo", **collect_open_meteo(loc, cfg["timezone"], now)}
     except Exception as first:

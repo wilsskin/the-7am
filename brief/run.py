@@ -10,7 +10,6 @@ python -m brief.run --dry-run
 import argparse
 import shutil
 from datetime import datetime
-from pathlib import Path
 
 from brief import render
 from brief.collect.__main__ import collect

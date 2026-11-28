@@ -1,54 +1,43 @@
 # The 7AM: Build Plan
 
-Handoff spec for a Claude Code agent. Read `CLAUDE.md` first, then all of this file (including §14, known risks and open items), `DESIGN_SYSTEM.md` and the three `templates/reference_*.html` mockups (open them in a browser), before writing any code. The design is final and approved by Wilson as of Nov 22, 2026: build it as specified, and ask before changing anything visual.
+How the pipeline works and why, plus every product decision made so far. Read `CLAUDE.md` first. Visual rules are in `DESIGN_SYSTEM.md`; ask Wilson before changing anything visual.
 
-The 7AM is a sibling of Wilson's portfolio ([wilsskin/wms-portfolio](https://github.com/wilsskin/wms-portfolio)). It should feel like the same brand: same design tokens, same plain-spoken voice, same "simple over clever" engineering. When in doubt, look at how the portfolio does it.
+The 7AM is a personal, ad-free morning newsletter emailed to Wilson every morning (around 6:35am ET), modeled on Exec Sum and Morning Brew, built around his holdings, his calendar and his interests. It is a sibling of Wilson's portfolio ([wilsskin/wms-portfolio](https://github.com/wilsskin/wms-portfolio)): same design tokens, same plain-spoken voice, same "simple over clever" engineering.
 
-**Constraint: this must run at no cost beyond Wilson's Claude plan.** No Anthropic API key, no paid APIs, no paid hosting. Every service below is on a free tier.
+## 0. Ground rules
 
-Owner: Wilson (w0skinner@gmail.com). Goal: *The 7AM*, a personal, ad-free morning newsletter emailed to Wilson every day at 7:00am ET, modeled on Exec Sum and Morning Brew, built around his holdings, his calendar and his interests.
-
-## 0. How to work on this project
-
-These come from the portfolio's CLAUDE.md and apply to every step here.
-
-- **Prefer simple solutions.** Plain Python, few dependencies, no frameworks, no extra services. If a library saves ten lines, it probably isn't worth adding.
-- **Offer options with tradeoffs** when there's more than one reasonable approach. Don't pick one silently.
-- **Ask rather than guess** on anything not obvious. Wilson prefers a quick question over an assumption that has to be undone.
-- **Explain your reasoning.** Wilson is a designer who builds, not an experienced engineer. Explain APIs, keys, git, cron and the scheduled task setup from scratch, in plain words.
-- **Show, don't describe.** Each milestone ends with something Wilson can look at: a JSON file, a screenshot, an email in his inbox.
-- **Never spend money.** If something seems to need a paid service or the Anthropic API, stop and ask.
+- **No cost beyond Wilson's Claude plan.** No Anthropic API key, no paid APIs, no paid hosting. Every service is on a free tier. If something seems to need money, stop and ask.
+- **Show, don't describe.** Changes end with something Wilson can look at: a JSON file, a screenshot, an email in his inbox.
+- Everything else about working with Wilson is in `CLAUDE.md`.
 
 ---
 
 ## 1. Architecture
 
-One GitHub repo, run daily by a **Claude cloud scheduled task**.
-
-Code owns the parts that must be exact. Claude owns the parts that need judgment.
+One GitHub repo (wilsskin/the-7am, cloned locally at `~/code/the-7am`), run daily by a **Claude cloud scheduled task**. Code owns the parts that must be exact. Claude owns the parts that need judgment.
 
 | Layer | Owner | Why |
 |---|---|---|
 | Market prices, earnings numbers, weather, subway alerts, scores, meme candidates | Python collectors (deterministic) | Numbers must never come from an LLM reading articles |
 | Calendar events + birthdays | Claude, via the Google Calendar connector | Connector already authorized, no OAuth setup |
-| Feedback (Wilson's replies) | Claude, via the Gmail connector, read only | Files replies into `feedback/FEEDBACK.md` (§10b) |
+| Feedback and past issues | Claude, via the Gmail connector, read only | §10b; past issues stop repeats (§6) |
 | Story selection, summaries, headlines, links | Claude, using web search | Needs editorial judgment |
-| Layout | Jinja2 HTML template in the repo | Identical layout every day; Claude never writes HTML |
+| Layout | Jinja2 templates in the repo | Identical layout every day; Claude never writes HTML |
 | Sending | Resend API | Reliable delivery to Gmail, free tier |
 
-### Daily run (scheduled task)
+### Daily run
 
-1. Task fires at **6:28am ET** (`CRON_TZ=America/New_York 28 6 * * *`). Off the hour and half hour on purpose: those runs can start late.
-2. Claude Code clones the repo, files any new feedback replies (§10b), then runs `python -m brief.collect` → writes `run/data.json`.
-3. Claude reads today's calendar through the connector → writes `run/calendar.json`.
-4. Claude follows `prompts/EDITORIAL.md`, researches the news with web search, writes `run/content.json` matching `brief/schema.py`.
-5. `python -m brief.render` validates both JSON files, enforces rules (dedupe, word caps, allowlist), renders `run/issue.html` + plain-text fallback.
+1. The task fires at **6:28am ET**. Its cron is UTC with no time zone: `28 11 * * *` while New York is on EST, `28 10 * * *` on EDT. It must be changed by hand at each clock change; the footer reminds Wilson beforehand (`reminders` in config.yaml). Off the hour on purpose: on-the-hour runs can start late.
+2. Claude clones the repo and follows `prompts/TASK.md`: files feedback (§10b), saves the last two issues for the no-repeat check, runs `python -m brief.collect` → `run/data.json`.
+3. Claude reads today's calendar → `run/calendar.json`.
+4. Claude follows `prompts/EDITORIAL.md`, researches the news, writes `run/content.json` (`brief/schema.py`). Optional charts: `python -m brief.charts`.
+5. `python -m brief.render` validates everything, enforces the rules (allowlist, dedupe, no repeats, word caps) and writes `run/issue.html` + `run/issue.txt`.
 6. `python -m brief.send` sends via Resend immediately (lands around 6:35am ET). Never use `scheduled_at`: Resend can't schedule emails with attachments, and every issue has inline icons (this silently dropped the Nov 23 issue).
 
 ### Failure rules (non-negotiable)
 
-- If a collector fails, its section renders "Data unavailable this morning." Never fill numbers from search.
-- If content.json fails validation, Claude gets one retry to fix it. If it still fails, render with whatever sections are valid.
+- If a collector fails, its section renders "… unavailable this morning." Never fill numbers from search.
+- If content.json fails validation, Claude gets one retry. If it still fails, `--lenient` renders whatever is valid, dropping only the bad items.
 - If render fails completely, send a plain-text email with whatever exists plus the error.
 - The email always sends. A missing section is fine. A missing email is not.
 
@@ -58,335 +47,144 @@ Code owns the parts that must be exact. Claude owns the parts that need judgment
 
 ```
 the-7am/
-  CLAUDE.md                 # provided: architecture, design, how to work with Wilson
-  README.md                 # provided: portfolio-style project summary
-  BUILD_PLAN.md             # this file
-  DESIGN_SYSTEM.md          # provided: tokens, text styles, components, section layouts
-  build_reference.py        # provided: generates the three reference issues from the tokens
-  config.yaml               # all personal settings (see §3)
+  CLAUDE.md  README.md  BUILD_PLAN.md  DESIGN_SYSTEM.md  SETUP.md
+  config.yaml               # all personal settings (§3)
   prompts/
-    TASK.md                 # the scheduled task prompt (see §8)
-    EDITORIAL.md            # section rules, sources, style (see §6)
+    TASK.md                 # the scheduled task's steps (§8)
+    EDITORIAL.md            # section rules, sources, style (§6)
   brief/
-    collect/
-      markets.py            # indices, crypto, holdings, standout stock
-      earnings.py           # yesterday's results + surprise %, next trading day's reporters, Monday week calendar
-      market_calendar.py    # trading day, closures, early closes
-      weather.py
-      mta.py
-      sports.py             # last night's scores for followed teams, Monday: this week's games
-      memes.py
-    tokens.py               # the DESIGN_SYSTEM.md tokens as one Python dict (port from build_reference.py)
-    schema.py               # pydantic models for data.json, calendar.json, content.json
-    render.py
-    send.py
-    run.py                  # local orchestrator: --dry-run, --fixture
+    collect/                # markets, earnings, market_calendar, weather, mta, sports, memes
+    common.py  fmt.py  tokens.py  schema.py
+    render.py  send.py  charts.py  feedback.py  previous.py  sp500.py
+    run.py                  # local only: --fixture, --dry-run; never sends
   templates/
-    reference_issue.html    # provided: weekday mockup, the visual source of truth
-    reference_monday.html   # provided: Monday mockup
-    reference_weekend.html  # provided: weekend mockup
-    icons/                  # provided: six 60px PNG line icons (weather, subway, calendar)
-    email.html.j2           # built by converting the reference mockups to Jinja (one template, edition switches)
-    email.txt.j2
-  data/
-    sp500.csv               # ticker, name; refresh monthly
-  feedback/
-    FEEDBACK.md             # Wilson's replies to the issue, newest first (§10b)
-  tests/
-    fixtures/               # sample data.json, calendar.json, content.json
+    email.html.j2  email.txt.j2
+    icons/                  # 60px PNG line icons (make_icons.swift)
+  brand/7am-twotone.png     # logo, for the sender avatar (§12)
+  data/sp500.csv            # tickers, names, market caps; refreshed monthly
+  feedback/FEEDBACK.md      # Wilson's replies, newest first (§10b)
+  tests/                    # pytest; fixtures/issues/ are the sample issues
   run/                      # gitignored, per-run output
 ```
 
-Python 3.12. Dependencies, kept deliberately short: `yfinance`, `exchange_calendars`, `requests`, `pydantic`, `jinja2`, `pyyaml`, `matplotlib` (charts, added Nov 27, 2026), `pytest` (Playwright for screenshot checks in dev only). No CSS inliner: the Jinja macros write inline styles from `tokens.py`. No Resend SDK: one `requests.post` call. Ask Wilson before adding anything else.
+Python 3.12. Dependencies are in `requirements.txt` (runtime) and `requirements-dev.txt` (pytest, Playwright). No CSS inliner (the Jinja macros write inline styles from `tokens.py`), no Resend SDK (one `requests.post`). Ask Wilson before adding anything.
 
-Local dev note: clone the repo outside iCloud Drive (e.g. `~/code/the-7am`). iCloud syncing a `.git` folder causes corruption.
+Keep the repo outside iCloud Drive: iCloud syncing a `.git` folder causes corruption. The iCloud `projects/newsletter` folder holds a reference copy of the docs only.
 
 ---
 
 ## 3. config.yaml
 
-```yaml
-brand: { name: "The 7AM" }          # working name, Wilson may rename
-recipient: w0skinner@gmail.com
-feedback_address: w0skinner+7am-feedback@gmail.com   # Reply-To on every issue (§10b)
-timezone: America/New_York
-location: { name: "New York", lat: 40.7306, lon: -73.9866 }   # East Village
-subway_lines: ["4", "5"]
-
-markets:
-  indices:
-    - { symbol: "^GSPC", label: "S&P 500" }
-    - { symbol: "^IXIC", label: "Nasdaq" }
-    - { symbol: "^DJI",  label: "Dow" }
-  crypto:
-    - { symbol: "BTC-USD", label: "Bitcoin" }
-    - { symbol: "ETH-USD", label: "Ether" }
-  holdings: ["SOXX", "PLTR", "GOOGL", "GEV", "COST", "V", "GS"]   # card order
-  standout_min_market_cap: 100_000_000_000
-  movers_shortlist: 8
-  big_earnings_universe: top_50_sp500_by_market_cap   # plus holdings
-
-sports:
-  teams:
-    - { league: nfl, team: "San Francisco 49ers" }
-    - { league: nba, team: "Golden State Warriors" }
-    - { league: mlb, team: "San Francisco Giants" }
-  also_cover: ["NFL major headlines and trades", "NBA major headlines and trades"]
-
-memes:
-  subreddits: ["wallstreetbets", "ProgrammerHumor", "memes"]   # Wilson will tune
-  count: 4
-
-sources:
-  subscribed: ["wsj.com", "nytimes.com"]          # prefer these links
-  allowed: ["wsj.com", "nytimes.com", "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk",
-            "nbcnews.com", "cnbc.com", "axios.com", "theverge.com", "techcrunch.com",
-            "espn.com", "variety.com", "hollywoodreporter.com", "gothamist.com", "ny1.com",
-            "ft.com", "bloomberg.com"]
-  paywalled_unsubscribed: ["ft.com", "bloomberg.com"]   # link only if no other source has it
-```
+All personal settings live in `config.yaml`: recipient, sender, feedback address, location, subway lines and stops, indices, crypto, holdings (in card order), the earnings universe, teams, meme sources, allowed news domains and leisure domains, and footer reminders. The file is the source of truth; its comments say what each setting does.
 
 ---
 
 ## 4. Data sources (collectors)
 
-Verify each endpoint at build time. Free tiers and unofficial endpoints change. If one is dead, pick the closest free equivalent and note it in CLAUDE.md.
-
 | Data | Source | Notes |
 |---|---|---|
-| Index, ETF, crypto, holdings prices | `yfinance` | Price at the last 4pm ET close, 1-day % (vs the 4pm ET close before it), week-to-date % (vs the 4pm ET close of the prior week's last trading day). Monday: YTD % instead of WTD. **Crypto uses the same 4pm ET snapshots as stocks, not a rolling 24h window**: pull hourly bars and take the bar at 16:00 ET on the same dates the stock closes come from. Weekend: crypto as of 4pm ET Friday. |
-| Standout stock | `yfinance` over `data/sp500.csv` | Biggest absolute 1-day % move among names over $100B market cap. Return ticker, name, % move. Claude writes the 2–3 sentence "why" and finds a link. |
-| Earnings results + calendar | Finnhub `/calendar/earnings` (free key) | EPS est/actual, revenue est/actual, timing (bmo/amc). Filter to the big universe. Code computes the surprise % for each: (actual − estimate) / |estimate|, rounded to 0.1% (positive = beat, negative = miss). After-hours / premarket move from `yfinance` (prepost). Also return the big-universe companies reporting the next trading day (company names); on Tue–Fri render.py appends "Deere reports tomorrow." / "Dell and Salesforce report tomorrow." (Friday: "report Monday") to the Earnings description. Nobody → no sentence. |
-| Market closures / early closes | `exchange_calendars` (XNYS) | Any closure or early close today or later this week → a fixed sentence ("Markets close Thursday for Thanksgiving, early close Friday at 1pm.") that render.py appends to the Before the bell description. |
-| Weather | Open-Meteo `/v1/forecast` (no key); backup: National Weather Service `api.weather.gov` (no key, needs a User-Agent) | High/low °F, conditions, hourly precip probability → "rain likely after 4pm". The WMO weather code also picks the icon: `sun` (0–1), `cloud` (2–48), `rain` (51–67, 80–82, 95–99), `snow` (71–77, 85–86). |
-| Subway alerts | MTA GTFS-RT alerts JSON (`api-endpoint.mta.info`, camsys subway-alerts feed, no key) | Active alerts where informed entity route is 4 or 5 and that touch the Fulton St–14 St-Union Sq ride (config `subway_stops`): alerts scoped "In the Bronx/Brooklyn/Queens" or listing only stations off the ride are dropped; line-wide delays stay. Header text only, max 2. |
-| Last night's scores | ESPN public scoreboard JSON (`site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard`) | Only followed teams, only games that finished since the previous morning's run (Monday too: since Sunday's run). One request per date; ESPN rejects date ranges. Return W/L, both scores, league. |
-| This week's games (Mondays) | ESPN team schedule JSON (`site.api.espn.com/apis/site/v2/sports/{sport}/{league}/teams/{team}/schedule`) | 49ers and Warriors games Monday through Sunday: day, opponent, home/away, start time ET. |
-| Supporting charts (on request) | Kalshi public API (`api.elections.kalshi.com/trade-api/v2`: event odds, daily candlesticks), Polymarket (`gamma-api.polymarket.com` events and search, `clob.polymarket.com/prices-history`), BLS public API v2 (`api.bls.gov`, no key: 25 requests a day, plenty for a few charts), Yahoo via yfinance. All free, no keys. | Not a daily collector. Claude adds a `chart` request to a story when one supports it; `python -m brief.charts` fetches the numbers and draws the PNG (matplotlib), so chart numbers never come from Claude. Verified Nov 27, 2026. FRED's CSV download timed out from Wilson's Mac, so it isn't used. BLS skipped October 2025 CPI (the 2025 shutdown), so year-over-year CPI has no October 2026 point. |
-| Meme candidates | Short Squeez and Exec Sum meme sections, Lemmy public API (no key); Reddit API if ever approved | Newsletter issues from the last 26 hours; Lemmy top of day, image posts only, not NSFW, score threshold. Return ~12 candidates with image URLs. Claude picks the final 4 (§6). |
+| Index, ETF, crypto, holdings prices | `yfinance` | Price at the last 4pm ET close, 1-day % (vs the close before it), week-to-date % (vs the prior week's last close). Monday: YTD % instead of WTD. **Crypto uses the same 4pm ET moments as stocks, not a rolling 24h window**: the open of the 16:00 ET hourly bar (fallback: close of the 15:00 bar). Weekend: crypto as of 4pm ET Friday. |
+| Big movers | `yfinance` over `data/sp500.csv` | The 8 biggest absolute 1-day % moves among $100B+ companies. Claude picks 2–3 and writes why. |
+| Earnings results + calendar | Finnhub `/calendar/earnings` (free key) | Universe: the 200 biggest S&P 500 companies plus holdings. Surprise % = (actual − estimate) / \|estimate\|, to 0.1%. After-hours move: latest extended-hours price (`yfinance` prepost) vs that day's close (1pm on early-close days). Next trading day's reporters → "Deere reports tomorrow." appended to the Earnings description. |
+| Market closures / early closes | `exchange_calendars` (XNYS) | Any closure or early close today or later this week → a fixed sentence ("Markets close Thursday for Thanksgiving, early close Friday at 1pm.") appended to the Before the bell description. |
+| Weather | Open-Meteo (no key); backup: National Weather Service `api.weather.gov` (no key) | High/low °F, conditions, the day's outlook, precipitation timing. Open-Meteo returned 429 from the shared cloud IP on Nov 27, 2026, hence the backup. |
+| Subway alerts | MTA GTFS-RT alerts JSON (`api-endpoint.mta.info`, no key) | 4/5 alerts that touch the Fulton St–14 St-Union Sq ride (`subway_stops`); line-wide delays stay. Max 2. |
+| Last night's scores | ESPN public scoreboard JSON | Followed teams, games finished since the previous run. One request per date; ESPN rejects date ranges. |
+| This week's games (Mondays) | ESPN team schedule JSON | Teams with `week_preview: true`, Monday through Sunday. |
+| Memes | Short Squeez "Memes of the Day", Exec Sum "Meme Cleanser", Lemmy (no keys); Reddit only if its API is ever approved | Newsletter issues under 26 hours old, so nothing repeats; Lemmy fills. Claude picks up to 6. Parsed with regex: a newsletter redesign makes that source return nothing. |
+| Supporting charts (on request) | Kalshi, Polymarket, BLS, Yahoo (all free, no keys) | Not a daily collector. Claude adds a `chart` request to a story; `python -m brief.charts` fetches the numbers and draws a PNG, so chart numbers never come from Claude. FRED timed out, so it isn't used. BLS never published October 2025 CPI. |
 
-`data.json` must include `as_of` timestamps per block and an `ok: true/false` flag per collector.
+Every `data.json` block has `ok`, `as_of` and, if it failed, `error`.
 
 ---
 
-## 5. Sections (final, in order)
+## 5. Sections (in order)
 
-Day variants (each has a reference file, see DESIGN_SYSTEM.md):
-- **Mon** (`reference_monday.html`): YTD instead of WTD in the market and holdings cards. Your day card adds a "This week" calendar preview (Tue–Sun events). Earnings shows "Reporting this week" (one row per day, company names only) instead of "Reported yesterday". The sports card adds this week's 49ers and Warriors games.
-- **Tue–Fri** (`reference_issue.html`): standard.
-- **Sat/Sun** (`reference_weekend.html`): Before the bell becomes "Markets" with Bitcoin and Ether only (4pm ET Friday). No Holdings, no Earnings, no "On deck today". Everything else stays.
-- **Holiday / early close:** a weekday issue. The Before the bell description ends with the closure sentence (no callout box) whenever the market is closed or closes early any day this week.
-
-Every section has a header: label plus a one-line description Claude writes that morning (`section_desc` in content.json).
+Editions: **Mon** shows YTD instead of WTD, a "This week" calendar preview, "Reporting this week" earnings and this week's games. **Tue–Fri** is standard. **Sat/Sun**: Before the bell becomes "Markets" with Bitcoin and Ether only; no Holdings, Earnings or On deck today. **Holiday / early close**: a weekday issue whose Before the bell description ends with the closure sentence. Every section has a label plus a one-line description Claude writes that morning (`section_desc`).
 
 | # | Section | Source | Spec |
 |---|---|---|---|
-| 1 | Subject line + intro | Claude | Subject: punchy hook from the top story, Exec Sum style, under 60 chars. Intro: 2–5 sentences, aim for 3. The first sentence is the one thing to know today. |
-| 2 | Your Day | data.json + calendar.json + Claude | Weather line. Subway alerts for 4/5 if any. Today's calendar events (time + title). Birthdays: any event today whose title contains "birthday" (case-insensitive) or eventType BIRTHDAY → "Lily Bien's birthday 🎂". Event titled "Happy birthday!" is Wilson's own birthday → render a special greeting. US holidays from the holidays calendar. Monday only: "This week" preview of the rest of the week's events. Then "NYC today": up to 3 linked items, the fun and big stuff in the city (big events, the biggest NYC sports news, city news that changes his day). An empty calendar is simply left out; never mention that it's empty. |
-| 3 | Before the Bell | data.json + Claude | One market card: S&P 500, Nasdaq, Dow, Bitcoin, Ether (price at 4pm ET close, 1D %, WTD % or YTD %). Big movers: code shortlists the ~8 biggest 1-day moves among $100B+ companies; Claude picks 2–3 that led the selloff or rally. Each is "NVDA −6.40%" on one line, then 1–2 sentences on why, with a link. "On deck today": econ releases, Fed speakers, notable events (Claude, from search), sorted by time in code; items with no set time go last with "–". Every link in the issue reads as the outlet name ("WSJ ↗"). |
-| 3b | Earnings | data.json | Right after Before the Bell, ahead of Holdings. Table of yesterday's big reporters: Revenue and EPS each on one line as the actual plus the surprise vs estimate in colored parentheses ("57.0B (+3.3%)"), and the after-hours move. Numbers only, no notes. No "Reporting today" on weekdays. Mondays: "Reporting this week" instead, one row per day with company names only (no tickers, no before/after timing). Skip the section if empty. |
-| 4 | Your Holdings | data.json + Claude | One row per holding (price, 1D %, WTD % or YTD %). Then a story (2–3 sentences, linked) for **every** holding with relevant, recent news in the last 24h. No cap: on a big day, cover them all. Headline starts with the ticker ("PLTR: Army expands its software contract"). No news → no story. Never pad. |
-| 5 | The Big Read | Claude | Single most important story. ~300 words, 6–8 short paragraphs (max 6 phone lines each), Morning Brew structure and length. Headline printed as the first sentence. Tone: clear, concise, direct. Not jokey. Ends with a link. |
-| 6 | Top 3 | Claude | 3 more big stories, ~100 words each in 2 paragraphs, headline as the first sentence, link inline at the end. |
-| 7 | The Latest | Claude + data.json | Headlines only, one line each, linked, 3–5 per category, in this order: **Business** (deals, Wall Street, Goldman; keep to 3), **Tech**, **World/Politics**, **Pop Culture**, then **Sports** last. Each category label is a tag pill. Sports: headlines first, then the score card from data.json below them (last night's results; Mondays also this week's 49ers/Warriors games; no results and not Monday → no card). Sports headlines: 49ers, Warriors, Giants news, big NFL/NBA headlines and trades, and major NFL injuries (starters out for multiple games or the season). |
-| 8 | Off the Clock | Claude | 2–3 brief items, rotating: ski conditions (Nov–Apr, Northeast + Tahoe), outdoors/backpacking, cars (Rivian etc.), AI tools, food. NYC events go in NYC today. Each story gets one emoji before its headline (Top 3 too). Short. Topic goes at the start of the headline ("Ski report: Killington opens more terrain"), no eyebrow. |
-| 9 | Meme Roundup | data.json + Claude | 4 images, Exec Sum style, no captions needed. |
-| — | Charts | Claude picks, code draws | Optional supporting chart under a Big read, Top 3, Holdings or Movers story when the news calls for it (data releases, rate expectations, prediction-market odds). Max 3 an issue, usually 0–1. Never forced. (Wilson, Nov 27, 2026.) |
+| 1 | Subject + intro | Claude | Subject: punchy hook, under 60 characters. Intro: 2–5 sentences; the first is the one thing to know and the inbox preview. |
+| 2 | Your day | data + calendar + Claude | Weather, 4/5 alerts, today's events, birthdays ("Lily Bien's birthday 🎂"), Wilson's own birthday as a theme pill, US holidays. Monday: "This week". Then "NYC today": up to 3 links. An empty calendar is left out, never mentioned. |
+| 3 | Before the bell | data + Claude | Market card (S&P 500, Nasdaq, Dow, Bitcoin, Ether). Big movers: "NVDA −6.40%", then 1–2 sentences on why. "On deck today": scheduled events in time order, untimed items last with "–". |
+| 3b | Earnings | data | Yesterday's big reporters: revenue and EPS as the actual plus surprise ("57.0B (+3.3%)"), and the after-hours move. Monday: "Reporting this week", company names per day. Skipped if empty. |
+| 4 | Your holdings | data + Claude | One row per holding. A story for **every** holding with relevant news, no cap; headline starts with the ticker. |
+| 5 | The big read | Claude | The most important story, ~300 words in 6–8 short paragraphs, headline as the first sentence. |
+| 6 | Top 3 | Claude | 3 more big stories, ~100 words each, with an emoji. |
+| 7 | The latest | Claude + data | Headlines only, 3–5 per category: Business, Tech, World, Pop culture, Sports (tag pills). Sports ends with the score card. |
+| 8 | Off the clock | Claude | 2–3 short leisure items (ski, outdoors, cars, AI tools, food), each with an emoji. |
+| 9 | Meme roundup | data + Claude | Up to 6 images, no captions. Skipped if none. |
+| — | Charts | Claude picks, code draws | Optional, under a Big read, Top 3, Holdings or Movers story. Max 3, usually 0–1. |
 
-Global target: 1,600–1,900 words (weekend ~1,000).
-
----
-
-## 6. Editorial rules (put these in prompts/EDITORIAL.md)
-
-**Each story appears once.** Priority order for placement: Big Read > Top 3 > Holdings > Earnings > Before the Bell > The Latest > NYC today > Off the Clock. render.py enforces this by URL and by near-duplicate headline check, and drops the lower-priority duplicate.
-
-**NYC today vs Off the Clock.** NYC today owns the city: big events, the biggest NYC sports news, city news that changes his day. Off the Clock is leisure outside that: ski, outdoors, cars, AI tools, food. Never the same item, venue or event in both. (Decided Nov 25, 2026.)
-
-**Section descriptions.** One line (two at most) under every section label, summarizing that section today: "Nvidia beat on both lines and still fell after hours. Walmart missed on revenue." Concrete, not generic ("Here are today's headlines" is not allowed). Any number must come from data.json. Don't repeat the closure line in Before the bell or the next-reporters line in Earnings; render.py adds both.
-
-**Holdings news.** Cover every holding with relevant, recent news, with no cap. Relevant means it could move the stock or changes the story around it: earnings, guidance, deals, contracts, regulation, executive changes, big product launches, analyst moves on the name. Skip passing mentions and listicles.
-
-**Sports.** Besides team news and big trades, include major NFL injuries: a starter out for multiple games or the season, especially quarterbacks and anyone on the 49ers.
-
-**Intro.** 2–5 sentences, aim for 3. The first sentence is the hook and also becomes the inbox preview. Don't spend a sentence on the calendar; if the calendar is empty, say nothing about it.
-
-**Sources.** Only domains in `config.sources.allowed`. Prefer WSJ and NYT links when they cover the story (Wilson subscribes). Use FT or Bloomberg only if no other allowed source has it. Every item has a link to the actual article, not a homepage. Never invent a URL; if an article can't be found, drop the item.
-
-**No repeats (Wilson, Nov 27, 2026).** The Nov 27 issue re-ran at least 8 stories from Nov 26, because each run starts with no memory. Now the task copies the plain text of the last two issues from Gmail (search fixed to the issue sender and Wilson, read only) into `run/previous.json`; EDITORIAL.md bans repeats, and render.py (`brief/previous.py`) blocks any repeated link or near-identical headline and warns on reworded ones. A follow-up is allowed only as a genuine new development with a new article. Gmail instead of a history file in the repo, because the task has never been confirmed to push to GitHub.
-
-**Recency.** News from the last ~24 hours (since the previous 7am issue). Monday covers only what happened since Sunday's issue (decided Nov 22, 2026).
-
-**Selection.** Pick what a sharp 23-year-old in NYC finance and product design needs to know to sound informed at work and with friends. Big market movers, big tech/AI, major world news, NYC things that affect his day. Skip celebrity filler, clickbait and opinion pieces posing as news.
-
-**Style.** Write like wilsonskinner.com: short declarative sentences, one idea each, specific numbers ("increasing applications by 35%"), strong verbs over adjectives. Clear and direct, never jokey. No em dashes, no exclamation points, no filler ("amid," "in a move that," "it remains to be seen," "leverage," "impactful"). The subject line and intro can have some edge, like Exec Sum. Headlines are statements with a verb, never questions or puns.
-
-**Accuracy.** Do not state any price, percentage or EPS number in prose unless it comes from data.json. Claude may explain why something moved; the numbers come from the collectors.
-
-**Summaries are paraphrased.** Never copy article text. Short summaries in Claude's own words with a link out.
-
-**Memes.** From the candidates in data.json, pick 4 that are funny, not political, not offensive, not NSFW, ideally finance/tech flavored. Claude should view the images before picking.
+Target length: 1,600–1,900 words (weekend ~1,000).
 
 ---
 
-## 7. content.json schema (pydantic, brief/schema.py)
+## 6. Editorial rules
 
-Claude writes text and links only. No HTML, no markdown.
-
-```python
-class Link(BaseModel):
-    title: str
-    url: HttpUrl
-    source: str                    # "WSJ", "NYT", "Reuters"...
-
-class Story(BaseModel):
-    headline: str
-    body: str                      # plain text, paragraphs split by \n\n
-    link: Link
-
-class Content(BaseModel):
-    date: date
-    edition: Literal["weekday", "monday", "weekend", "holiday"]
-    subject: str = Field(max_length=70)
-    intro: str                              # 2-5 sentences, aim for 3
-    section_desc: dict[Literal["your_day","before_the_bell","earnings","holdings","big_read",
-                               "top_3","latest","off_the_clock","memes"], str]   # one line each
-    your_day_nyc: list[Link]                # 0-3, rendered under "NYC today"
-    movers: list[MoverStory]                # 0-3 {ticker, body, link}, ticker from data.json standout.movers; headline built by code
-    on_deck_today: list[OnDeck]             # {time: "8:30" | None, text}; the time fills the left column
-    holdings_news: list[HoldingStory]       # any number; HoldingStory = Story + ticker; headline starts "PLTR: "
-    big_read: Story
-    top_3: list[Story]                      # exactly 3
-    latest: dict[Literal["business","tech","world","sports","pop_culture"], list[Link]]
-    off_the_clock: list[Story]              # 2-3, short bodies
-    memes: list[HttpUrl]                    # 4, must be from data.json candidates
-
-class HoldingStory(Story):
-    ticker: str                             # must be in config.markets.holdings
-```
-
-Key order in `latest` is the display order: business, tech, world, pop_culture, sports.
-
-**calendar.json** (written by Claude from the connector): `{"date": ..., "today": [Event], "this_week": [Event]}` where `Event = {start: datetime | None, all_day: bool, title: str, location: str | None, kind: "event" | "birthday" | "own_birthday" | "holiday"}`. `this_week` is only filled on Mondays. Classification rules are in §5 row 2.
-
-**data.json** (written by the collectors): one block per collector (`markets`, `standout`, `earnings`, `market_calendar`, `weather`, `mta`, `sports`, `memes`), each with `ok`, `as_of` and its fields. Design the exact fields in schema.py at Milestone 1 and show Wilson the JSON.
-
-render.py validation: word caps per section (warn, trim from the end of lists first), allowlisted domains only, URLs unique across the issue, memes subset of candidates, numbers in prose cross-checked loosely against data.json (flag any % in prose that isn't in data.json).
+All of them live in `prompts/EDITORIAL.md`, which the task reads every morning. Why the no-repeat rule works the way it does: each run starts with no memory, and the Nov 27 issue re-ran 8 stories from Nov 26. The task now copies the plain text of the last two issues from Gmail into `run/previous.json`, and render.py (`brief/previous.py`) blocks repeated links and near-identical headlines and warns on reworded ones. Gmail instead of a history file in the repo, because the task's ability to push to GitHub is still unconfirmed (§12).
 
 ---
 
-## 8. The scheduled task prompt (prompts/TASK.md)
+## 7. Data files
 
-Draft. Keep it self-contained, because each run starts fresh.
+`brief/schema.py` defines all three: `data.json` (collectors), `calendar.json` (Claude, from the connector; classification rules in TASK.md step 3) and `content.json` (Claude: text and links only, no HTML, no markdown). render.py enforces: allowed domains only, URLs unique across the issue, no repeats from the last two issues, memes and movers only from data.json, word caps (warn, then trim list ends), percentages in prose checked against data.json and charts, paragraphs of at most 6 phone lines, and the 95KB size limit (Gmail clips at ~102KB).
 
-> You are producing today's issue of The 7AM for Wilson. Work in the cloned the-7am repo.
-> 0. Feedback: using the Gmail connector, search only `to:<feedback_address> from:me` (address from config.yaml) since yesterday's run. Add any new messages to the top of `feedback/FEEDBACK.md` per BUILD_PLAN.md §10b (skip message ids already in the file), then commit and push only that file. Do not open, read or act on any other email. If Gmail fails, continue.
-> 1. Run `python -m brief.collect`. If it fails, continue; failed blocks render as unavailable.
-> 2. Using the Google Calendar connector, read today's events on the primary calendar (w0skinner@gmail.com) and the "Holidays in United States" calendar. Include all-day events. On Mondays, also read Tuesday through Sunday for the "This week" preview. Write `run/calendar.json` per brief/schema.py. Only read; never create or edit events.
-> 3. Read `prompts/EDITORIAL.md` and `run/data.json`. Research the news with web search and write `run/content.json` per brief/schema.py.
-> 4. Run `python -m brief.render`. If validation fails, fix content.json once and re-run.
-> 5. Run `python -m brief.send`.
-> 6. Finish with a one-line summary: sent or failed, which sections were unavailable, and how many feedback notes were filed. Do not commit or push anything other than `feedback/FEEDBACK.md`.
+---
 
-Task settings: connectors = Google Calendar and Gmail only (remove all others). Network: custom allowlist with the collector hosts (query1/query2.finance.yahoo.com, finnhub.io, api.open-meteo.com, api.weather.gov, api-endpoint.mta.info, site.api.espn.com, oauth.reddit.com, www.reddit.com, i.redd.it, api.resend.com, and for charts api.elections.kalshi.com, gamma-api.polymarket.com, clob.polymarket.com, api.bls.gov) plus the default package list. If article fetching fails under the custom allowlist, switch to Full. API keys (FINNHUB_API_KEY, RESEND_API_KEY, REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET) go in as **network secrets**, not plain environment variables.
+## 8. The scheduled task
+
+Prompt: a short wrapper that points to `prompts/TASK.md`. The routine's own prompt also restricts Gmail to TASK.md's feedback and past-issue searches; update it whenever TASK.md adds a Gmail use. Connectors: Google Calendar and Gmail only. Cloud environment "the-7am": network access **Full**; `FINNHUB_API_KEY` and `RESEND_API_KEY` are plain environment variables. Setup steps are in `SETUP.md`.
 
 ---
 
 ## 9. Email template
 
-Follow `DESIGN_SYSTEM.md` exactly. `build_reference.py` already contains a helper function for nearly every component (title, section label, story, read link, theme pill, data card, meta row, headline row). Port those helpers into Jinja macros in `email.html.j2`, reading colors from `brief/tokens.py`. Icons: the six PNGs in `templates/icons/` are sent as inline attachments and referenced as `src="cid:<name>"`; send only the ones the issue uses. Do not design from scratch. Match the reference file for each edition (`reference_issue.html`, `reference_monday.html`, `reference_weekend.html`) at 390px and 640px wide, light and dark. Key constraints, all in DESIGN_SYSTEM.md (Email Engineering Rules): table layout, inline styles, system font stack (no web fonts), 400/500 weights only, HTML under 100KB, memes as hotlinked images, plain-text alternative always included.
+`templates/email.html.j2` follows `DESIGN_SYSTEM.md` and reads colors from `brief/tokens.py`. The rendered sample issues (`python -m brief.run --fixture` → `run/preview*.html`; `python tests/screenshots.py` for 390px and 640px, light and dark) are the visual reference. Icons are inline attachments (`src="cid:<name>"`), only the ones the issue uses. Table layout, inline styles, system font stack, 400/500 weights only, memes as hotlinked images, plain-text version always included.
 
 ## 10. Sending
 
-- Resend. Wilson signs up with w0skinner@gmail.com. Without a verified domain, Resend only sends from its test address to the account's own email, which is exactly this use case. Verify this at build time. A custom domain can come later.
-- `from: "The 7AM <7am@wilsonskinner.com>"`. wilsonskinner.com was verified in Resend on Nov 27, 2026 (DNS at Porkbun: DKIM `resend._domainkey`, CNAMEs `send` and `rsend`, `_dmarc` p=none). Open and click tracking are off (opt-in on a verified domain).
-- Icons go in the `attachments` array with a `content_id` (inline images). Verify at build time that Resend supports this and that Gmail iOS shows them; if not, fall back to hosting the PNGs at a public https URL and ask Wilson where.
-- `reply_to: config.feedback_address`, so hitting Reply in Gmail sends feedback without typing an address (§10b).
-- Subject line comes from content.json (`subject`), no prefix.
-- Never use `scheduled_at`: Resend rejects scheduling for emails with attachments. Send immediately.
-- Wilson should add a Gmail filter: never send to spam, mark important.
+- Resend, account w0skinner@gmail.com. `from: "The 7AM <7am@wilsonskinner.com>"`. wilsonskinner.com was verified on Nov 27, 2026 (DNS at Porkbun: DKIM `resend._domainkey`, CNAMEs `send` and `rsend`, `_dmarc` p=none). Open and click tracking are off. Before that, issues came from `onboarding@resend.dev`, whose forced click tracking broke links.
+- Icons in the `attachments` array with a `content_id`. Confirmed in Gmail iOS, light and dark.
+- `reply_to: config.feedback_address`, so Reply in Gmail files feedback (§10b).
+- Subject from content.json, no prefix. Sent immediately, never `scheduled_at`.
+- One send per date: the Idempotency-Key is the date. `--test` uses a one-off key.
 
 ## 10b. Feedback loop
 
-Wilson gives feedback by replying to the issue. There is no feedback section or button in the email; Wilson knows to reply. The goal: his notes end up in a file in the repo (`feedback/FEEDBACK.md`, newest first, dated, tagged with the issue they reply to) so a Claude Code session can read it and fix things.
+Wilson gives feedback by replying to the issue. No feedback section or button.
 
-**Pipeline: reply to the email (decided Nov 22, 2026).**
+1. Every issue has `reply_to: w0skinner+7am-feedback@gmail.com`. Gmail delivers `+something` addresses to the normal inbox.
+2. Each morning, before writing, the task searches Gmail for exactly `to:<feedback_address> from:me`. Read only.
+3. `python -m brief.feedback` adds each new reply to the top of `feedback/FEEDBACK.md`: date, the issue's subject, the note with the quoted original removed, and the Gmail id in an HTML comment so nothing is filed twice.
+4. The task commits and pushes **only** `feedback/FEEDBACK.md` (plus `data/sp500.csv` on the 1st of the month).
+5. Feedback isn't acted on automatically. In a Claude Code session, Claude reads it, proposes fixes and marks entries done (`- [x]`).
 
-1. Every issue is sent with `reply_to: config.feedback_address` (`w0skinner+7am-feedback@gmail.com`). Gmail delivers anything sent to a `+something` version of an address to the normal inbox, so no new account or inbox is needed. Without this, Reply would go to `onboarding@resend.dev` and be lost.
-2. Wilson hits Reply in Gmail and types his note. The reply's subject is "Re: <that day's subject>", so it's clear which issue it's about. Replying several times is fine; each reply is one entry.
-3. Each morning, before writing the issue, the scheduled task searches Gmail through the Gmail connector for exactly `to:<feedback_address> from:me` since the last run. Read only: it never sends, labels, deletes or opens any other mail.
-4. For each new message it adds an entry to the top of `feedback/FEEDBACK.md`: received date, the issue's subject (from "Re: ..."), the note text with the quoted original removed (drop everything from the "On ... wrote:" line down, and any lines starting with ">"), and the Gmail message id in an HTML comment so the same reply is never added twice.
-5. The task commits and pushes **only** `feedback/FEEDBACK.md` with the message `Add feedback from <date>`. This is the one exception to "do not commit or push anything" in TASK.md.
-6. Feedback is not acted on automatically. When Wilson opens a Claude Code session, Claude reads `feedback/FEEDBACK.md`, proposes fixes, and marks entries done (`- [x]`) once they ship.
-
-Why this way: free, nothing to tap or set up beyond Reply, and the notes end up as a plain file in the repo. Tradeoff: the morning task gets Gmail read access, so the search is fixed to the feedback address from Wilson himself, and TASK.md says to read nothing else in the inbox. Replies sent after 6:28am are picked up the next morning. Verify at build time that Resend's `reply_to` survives into Gmail iOS's Reply.
-
-Where the file lives: in the GitHub repo, because the cloud task can only save to GitHub, not to Wilson's Mac. The repo is cloned locally at `~/code/the-7am` (not the iCloud `projects/newsletter` folder, see §2). Run `git pull` there to see new entries.
+Replies sent after 6:28am are picked up the next morning. Run `git pull` in `~/code/the-7am` to see new entries.
 
 ---
 
-## 11. Milestones
+## 11. Decisions
 
-Work in this order. Each ends with something Wilson can see.
-
-1. **Scaffold + collectors.** Create the repo at `~/code/the-7am` and copy in the provided files from Wilson's iCloud `projects/newsletter` folder: CLAUDE.md, README.md, BUILD_PLAN.md, DESIGN_SYSTEM.md, build_reference.py, the three templates/reference_*.html files and templates/icons/. Then config, tokens, schema, all collectors with tests. `python -m brief.collect` writes a real data.json. Show Wilson the JSON.
-2. **Template + render.** Port the helpers in `build_reference.py` into macros in `email.html.j2` per DESIGN_SYSTEM.md, render it against fixture content.json. `python -m brief.run --fixture` writes `run/preview.html`. Screenshot it at 390px and 640px, light and dark (Playwright), compare against the reference, and show Wilson.
-3. **Editorial pass.** Write EDITORIAL.md. In an interactive Claude Code session, do steps 2–4 of TASK.md by hand to produce a real issue. Show Wilson.
-4. **Send.** Resend wired up; send a real test issue to Wilson's inbox. Check on iPhone Gmail, light and dark mode: icons show (inline attachments), layout matches the mockups, and tapping Reply addresses the feedback address.
-5. **Schedule.** Create the scheduled task (TASK.md prompt, Google Calendar and Gmail connectors only, network allowlist, network secrets). Do a Run now. Reply to that issue once and confirm the reply lands in `feedback/FEEDBACK.md` the next morning.
-6. **Shadow week.** Let it run 5 mornings. Collect Wilson's feedback, tune EDITORIAL.md and the template.
-
-## 12. Things Wilson has to do himself
-
-- Create the GitHub repo (private) and connect GitHub to Claude Code on the web.
-- Create accounts and keys: Finnhub (free), Resend (free, sign up with w0skinner@gmail.com), Reddit script app.
-- Approve the scheduled task and its network settings.
-- Keep the Google Calendar and Gmail connectors connected.
-
-## 13. Cost
-
-$0 beyond Wilson's existing Claude plan. The scheduled task runs count against his plan usage like any other session. Finnhub, Open-Meteo, MTA, ESPN, Reddit, GitHub and Resend are all free at this volume. Do not add the Anthropic API or any paid service. If something seems to need one, stop and ask Wilson.
-
-## 14. Known risks and open items
-
-Read before Milestone 1. Each risk names its fallback; if the fallback isn't good enough, ask Wilson.
-
-**Risks to verify early (Milestone 1 or 4)**
-- **Yahoo Finance from the cloud.** `yfinance` is an unofficial scraper and Yahoo often rate-limits or blocks requests from cloud servers. Test it from the scheduled task's environment, not just locally. Fallbacks: Finnhub `/quote` (free key, stocks and ETFs; index values via SPY/QQQ only if Wilson agrees), Coinbase public API for the 4pm ET crypto price.
-- **Reddit API access.** Reddit now reviews new API apps instead of approving them instantly, so a script app may not be granted. Decided (Nov 22, 2026): if access isn't granted, ship without the Meme roundup. **Changed (Nov 26, 2026):** Reddit never approved access, so Wilson chose Short Squeez and Exec Sum (their daily meme sections) plus Lemmy (free, no key), up to 6 memes. Reddit stays as a config option. The email must render fine with zero memes: skip the section entirely.
-- **Resend inline images and reply_to.** Confirm both work in Gmail iOS (BUILD_PLAN §10, §10b). Inline-image fallback: host the PNGs at a public https URL (ask Wilson where).
-- **Pushing from the scheduled task.** Confirm the cloud task can commit and push `feedback/FEEDBACK.md` to the default branch. If it can only push to its own branch, use one long-lived `feedback` branch, and tell Wilson to `git pull` that branch.
-- **Connectors inside a scheduled task.** Confirm the Google Calendar connector can see the "Holidays in United States" and contacts "Birthdays" calendars, and that the Gmail connector can search. Wilson has to connect Gmail in claude.ai first (it isn't connected yet).
-- **Gmail clipping.** Holdings news has no cap, so a big day can get long. Keep the rendered HTML under 95KB; if it goes over, shorten stories, not sections.
-- **Memes from the cloud.** The task has to download and look at each meme image before picking. If it can't view images, pick by title and score and tell Wilson.
-
-**Found at build time (Nov 22, 2026)**
-- Yahoo, Open-Meteo, MTA, ESPN, Coinbase and the S&P 500 list all work from Wilson's Mac. ESPN's scoreboard rejects date ranges, so sports asks one date at a time. Cloud test still pending.
-- Claude's web search refuses domain filters for WSJ, NYT, Reuters, AP, BBC, FT and The Verge (those sites block Anthropic's crawler), and the fetcher can't open them. Axios returns 403; Gothamist and Variety redirect bots to a paywall host. EDITORIAL.md says how to cite them anyway.
-- Resend (Milestone 4 test, Nov 22): inline cid icons show in Gmail iOS, light and dark mode look right, and Reply goes to the feedback address. Feedback search and filing work end to end. But the shared onboarding@resend.dev sender adds click tracking (links rewritten via resend-clicks.com) and an open pixel, against "no tracking" in DESIGN_SYSTEM.md. Tracking is per domain and off by default on a verified domain, so the fix is sending from Wilson's own domain.
-- Google Calendar: birthdays are ordinary all-day events on the primary calendar ("Lily Bien's birthday"); there is no separate Birthdays calendar. The title rule catches them.
-
-**Decided (Nov 22, 2026)**
-- On Tuesdays, WTD equals 1D (the week is one day old). Keep it as is; no special case.
-- Monday covers only what happened since Sunday's issue (news and sports), not the whole weekend.
+- On Tuesdays, WTD equals 1D (the week is one day old). No special case.
+- Monday covers only what happened since Sunday's issue (news and sports).
 - Earnings "After hrs" is the latest extended-hours price vs the reporting day's close, for every reporter, including ones that reported before the open.
 - "Reported yesterday" means the previous trading day.
 - The big temperature in Your day is the current East Village temperature when the task runs.
-- Market caps live in `data/sp500.csv` (refreshed monthly with `python -m brief.sp500`), not looked up live.
+- Market caps live in `data/sp500.csv` (refreshed monthly), not looked up live. The task refreshes it on the 1st and pushes it.
 - Subway alerts and calendar events show on weekends too, when there are any.
-- Crypto's 4pm price is the open of the 16:00 ET hourly bar (fallback: close of the 15:00 bar).
-- The GitHub repo is created in Milestone 1 so the cloud Yahoo test can run early.
-- Earnings covers the 200 biggest S&P 500 companies plus holdings (not just the top 50), biggest first. Watch the email size in peak season; if it gets close to 95KB, cap the table at the largest names with an "and N others" line (ask Wilson first).
-- Off the clock may link leisure sites beyond the news allowlist (`sources.off_the_clock_extra` in config.yaml); render.py allows them only there.
-- The scheduled task refreshes `data/sp500.csv` on the 1st of each month and pushes it: the second exception to "only push FEEDBACK.md".
-- Wilson's own birthday (theme pill in Your day) and "unavailable" states (a collector failed) aren't mocked up. Build them from the spec, render each with a fixture at Milestone 2, and show Wilson the draft.
+- Earnings covers the top 200 S&P 500 companies plus holdings. If the email nears 95KB in peak season, cap the table with an "and N others" line (ask Wilson first).
+- Off the clock may link leisure sites beyond the news allowlist (`sources.off_the_clock_extra`); render.py allows them only there.
+- NYC today owns the city (events, big NYC sports news, city news); Off the clock is leisure outside it. Never the same item in both.
+- Every link reads as the outlet name ("WSJ ↗"), never the article title.
+- Google Calendar birthdays are ordinary all-day events on the primary calendar; the title rule catches them.
+- Claude's web search can't filter to WSJ, NYT, Reuters, AP, BBC, FT or The Verge, and the fetcher can't open them; EDITORIAL.md says how to cite them anyway.
+- Reddit never approved API access (Nov 26, 2026); memes come from Short Squeez, Exec Sum and Lemmy. Reddit code stays in case it's approved.
+- Wilson doesn't use a Gmail filter, and declined rotating the Resend API key (free account, low stakes).
 
-**To do later (agreed Nov 22, 2026)**
-- ~~**Send from Wilson's own domain**~~ **Done Nov 27, 2026** (sender `7am@wilsonskinner.com`, tracking off). Higher priority than it looked: on Nov 22 the resend-clicks.com redirect failed its TLS handshake, so tapped links in the email did not open (direct URLs all work). Verify wilsonskinner.com (or a subdomain) in Resend by adding the DNS records Resend gives, then change `sender` in config.yaml to something like `The 7AM <7am@wilsonskinner.com>` and update the Gmail filter. Why: the shared onboarding@resend.dev sender forces click and open tracking (links go through resend-clicks.com), which DESIGN_SYSTEM.md rules out; on a verified domain tracking is off by default. Confirm both tracking toggles are off in Resend → Domains afterwards.
-- **Sender avatar for everyone (with the own-domain step).** Gmail's inbox circle comes from the sender address. Once mail comes from e.g. 7am@wilsonskinner.com, create a free Google Account for that address (needs email forwarding on the domain to receive Google's code) and set `brand/7am-twotone.png` as its profile photo. BIMI is the official route but needs a paid certificate, so it's out. Until then: a Google Contact for the sender with the logo as its photo, which only Wilson sees.
-- ~~Rotate the Resend API key~~ Dropped (Wilson, Nov 27, 2026): free account, low stakes, not worth it.
+## 12. Open items
 
-**Small decisions still open (ask Wilson when you reach them)**
-- Plain-text version layout: derive it from the HTML order; show Wilson once.
-- Meme subreddits and the final name ("The 7AM" is a working name) are Wilson's to tune any time.
-
+- **Confirm the task can push to GitHub.** Wilson replies to the Nov 28 issue; on Nov 29 check that it landed in `feedback/FEEDBACK.md`. If the task can only push to its own branch, use one long-lived `feedback` branch.
+- **Drop the old sender from the past-issues search** in TASK.md step 1a after Dec 2, 2026, once both saved issues come from `7am@wilsonskinner.com`.
+- **Sender avatar (optional).** Gmail's inbox circle comes from the sender address. Create a free Google Account for 7am@wilsonskinner.com (Porkbun email forwarding receives Google's code) and set `brand/7am-twotone.png` as its photo. BIMI needs a paid certificate, so it's out.
+- **Name.** "The 7AM" is a working name; it's `brand.name` in config.yaml.

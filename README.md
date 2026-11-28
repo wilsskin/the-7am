@@ -1,5 +1,5 @@
 # The 7AM
-A personal morning newsletter, emailed every day at 7am.
+A personal morning newsletter, emailed every morning before 7am.
 
 [wilsonskinner.com](https://wilsonskinner.com)
 

@@ -55,10 +55,6 @@ def load() -> list[dict]:
     return [r for r in rows if best[r["name"]] is r]
 
 
-def top_by_cap(n: int) -> list[dict]:
-    return sorted(load(), key=lambda r: r["market_cap"], reverse=True)[:n]
-
-
 def refresh() -> None:
     import yfinance as yf
 

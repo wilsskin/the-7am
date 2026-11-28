@@ -98,11 +98,6 @@ class MarketEvent(BaseModel):
 class MarketCalendar(Block):
     today_is_trading_day: bool | None = None
     last_close: date | None = None
-    last_close_at: datetime | None = None
-    prev_close: date | None = None
-    week_base: date | None = None
-    year_base: date | None = None
-    next_trading_day: date | None = None
     this_week: list[MarketEvent] = []
     closure_line: str | None = None          # appended to the Before the bell description
 
@@ -287,14 +282,11 @@ class HoldingStory(Story):
         return self
 
 
-class StandoutStory(BaseModel):
+class MoverStory(BaseModel):
+    ticker: str                              # must be in data.json standout.movers
     body: str                                # headline ("NVDA −6.40%") is built by code
     link: Link
     chart: ChartRequest | None = None
-
-
-class MoverStory(StandoutStory):
-    ticker: str                              # must be in data.json standout.movers
 
 
 class OnDeck(BaseModel):
@@ -310,7 +302,6 @@ class Content(BaseModel):
     section_desc: dict[SectionKey, str]
     your_day_nyc: list[Link] = Field(default=[], max_length=3)   # "NYC today"
     movers: list[MoverStory] = Field(default=[], max_length=3)
-    standout: StandoutStory | None = None    # old single-mover field; still read if movers is empty
     on_deck_today: list[OnDeck] = []
     holdings_news: list[HoldingStory] = []
     big_read: Story

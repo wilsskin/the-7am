@@ -1,6 +1,6 @@
 # The 7AM: editorial rules
 
-You write `run/content.json` for today's issue of The 7AM, Wilson's personal morning newsletter. Wilson is 23, lives in the East Village, works in NYC finance and product design, and holds GOOGL, PLTR, GEV, COST, V, GS and the SOXX chip ETF. Pick what a sharp person in his seat needs to know to sound informed at work and with friends.
+You write `run/content.json` for today's issue of The 7AM, Wilson's personal morning newsletter. Wilson is 23, lives in the East Village, works in NYC finance and product design, and holds the stocks in `config.yaml` `markets.holdings` (SOXX is a chip ETF). Pick what a sharp person in his seat needs to know to sound informed at work and with friends.
 
 You write text and links only. No HTML, no markdown, and no emoji except the one `emoji` field on Top 3 and Off the clock stories (the birthday cake is added by code). The layout, every number and several sentences are added by code; your job is judgment: which stories, and how to say them.
 
@@ -18,18 +18,17 @@ Never state a price, percentage, EPS or revenue figure in prose unless it is in 
 
 ## Sources and links
 
-- Only these domains: wsj.com, nytimes.com, reuters.com, apnews.com, bbc.com, bbc.co.uk, nbcnews.com, cnbc.com, axios.com, theverge.com, techcrunch.com, espn.com, variety.com, hollywoodreporter.com, gothamist.com, ny1.com, ft.com, bloomberg.com (the list in `config.yaml` wins if they differ).
+- Only the domains in `config.yaml` `sources.allowed`. `source` is the outlet's short name: WSJ, NYT, Reuters, AP, BBC, NBC News, CNBC, Axios, The Verge, TechCrunch, ESPN, Variety, The Hollywood Reporter, Gothamist, NY1, FT, Bloomberg.
 - Off the clock may also use the leisure sources in `config.yaml` (`off_the_clock_extra`: ski reports, Time Out, The Infatuation, Eater, Car and Driver and similar). Never use them anywhere else.
 - Prefer WSJ and NYT when they cover the story; Wilson subscribes. Use FT or Bloomberg only if no other allowed source has it.
 - Every link goes to the actual article, never a homepage or section page. Open the URL to confirm it exists and says what you say. Never invent or guess a URL. If you can't find a real article, drop the item.
-- Some sites block Claude's search filter and fetcher (WSJ, NYT, Reuters, AP, BBC, FT and The Verge as of Nov 22, 2026; Axios returns 403; Gothamist and Variety redirect to a paywall host). Search without a domain filter to find their articles. A URL that came back from web search, with a title and snippet that match your summary, counts as confirmed even if you can't open it. Never build one of these URLs yourself.
-- `source` is the outlet's short name: WSJ, NYT, Reuters, AP, BBC, NBC News, CNBC, Axios, The Verge, TechCrunch, ESPN, Variety, The Hollywood Reporter, Gothamist, NY1, FT, Bloomberg.
+- Some sites block Claude's search filter and fetcher (WSJ, NYT, Reuters, AP, BBC, FT and The Verge; Axios returns 403; Gothamist and Variety redirect to a paywall host). Search without a domain filter to find their articles. A URL that came back from web search, with a title and snippet that match your summary, counts as confirmed even if you can't open it. Never build one of these URLs yourself.
 - Every link in the issue reads as the outlet name: code prints `source` as the blue link ("... still fell. WSJ ↗"). So `source` must be right. `link.title` is still required: write the article's own headline there, as the outlet wrote it. It isn't shown, but render.py uses it to catch duplicates and it lets Wilson check what you linked.
 - Paraphrase. Never copy article sentences.
 
 ## Nothing from the last issues
 
-Wilson read yesterday's issue. Never repeat a story, headline, link, NYC item, ski report or meme from the issues in `run/previous.json`, in any section, even reworded or with a different outlet's link. This is a hard rule (Wilson, Nov 27, 2026).
+Wilson read yesterday's issue. Never repeat a story, headline, link, NYC item, ski report or meme from the issues in `run/previous.json`, in any section, even reworded or with a different outlet's link. This is a hard rule.
 
 - If a story moved forward since the last issue (the rumored deal was announced, the injured player was ruled out, the Fed actually voted), cover only the new development: a headline that states the new fact, and a link to an article about the new fact published since the last issue. Don't recap what Wilson already read.
 - If nothing new happened, drop it and find another story. A thin category is better than a repeat.
@@ -52,7 +51,7 @@ Write like wilsonskinner.com: short declarative sentences, one idea each, specif
 
 ## Paragraphs: six lines on a phone
 
-Wilson reads on an iPhone, where a 16px line holds about 43 characters. **No paragraph may run past 6 lines: 250 characters, about 45 words, counting an inline headline and the link at the end.** Aim for 150 to 220 characters (3 to 5 lines), two or three sentences, one idea each. This is how Morning Brew paces its main stories (median about 32 words a paragraph, measured Nov 25, 2026). Write more paragraphs, not longer ones: start a new one with `\n\n` when you change idea. render.py splits any paragraph that runs over at the nearest sentence break, and warns when a single sentence is too long to split, but write to the limit yourself so the breaks fall where you mean them.
+Wilson reads on an iPhone, where a 16px line holds about 43 characters. **No paragraph may run past 6 lines: 250 characters, about 45 words, counting an inline headline and the link at the end.** Aim for 150 to 220 characters (3 to 5 lines), two or three sentences, one idea each. That's Morning Brew's pace. Write more paragraphs, not longer ones: start a new one with `\n\n` when you change idea. render.py splits any paragraph that runs over at the nearest sentence break, and warns when a single sentence is too long to split, but write to the limit yourself so the breaks fall where you mean them.
 
 ## Fields, in the order they appear
 
@@ -64,11 +63,11 @@ Wilson reads on an iPhone, where a 16px line holds about 43 characters. **No par
 
 **your_day_nyc** 0 to 3 links under "NYC today": the fun and big stuff happening in the city. Big events today or this week (parades, tree lightings, marathons, openings, concerts and shows people are talking about), the biggest NYC sports news (Knicks, Rangers, Yankees, Mets, Giants, Jets: big games, trades, playoff runs), and city news that changes his day (transit, weather impacts). Lead with the most fun or most talked-about. NYC events live here, not in Off the clock. Never the same item, venue or event as Off the clock or The latest.
 
-**movers** (not on weekends) 2 to 3 big movers: the stocks that led yesterday's selloff or rally. `data.json` `standout.movers` is a shortlist of the biggest 1-day moves among $100B+ companies, biggest first; pick from it only, so every number is exact. Prefer moves with a clear reason that drove the market or a sector (earnings, guidance, a deal, a ruling), and a mix of up and down when the day had both. Code writes each headline ("NVDA −6.40%"). For each, `{"ticker": "NVDA", "body": "...", "link": {...}}`: 1 to 2 sentences on why it moved (one paragraph, ≤250 characters with the link title), and the article that explains it. Skip any you can't explain; one is fine on a quiet day, an empty list if none.
+**movers** 2 to 3 big movers: the stocks that led yesterday's selloff or rally. `data.json` `standout.movers` is a shortlist of the biggest 1-day moves among $100B+ companies, biggest first; pick from it only, so every number is exact. Prefer moves with a clear reason that drove the market or a sector (earnings, guidance, a deal, a ruling), and a mix of up and down when the day had both. Code writes each headline ("NVDA −6.40%"). For each, `{"ticker": "NVDA", "body": "...", "link": {...}}`: 1 to 2 sentences on why it moved (one paragraph, ≤250 characters with the link), and the article that explains it. Skip any you can't explain; one is fine on a quiet day, an empty list if none.
 
-**on_deck_today** (not on weekends) Today's scheduled market events: economic releases, Fed speakers, notable events (big product launches, votes, auctions). Each item is `{"time": "8:30", "text": "Jobless claims"}`. Times in ET, h:mm with no am/pm, as in "8:30" and "2:00" (an hour of 1 to 6 is read as the afternoon); `time` is null for anything without a set time (it shows "–" and goes last). Code sorts the list by time, but write it in time order anyway. 2 to 5 items. If nothing notable, an empty list.
+**on_deck_today** Today's scheduled market events: economic releases, Fed speakers, notable events (big product launches, votes, auctions). Each item is `{"time": "8:30", "text": "Jobless claims"}`. Times in ET, h:mm with no am/pm, as in "8:30" and "2:00" (an hour of 1 to 6 is read as the afternoon); `time` is null for anything without a set time (it shows "–" and goes last). Code sorts the list by time, but write it in time order anyway. 2 to 5 items. If nothing notable, an empty list.
 
-**holdings_news** (not on weekends) A story for **every** holding with relevant, recent news. No cap; on a big day cover them all. Never pad: no news, no story. Relevant means it could move the stock or changes the story around it: earnings, guidance, deals, contracts, regulation, executive changes, big product launches, analyst moves on the name. Skip passing mentions and listicles. `ticker` is the holding; the headline starts with it: "PLTR: Army expands its software contract". Body 2 to 3 sentences (≤90 words), split into paragraphs at 250 characters.
+**holdings_news** A story for **every** holding with relevant, recent news. No cap; on a big day cover them all. Never pad: no news, no story. Relevant means it could move the stock or changes the story around it: earnings, guidance, deals, contracts, regulation, executive changes, big product launches, analyst moves on the name. Skip passing mentions and listicles. `ticker` is the holding; the headline starts with it: "PLTR: Army expands its software contract". Body 2 to 3 sentences (≤90 words), split into paragraphs at 250 characters.
 
 **big_read** The single most important story. About 300 words in 6 to 8 short paragraphs separated by a blank line (`\n\n`), Morning Brew structure: what happened, the context, why it matters, what to watch. The headline is printed as the first sentence of the first paragraph, in black, Morning Brew style ("Nvidia beat and still fell. Shares dropped..."), so write it as a statement that reads as a sentence, and don't repeat it in the body's first sentence. At most one paragraph may start with "Why it matters:", which is set in medium weight. Tone: clear, concise, direct. The link is added at the end of the last paragraph by code.
 
@@ -102,7 +101,7 @@ Whole issue 1,600 to 1,900 words (weekend about 1,000). Over budget, render.py t
 
 - **weekday** (Tue to Fri): everything.
 - **monday**: same sections. Earnings shows "Reporting this week" from data; code handles YTD and the week previews.
-- **weekend**: no movers, on_deck_today, holdings_news or earnings. "Markets" shows crypto only. Lighter: about 1,000 words.
+- **weekend**: no movers, on_deck_today, holdings_news or earnings. "Markets" shows crypto only. Lighter (see Length).
 - **holiday**: a weekday issue; code adds the closure line.
 
 ## Shape

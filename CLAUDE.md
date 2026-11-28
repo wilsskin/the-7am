@@ -5,13 +5,13 @@ Always read `DESIGN_SYSTEM.md` before making any visual change, and `BUILD_PLAN.
 
 ## Architecture
 
-A Python script and a Claude scheduled task, nothing else. Every morning at 6:28am ET the scheduled task clones this repo, runs `python -m brief.collect` (exact numbers from free data sources), files any new feedback replies from Gmail into `feedback/FEEDBACK.md`, reads Wilson's Google Calendar through the connector, writes the stories into `run/content.json`, draws any supporting charts with `python -m brief.charts`, then runs `python -m brief.render` and `python -m brief.send`. The email sends the moment the run finishes, usually around 6:35am ET. (It used to be held for 7:00 with Resend's scheduled_at, but Resend can't schedule emails with attachments, so those sends never arrived.) No servers, no database, no paid APIs, no Anthropic API key.
+A Python script and a Claude scheduled task, nothing else. Every morning at 6:28am ET the scheduled task clones this repo, runs `python -m brief.collect` (exact numbers from free data sources), files any new feedback replies from Gmail into `feedback/FEEDBACK.md`, reads Wilson's Google Calendar through the connector, writes the stories into `run/content.json`, draws any supporting charts with `python -m brief.charts`, then runs `python -m brief.render` and `python -m brief.send`. The email sends the moment the run finishes, usually around 6:35am ET (never with Resend's `scheduled_at`: see BUILD_PLAN.md §1). No servers, no database, no paid APIs, no Anthropic API key.
 
 Code owns anything that must be exact (prices, earnings, weather, scores, layout). Claude owns anything that needs judgment (which stories, how to summarize them). Claude never writes HTML and never writes a number that isn't in `run/data.json`.
 
 ## Design
 
-The 7AM is a sibling of wilsonskinner.com: same tokens, same grayscale restraint, one theme color. It uses the system font (SF Pro on Apple devices) instead of the site's Inter, because Gmail doesn't load web fonts. The full design system lives in `DESIGN_SYSTEM.md`, and the three `templates/reference_*.html` files (weekday, Monday, weekend) are the visual source of truth. When this repo's design system is silent, follow the portfolio's DESIGN_SYSTEM.md.
+The 7AM is a sibling of wilsonskinner.com: same tokens, same grayscale restraint, one theme color. It uses the system font (SF Pro on Apple devices) instead of the site's Inter, because Gmail doesn't load web fonts. The full design system lives in `DESIGN_SYSTEM.md`, and the rendered sample issues (`python -m brief.run --fixture` → `run/preview*.html`) are the visual reference. When this repo's design system is silent, follow the portfolio's DESIGN_SYSTEM.md.
 
 ## How to work with Wilson
 

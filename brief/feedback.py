@@ -8,7 +8,6 @@ the top of the list, newest first. Prints how many it added.
 """
 import json
 import re
-import sys
 
 from brief.common import ROOT, RUN_DIR
 
@@ -57,7 +56,6 @@ def main():
         return
     n = add(json.loads(src.read_text()))
     print(f"filed {n} new feedback note{'s' if n != 1 else ''}")
-    sys.exit(0)
 
 
 if __name__ == "__main__":

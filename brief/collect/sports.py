@@ -7,6 +7,7 @@ week      Monday issue only: Monday through Sunday games for teams with week_pre
 """
 from datetime import datetime, timedelta
 
+from brief import fmt
 from brief.common import ET, get_json
 
 BASE = "https://site.api.espn.com/apis/site/v2/sports"
@@ -18,10 +19,6 @@ WINDOW = timedelta(hours=27)
 
 def parse_time(s: str) -> datetime:
     return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(ET)
-
-
-def fmt_time(t: datetime) -> str:
-    return f"{t.hour % 12 or 12}{'' if t.minute == 0 else f':{t.minute:02d}'}{'am' if t.hour < 12 else 'pm'}"
 
 
 def find_team(teams_json: dict, display_name: str) -> dict:
@@ -81,15 +78,15 @@ def week_games(schedule: dict, team_id: str, league: str, monday: datetime) -> l
         timed = comp.get("timeValid", True)
         out.append({"league": league.upper(), "team": _short(us[0]), "opponent": _short(them[0]),
                     "home": us[0].get("homeAway") == "home", "day": start.strftime("%a"),
-                    "start": start.isoformat(), "time": fmt_time(start) if timed else "TBD"})
+                    "start": start.isoformat(), "time": fmt.hour(start.hour, start.minute) if timed else "TBD"})
     return out
 
 
 def collect(cfg: dict, now: datetime) -> dict:
     since = now - WINDOW
     # ESPN's scoreboard takes one date at a time (ranges return a 400).
-    days = sorted({(since + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
-                   if since + timedelta(days=i) <= now + timedelta(days=1)} | {now.strftime("%Y%m%d")})
+    # Every date from `since` through today; tomorrow's scoreboard can't have a finished game.
+    days = [(since.date() + timedelta(days=i)).strftime("%Y%m%d") for i in range((now.date() - since.date()).days + 1)]
     res, week = [], []
     for t in cfg["sports"]["teams"]:
         path = f"{BASE}/{PATHS[t['league']]}"
@@ -104,4 +101,4 @@ def collect(cfg: dict, now: datetime) -> dict:
             monday = now.replace(hour=0, minute=0, second=0, microsecond=0)
             week += week_games(get_json(f"{path}/teams/{team['id']}/schedule"), team["id"], t["league"], monday)
     week.sort(key=lambda g: g["start"])
-    return {"as_of": now.isoformat(), "since": since.isoformat(), "results": res, "week": week}
+    return {"since": since.isoformat(), "results": res, "week": week}

@@ -10,7 +10,7 @@
 Newsletter issues only count if they were published in the last newsletter_max_age_hours,
 so the same issue never shows up two mornings in a row. Each source can fail on its own;
 the block is ok: false only if every source fails. Claude looks at the candidates and picks
-up to config.memes.count (EDITORIAL.md).
+up to 6 (EDITORIAL.md).
 """
 import html
 import os
@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
-from brief.common import TIMEOUT, USER_AGENT, get_json
+from brief.common import TIMEOUT, USER_AGENT, get, get_json
 
 IMAGE_EXT = (".jpg", ".jpeg", ".png", ".webp")    # no GIFs (DESIGN_SYSTEM: what we drop)
 # Newsletter memes are hosted on beehiiv's image CDN. Ask it for a 1008px-wide copy (2x our
@@ -30,12 +30,6 @@ BEEHIIV_URL = "https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=aut
 
 def is_image(url: str) -> bool:
     return url.startswith("https://") and url.split("?")[0].lower().endswith(IMAGE_EXT)
-
-
-def get_html(url: str) -> str:
-    r = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT)
-    r.raise_for_status()
-    return r.text
 
 
 # ---------- newsletters (shared) ----------
@@ -71,12 +65,12 @@ def newsletter_candidates(images: list[dict], name: str, title: str, link: str) 
 # ---------- Short Squeez ----------
 
 def collect_shortsqueez(m: dict, now: datetime) -> list[dict]:
-    home = get_html("https://www.shortsqueez.co/")
+    home = get("https://www.shortsqueez.co/").text
     slugs = [s for s in dict.fromkeys(re.findall(r'href="(?:https://www\.shortsqueez\.co)?(/p/[a-z0-9-]+)"', home))
              if not s.startswith("/p/insiders-")]          # "Insiders" is a separate series, no memes
     out = []
     for slug in slugs[:3]:                       # newest first; only today's issue should pass
-        page = get_html("https://www.shortsqueez.co" + slug)
+        page = get("https://www.shortsqueez.co" + slug).text
         pub = re.search(r'property="article:published_time" content="([^"]+)"', page)
         if not pub or not fresh(datetime.fromisoformat(pub.group(1).replace("Z", "+00:00")), now,
                                 m["newsletter_max_age_hours"]):
@@ -85,6 +79,8 @@ def collect_shortsqueez(m: dict, now: datetime) -> list[dict]:
         imgs = section_images(page, "Memes of the Day", ("Partner With Us", "What&#x27;d you think", "What'd you think"))
         out += newsletter_candidates(imgs, "Short Squeez", html.unescape(title.group(1)) if title else "",
                                      "https://www.shortsqueez.co" + slug)
+        if out:                                  # one fresh issue a day; skip fetching the rest
+            break
     return out
 
 
@@ -194,7 +190,7 @@ def collect(cfg: dict, now: datetime) -> dict:
         raise RuntimeError("every meme source failed: " + "; ".join(errors))
     seen = set()
     candidates = [c for c in candidates if not (c["url"] in seen or seen.add(c["url"]))]
-    return {"as_of": now.isoformat(), "sources": worked, "source_errors": errors, "candidates": candidates}
+    return {"sources": worked, "source_errors": errors, "candidates": candidates}
 
 
 def interleave(lists: list[list[dict]]) -> list[dict]:

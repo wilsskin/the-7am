@@ -1,4 +1,4 @@
-"""python -m brief.collect [--now 2026-11-23T06:22]
+"""python -m brief.collect [--now 2026-11-23T06:28]
 
 Runs every collector and writes run/data.json. A collector that fails becomes
 {"ok": false, "error": ...} and the rest keep going: the email always sends.
@@ -62,7 +62,7 @@ def collect(now: datetime, cfg: dict | None = None) -> dict:
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--now", help="pretend it is this ET time, e.g. 2026-11-23T06:22")
+    p.add_argument("--now", help="pretend it is this ET time, e.g. 2026-11-23T06:28")
     p.add_argument("--out", default=str(RUN_DIR / "data.json"))
     a = p.parse_args()
     now = datetime.fromisoformat(a.now).replace(tzinfo=ET) if a.now else now_et()

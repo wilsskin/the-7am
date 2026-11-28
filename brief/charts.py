@@ -17,9 +17,8 @@ and its story renders without it. The email always sends.
 """
 import argparse
 import json
-import sys
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import requests
@@ -86,7 +85,7 @@ def fetch_kalshi(req: ChartRequest, now: datetime) -> dict:
     series = event.get("series_ticker") or req.id.split("-")[0]
     end = int(now.timestamp())
     start = end - PERIOD_DAYS[req.period] * 86400
-    lines, xs = [], None
+    lines = []
     for name, _, ticker in outcomes[:MAX_LINES]:
         cs = get_json(f"{KALSHI}/series/{series}/markets/{ticker}/candlesticks",
                       params={"start_ts": start, "end_ts": end, "period_interval": 1440}).get("candlesticks", [])
@@ -173,7 +172,7 @@ FETCHERS = {"kalshi": fetch_kalshi, "polymarket": fetch_polymarket, "bls": fetch
 
 
 def _align(lines: list[tuple[str, dict]]) -> dict:
-    """Put every line on the same dates (the first line's), carrying values forward."""
+    """Put every line on the same dates (every date any line has), carrying values forward."""
     if not lines:
         raise RuntimeError("no history returned")
     xs = sorted(set().union(*(pts.keys() for _, pts in lines)))

@@ -1,6 +1,5 @@
-{#- The 7AM email. One template, edition switches. Every macro is a port of the helper of
-    the same name in build_reference.py; keep them in step. Colors come from brief/tokens.py
-    (T), never raw hex. Claude never writes HTML: everything here is filled from data.json,
+{#- The 7AM email. One template, edition switches. Components follow DESIGN_SYSTEM.md.
+    Colors come from brief/tokens.py (T), never raw hex. Claude never writes HTML: everything here is filled from data.json,
     calendar.json and content.json by brief/render.py. -#}
 {%- set S = sans -%}
 
@@ -172,16 +171,14 @@
   @media (max-width: 480px) {
     .px { padding-left:16px !important; padding-right:16px !important; }
     .t-title { font-size:22px !important; line-height:25px !important; }
-    .t-heading { font-size:18px !important; line-height:24px !important; }
     .t-h2 { font-size:20px !important; line-height:26px !important; }
     .card, .chart { border-radius:8px !important; }
   }
   @media (prefers-color-scheme: dark) {
     .bg { background-color:{{D.bg}} !important; }
-    .card, .meme-ph { background-color:{{D.surface}} !important; }
+    .card { background-color:{{D.surface}} !important; }
     .c-primary { color:{{D.primary}} !important; }
     .c-secondary { color:{{D.secondary}} !important; }
-    .c-theme { color:{{D.theme}} !important; }
     .c-up { color:{{D.up}} !important; }
     .c-down { color:{{D.down}} !important; }
     .c-link, .c-lo { color:{{D.link}} !important; }

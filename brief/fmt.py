@@ -48,6 +48,11 @@ def eps(v: float | None) -> str:
     return (MINUS if v < 0 else "") + f"{abs(v):.2f}"
 
 
+def hour(h: int, m: int = 0) -> str:
+    """"1pm" / "1:30pm": early closes, game times, weather spells."""
+    return f"{h % 12 or 12}{'' if m == 0 else f':{m:02d}'}{'am' if h < 12 else 'pm'}"
+
+
 def clock(dt: datetime) -> str:
     """Calendar times as in the mockup: "12:30", "10:00", but "6:15pm" in the evening
     and "6:30am" early, where the hour alone would be ambiguous."""

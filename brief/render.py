@@ -13,20 +13,20 @@ Automatic either way: duplicate stories are dropped by priority, over-long lists
 trimmed, numbers in prose that aren't in data.json are flagged as warnings.
 """
 import argparse
-
 import json
 import re
 import sys
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from markupsafe import Markup
 from pydantic import TypeAdapter, ValidationError
 
 from brief import fmt, previous, tokens
 from brief.common import ET, ROOT, RUN_DIR, load_config, now_et
-from brief.schema import Calendar, Content, Data, MoverStory
+from brief.schema import LATEST_ORDER, Calendar, Content, Data, Link
 
 MAX_BYTES = 95_000          # Gmail clips at ~102KB; fail loudly before that
 LEAD_INS = ("Why it matters:",)
@@ -43,7 +43,7 @@ LATEST_LABELS = {"business": "Business", "tech": "Tech", "world": "World",
 LATEST_ICONS = {"Business": "tag-business", "Tech": "tag-tech", "World": "tag-world",
                 "Pop culture": "tag-pop", "Sports": "tag-sports"}
 # Word caps (warn only). Global target 1,600–1,900 (weekend ~1,000).
-CAPS = {"big_read": 380, "top_3": 130, "holdings": 90, "off_the_clock": 90, "standout": 80, "desc": 30}
+CAPS = {"big_read": 380, "top_3": 130, "holdings": 90, "off_the_clock": 90, "desc": 30}
 TRIM_ABOVE = {"weekday": 2200, "monday": 2300, "holiday": 2200, "weekend": 1300}
 UNAVAILABLE_NAMES = {"markets": "Markets", "standout": "Big movers", "earnings": "Earnings",
                      "weather": "Weather", "mta": "Subway alerts", "sports": "Scores",
@@ -84,6 +84,10 @@ def parse_content(raw: dict | None, lenient: bool, errors: list[str]) -> Content
         except ValidationError:
             if name in ("top_3", "holdings_news", "off_the_clock", "your_day_nyc", "memes", "on_deck_today", "movers"):
                 good[name] = keep_valid_items(field.annotation, raw[name])
+            elif name == "latest" and isinstance(raw[name], dict):        # one bad link drops that link only
+                good[name] = {k: keep_valid_items(list[Link], raw[name][k]) for k in LATEST_ORDER if k in raw[name]}
+            elif name == "section_desc" and isinstance(raw[name], dict):  # one bad key drops that key only
+                good[name] = {k: v for k, v in raw[name].items() if k in SECTION_KEYS and isinstance(v, str)}
     if isinstance(good.get("top_3"), list):
         good["top_3"] = good["top_3"][:3]
     if isinstance(good.get("subject"), str):
@@ -91,7 +95,10 @@ def parse_content(raw: dict | None, lenient: bool, errors: list[str]) -> Content
     return Content.model_construct(**{"date": None, "edition": None, "subject": None, "intro": "",
                                       "section_desc": {}, "latest": {}, "your_day_nyc": [], "on_deck_today": [],
                                       "holdings_news": [], "top_3": [], "off_the_clock": [], "memes": [],
-                                      "standout": None, "movers": [], "big_read": None, **good})
+                                      "movers": [], "big_read": None, **good})
+
+
+SECTION_KEYS = set(Content.model_fields["section_desc"].annotation.__args__[0].__args__)
 
 
 def keep_valid_items(annotation, items) -> list:
@@ -112,20 +119,18 @@ def host_allowed(url: str, allowed: list[str]) -> bool:
     return any(host == d or host.endswith("." + d) for d in allowed)
 
 
-def norm_url(url) -> str:
-    p = urlparse(str(url))
-    return (p.hostname or "").removeprefix("www.") + p.path.rstrip("/")
-
-
 STOPWORDS = {"the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "with", "at", "by", "from", "as",
              "its", "is", "after", "over", "into", "new"}
+
+
+def key_words(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]+", text.lower()) if w not in STOPWORDS}
 
 
 def similar(a: str, b: str) -> bool:
     """Near-duplicate headlines: at least 75% of their meaningful words are shared.
     Conservative on purpose; exact duplicates are caught by URL."""
-    wa = {w for w in re.findall(r"[a-z0-9]+", a.lower()) if w not in STOPWORDS}
-    wb = {w for w in re.findall(r"[a-z0-9]+", b.lower()) if w not in STOPWORDS}
+    wa, wb = key_words(a), key_words(b)
     if not wa or not wb:
         return False
     return len(wa & wb) / len(wa | wb) >= 0.75
@@ -155,22 +160,26 @@ def items_by_priority(c: Content):
         yield "off_the_clock", c.off_the_clock, i, s.link.url, s.headline
 
 
-def dedupe(c: Content, warnings: list[str]) -> None:
-    seen = []
-    drop = []
-    for section, lst, i, url, title in items_by_priority(c):
-        u = norm_url(url)
-        dup = next((s for s in seen if s[0] == u or similar(s[1], title)), None)
-        if dup:
-            warnings.append(f'dropped duplicate in {section}: "{title}" (already in {dup[2]})')
-            drop.append((section, lst, i))
-        else:
-            seen.append((u, title, section))
-    for section, lst, i in reversed(drop):
+def drop_items(c: Content, bad: list) -> None:
+    """Remove (section, list, index) items found by items_by_priority, last first so indexes stay valid."""
+    for section, lst, i in reversed(bad):
         if lst is None:
             setattr(c, section, None)
         else:
             lst.pop(i)
+
+
+def dedupe(c: Content, warnings: list[str]) -> None:
+    seen, bad = [], []
+    for section, lst, i, url, title in items_by_priority(c):
+        u = previous.norm_url(url)
+        dup = next((s for s in seen if s[0] == u or similar(s[1], title)), None)
+        if dup:
+            warnings.append(f'dropped duplicate in {section}: "{title}" (already in {dup[2]})')
+            bad.append((section, lst, i))
+        else:
+            seen.append((u, title, section))
+    drop_items(c, bad)
 
 
 def check_links(c: Content, cfg: dict, lenient: bool, errors: list[str]) -> None:
@@ -182,18 +191,13 @@ def check_links(c: Content, cfg: dict, lenient: bool, errors: list[str]) -> None
             errors.append(f'{section}: "{title}" links to {urlparse(str(url)).hostname}, not an allowed source')
             bad.append((section, lst, i))
     if lenient:
-        for section, lst, i in reversed(bad):
-            if lst is None:
-                setattr(c, section, None)
-            else:
-                lst.pop(i)
+        drop_items(c, bad)
 
 
 def same_story(a: str, b: str) -> bool:
     """Looser than similar(): the same story reworded ("Purdy hurts his ankle and sits out practice" /
     "Purdy hurts his ankle and is day to day"). Only ever a warning, for Claude to judge."""
-    wa = {w for w in re.findall(r"[a-z0-9]+", a.lower()) if w not in STOPWORDS}
-    wb = {w for w in re.findall(r"[a-z0-9]+", b.lower()) if w not in STOPWORDS}
+    wa, wb = key_words(a), key_words(b)
     shared = wa & wb
     return len(shared) >= 3 and len(shared) / min(len(wa), len(wb)) >= 0.5
 
@@ -220,11 +224,7 @@ def check_repeats(c: Content, prev: "previous.Previous", lenient: bool, errors: 
                 warnings.append(f'{section}: "{title}" may repeat "{old}" from {prev.label()}. Keep it only if '
                                 "there is a real new development, written as the new fact.")
     if lenient:
-        for section, lst, i in reversed(bad):
-            if lst is None:
-                setattr(c, section, None)
-            else:
-                lst.pop(i)
+        drop_items(c, bad)
     again = [u for u in c.memes if previous.norm_url(u) in prev.urls]
     if again:
         warnings.append(f"memes: dropped {len(again)} already in {prev.label()}")
@@ -241,11 +241,7 @@ def check_memes(c: Content, data: Data, lenient: bool, errors: list[str]) -> Non
 
 
 def check_movers(c: Content, data: Data, edition: str, lenient: bool, errors: list[str]) -> None:
-    """Movers must come from the shortlist in data.json (so every number is exact), once each.
-    An old-style `standout` story becomes a mover for the top ticker."""
-    if not c.movers and c.standout and data.standout.ticker:
-        c.movers = [MoverStory(ticker=data.standout.ticker, body=c.standout.body, link=c.standout.link)]
-    c.standout = None
+    """Movers must come from the shortlist in data.json (so every number is exact), once each."""
     if edition == "weekend" or not data.standout.ok:
         c.movers = []
         return
@@ -424,6 +420,10 @@ def join(*parts) -> str:
     return " ".join(p.strip() for p in parts if p and p.strip())
 
 
+def cal_title(e) -> str:
+    return e.title + (" 🎂" if e.kind == "birthday" and "🎂" not in e.title else "")
+
+
 def your_day_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, edition: str) -> dict:
     rows = []
     w = data.weather
@@ -442,16 +442,15 @@ def your_day_view(data: Data, cal: Calendar | None, c: Content, cfg: dict, editi
             if e.kind == "own_birthday":
                 pill = "Happy birthday, Wilson!"
                 continue
-            title = e.title + (" 🎂" if e.kind == "birthday" and "🎂" not in e.title else "")
             rows.append({"kind": "calendar", "icon": "calendar",
                          "left": "All day" if e.all_day or not e.start else fmt.clock(e.start.astimezone(ET)),
-                         "text": title, "detail": e.location})
+                         "text": cal_title(e), "detail": e.location})
         if edition == "monday" and cal.this_week:
             rows.append({"kind": "header", "text": "This week"})
             for e in sorted(cal.this_week, key=lambda e: (e.start or datetime.min.replace(tzinfo=ET))):
                 st = e.start.astimezone(ET) if e.start else None
                 rows.append({"kind": "calendar", "icon": "calendar", "left": st.strftime("%a") if st else "",
-                             "text": e.title + (" 🎂" if e.kind == "birthday" and "🎂" not in e.title else ""),
+                             "text": cal_title(e),
                              "detail": "All day" if e.all_day or not st else fmt.clock(st)})
     nyc = [{"title": l.title, "url": str(l.url), "source": l.source} for l in c.your_day_nyc]
     return {"desc": c.section_desc.get("your_day", ""), "rows": rows, "birthday_pill": pill, "nyc": nyc}
@@ -567,10 +566,9 @@ def memes_view(data: Data, c: Content) -> dict | None:
 
 def reminders_due(cfg: dict, today) -> list[str]:
     """config.reminders entries whose countdown lands on today, e.g. "In 1 week: <text>"."""
-    from datetime import date as _date
     out = []
     for r in cfg.get("reminders") or []:
-        when = r["date"] if isinstance(r["date"], _date) else _date.fromisoformat(str(r["date"]))
+        when = r["date"] if isinstance(r["date"], date) else date.fromisoformat(str(r["date"]))
         left = (when - today).days
         if left in r.get("days_before", []):
             label = {1: "Tomorrow"}.get(left) or (f"In {left // 7} week{'s' if left > 7 else ''}" if left % 7 == 0 else f"In {left} days")
@@ -649,15 +647,16 @@ def icons_used(v: dict) -> list[str]:
 
 # ---------- rendering ----------
 
-def env() -> Environment:
-    e = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=True,
-                    undefined=StrictUndefined, extensions=["jinja2.ext.do"], keep_trailing_newline=True)
-    return e
+def template(name: str, **opts):
+    return Environment(loader=FileSystemLoader(ROOT / "templates"), undefined=StrictUndefined,
+                       **opts).get_template(name)
 
 
 def render_html(v: dict, icon_src: str, chart_src: str = "cid:{}") -> str:
-    t = env().get_template("email.html.j2")
-    html = t.render(v=v, T=tokens.COLORS, D=tokens.DARK, sans=tokens.SANS, mono=tokens.MONO, num=tokens.NUM,
+    t = template("email.html.j2", autoescape=True, extensions=["jinja2.ext.do"], keep_trailing_newline=True)
+    # Fonts as Markup: their ' quotes stay ' instead of &#39; (all style attributes use double quotes),
+    # which saves ~3KB per email with the exact same CSS.
+    html = t.render(v=v, T=tokens.COLORS, D=tokens.DARK, sans=Markup(tokens.SANS), mono=Markup(tokens.MONO), num=Markup(tokens.NUM),
                     section_gap=tokens.SECTION_GAP, content_width=tokens.CONTENT_WIDTH, icon_src=icon_src,
                     chart_src=chart_src, arrow=ARROW)
     html = re.sub(r"\n\s*\n+", "\n", html)
@@ -669,9 +668,7 @@ def render_html(v: dict, icon_src: str, chart_src: str = "cid:{}") -> str:
 
 
 def render_text(v: dict) -> str:
-    e = Environment(loader=FileSystemLoader(ROOT / "templates"), autoescape=False, undefined=StrictUndefined,
-                    trim_blocks=True, lstrip_blocks=True)
-    txt = e.get_template("email.txt.j2").render(v=v)
+    txt = template("email.txt.j2", trim_blocks=True, lstrip_blocks=True).render(v=v)
     return re.sub(r"\n{3,}", "\n\n", txt).strip() + "\n"
 
 
@@ -733,9 +730,8 @@ def render(run_dir: Path, lenient: bool = False, icon_src: str = "cid:{}", now: 
     text = render_text(v)
     (run_dir / f"{out_name}.html").write_text(html)
     (run_dir / f"{out_name}.txt").write_text(text)
-    meta = {"subject": v["subject"], "preheader": v["lead"], "icons": icons_used(v), "charts": charts_used(v),
-            "bytes": len(html.encode()),
-            "edition": data.edition, "missing": v["missing"], "warnings": warnings, "errors_dropped": errors}
+    meta = {"subject": v["subject"], "icons": icons_used(v), "charts": charts_used(v), "bytes": len(html.encode()),
+            "missing": v["missing"], "warnings": warnings, "errors_dropped": errors}
     (run_dir / "render.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False))
     return meta
 

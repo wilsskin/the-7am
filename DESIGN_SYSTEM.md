@@ -6,27 +6,13 @@
 
 Read this before making any visual change. The 7AM is a sibling of wilsonskinner.com: same tokens, same restraint. Where this file is silent, the portfolio's DESIGN_SYSTEM.md wins. If you're in a hurry, jump to [Quick Reference](#quick-reference) and [Do's and Don'ts](#dos-and-donts).
 
-The reference issues are the visual source of truth. `build_reference.py` generates all three from these tokens:
-
-| File | Edition |
-|---|---|
-| `templates/reference_issue.html` | Weekday (Tue–Fri). The main reference. |
-| `templates/reference_monday.html` | Monday: YTD columns, "This week" calendar, earnings week, games this week |
-| `templates/reference_weekend.html` | Sat/Sun: no equities, holdings or earnings |
-
-A holiday issue is a weekday issue whose Before the bell description ends with the closure line. Icons live in `templates/icons/`. Build `templates/email.html.j2` by turning the helpers in `build_reference.py` into Jinja macros, not by designing from scratch.
+The rendered sample issues are the visual reference: `python -m brief.run --fixture` writes `run/preview.html` (weekday), `preview-monday.html`, `preview-weekend.html`, `preview-birthday.html` and `preview-unavailable.html` from `tests/fixtures/issues/`; `python tests/screenshots.py` captures them at 390px and 640px, light and dark. The template is `templates/email.html.j2`, colors come from `brief/tokens.py`, icons live in `templates/icons/`. A holiday issue is a weekday issue whose Before the bell description ends with the closure line.
 
 ### Changelog
 - **1.10 (Nov 27, 2026), Wilson:** every link's text is the outlet name ("WSJ ↗"), in stories too; the article title is no longer shown. Market card order is S&P 500, Nasdaq, Dow, then crypto. Holdings card starts SOXX, PLTR, GOOGL, GEV. On deck today runs in time order; items with no set time go last with "–" in the time column. The latest's tag icons draw at a 1px line (regular or medium SF Symbol weight per icon, whichever is closer to 1px at 18px). Top 3 and Off the clock emoji are strictly one standard emoji (no symbols, combined emoji, flags or skin tones). New **Chart** component: an optional supporting chart under a story (big data releases, rate expectations, prediction-market odds), only when the story calls for one.
 - **1.9 (Nov 25, 2026):** section labels (h2) 22px (20px on phones). The latest's tag pills use tertiary text with an 18px SF Symbol inside (briefcase, apple.terminal, globe.americas, popcorn, sportscourt). Top 3 and Off the clock headlines start with one emoji chosen by Claude. "Around NYC" is now "NYC today" (up to 3). Before the bell shows 2–3 big movers instead of one standout. Market card adds the Dow; SOXX moves to holdings.
 - **1.8 (Nov 25, 2026), Wilson's first-issue review:** masthead name and date share one vertical center line. All external links are Apple blue (`#007AFF`) at body size, no underline, ending in ↗; stories end with the article title as an inline link in the last paragraph ("Read on WSJ →" is gone); in The latest and Around NYC the headline is black text and only the outlet name is the link. Paragraphs max 6 lines on a phone (250 characters; render.py splits at a sentence break). The big read and Top 3 headlines are the first sentence of the first paragraph (Morning Brew style), still 500 and primary. Icons are SF Symbols in `#424245`, with Apple Weather's condition set. Weather row keeps the current temperature (primary) in the left column, then "H53° L41° – Cloudy until 4pm, then rain" with the high in Apple red and the low in Apple blue. Text colors move to apple.com's: primary `#1D1D1F`, a new tertiary `#424245` (icons), secondary `#6E6E73`.
-- **1.7 (Nov 22, 2026):** Feedback section removed from the issue. Feedback still works by replying to the email (BUILD_PLAN.md §10b); nothing in the layout points to it.
-- **1.6 (Nov 22, 2026):** feedback is now a reply to the email. The Feedback section is just its header (label + fixed description telling Wilson to reply); the button is gone, so the theme pill is used only for Wilson's birthday.
-- **1.5 (Nov 22, 2026):** The latest's category labels (Business, Tech, World, Pop culture, Sports) are tag pills again; the sports card moves below the sports headlines; the Earnings description ends with who reports next on Tue–Fri.
-- **1.4 (Nov 22, 2026):** Standout headline is just the ticker and move ("NVDA −6.40%"); Your day rows and On deck today rows are vertically centered; earnings cells are one line, "57.0B (+3.3%)", with the surprise in colored parentheses and no Beat/Miss word; "Reporting today" removed on weekdays; Monday "Reporting this week" is one row per day with company names only; Off the clock topic moves into the headline ("Ski report: ..."); tag pills are no longer used.
-- **1.3 (Nov 22, 2026):** section labels back to the `heading` role: 20px, weight 500 (18px on phones). Weight 600 is no longer used. Sentence case and the one-line description stay.
-- **1.2 (Nov 22, 2026), Wilson's second review:** section labels 16px, weight 600, sentence case, each followed by a one-line description; Your day main content in a card with icons (weather, subway, calendar); closure callout replaced by text in the Before the bell description; market and holdings tables headed "Asset"; holdings get a WTD/YTD column; Standout on one line with a longer write-up and link; tighter time column in On deck today; earnings cells show "Beat (+3.3%)" instead of the estimate line, and the per-company notes are gone; "Reported yesterday" and "Reporting today" use the small headline style; holdings stories have the ticker in the headline, with no cap on how many; all story headlines (including The big read) are 16px; Also Brewing renamed Top 3; sports moved to the end of The latest, with a score card (W/L on the left, Monday adds this week's games) and NFL injury headlines.
-- **1.1 (Nov 22, 2026), Wilson's first review:** system font (SF Pro) instead of Inter; 96px between sections; read links gray like the portfolio's "View →"; body stays 16px on mobile; crypto joins the index card at the 4pm ET close; Earnings ahead of Holdings; "Around NYC" sub-label; Monday "This week" calendar; Off the Clock drops its cards; Feedback section; one card padding; red/green confirmed.
+- **1.1–1.7 (Nov 22, 2026):** the first build and Wilson's first reviews. See git history.
 
 ---
 
@@ -58,7 +44,7 @@ A holiday issue is a weekday issue whose Before the bell description ends with t
 
 Editorial restraint, delivered to an inbox. The canvas is the same near-white `#F8F8F8` as the portfolio. Headlines and section labels are near-black `#1D1D1F`; body steps back to `#6E6E73`. Both are apple.com's text colors, with `#424245` between them for icons. Depth comes from spacing alone: no divider lines between sections, no shadows, no gradients, no illustrations.
 
-Hierarchy is flat on purpose, like the portfolio: section labels are 20px and everything inside a section is 16px, told apart by weight (500 headline, 400 body), color (black vs gray) and 96px of space between sections.
+Hierarchy is flat on purpose, like the portfolio: section labels are 22px and everything inside a section is 16px, told apart by weight (500 headline, 400 body), color (black vs gray) and 96px of space between sections.
 
 Color enters the way it does on the case study pages: one theme color, used sparingly on the theme pill. Links are Apple blue with ↗, so anything that leaves the email looks the same everywhere. Green and red appear on market data and scores; Apple red and blue on the weather high and low. Everything else is black and gray.
 
@@ -83,11 +69,11 @@ Four roles, same as the portfolio. Do not invent sizes.
 | Role | Name | Size (≤480px) | Weight | Line height | Letter-spacing | Color |
 |---|---|---|---|---|---|---|
 | Issue title | `title` | 26px (22px) | 500 | 30px (25px) | −0.02em | primary + secondary span |
-| Headline | `heading` | 20px (18px) | 500 | 27px (24px) | −0.01em | primary |
+| Headline | `heading` | 20px (20px) | 500 | 27px | −0.01em | primary |
 | Body | `body` | 16px (16px) | 400 | 22px | 0 | secondary |
 | Meta | `meta` | 14px | 400 | 19px | +0.01em | secondary |
 
-`heading` (20px) is used for section labels, the masthead name and the temperature. Every story headline uses the small headline variant (16px), so a story never outranks its section.
+`heading` (20px) is used for the masthead name and the temperature. Section labels are one step up: 22px (20px on phones), see Section label below. Every story headline uses the small headline variant (16px), so a story never outranks its section.
 
 **Font: the system font, not Inter.** Gmail (web, iOS and Android) does not load web fonts, so Inter would never show where Wilson reads the issue. The stack is:
 
@@ -99,7 +85,7 @@ That gives SF Pro in Gmail on iPhone, Apple Mail and Chrome on a Mac. No `<link>
 
 **Weights:** 400 and 500 only. Never 600, 700 or `<strong>`/`<b>` defaults. "400 reads, 500 announces."
 
-**Body stays 16px on phones.** The issue is mostly read on an iPhone, so the main reading size never shrinks. Only `title` and `heading` step down at ≤480px.
+**Body stays 16px on phones.** The issue is mostly read on an iPhone, so the main reading size never shrinks. Only `title` and section labels step down at ≤480px.
 
 ### Named variants (built from the four roles)
 
@@ -186,7 +172,7 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 - One centered table, `max-width: 552px` (504px reading column + 24px padding each side). This is the portfolio's reading column, so line lengths match the site.
 - Single column always. No side-by-side layouts, so there's nothing to collapse on a phone.
-- Mobile (≤480px) via one media query: side padding 16px, `title` 22px, `heading` 18px (section labels too), cards radius 8px. Everything else stays the same size.
+- Mobile (≤480px) via one media query: side padding 16px, `title` 22px, section labels 20px, cards and charts radius 8px. Everything else stays the same size.
 
 ---
 
@@ -250,7 +236,7 @@ Two levels only. Email clients drop shadows unevenly, so there are none.
 
 ## Section Layouts
 
-Fixed order. Day variants are in BUILD_PLAN.md §5 and in the three reference files. Every section starts with a section header (label + description).
+Fixed order. Day variants are in BUILD_PLAN.md §5 and in the rendered samples. Every section starts with a section header (label + description).
 
 | # | Section | Layout |
 |---|---|---|
@@ -260,10 +246,10 @@ Fixed order. Day variants are in BUILD_PLAN.md §5 and in the three reference fi
 | 3 | Before the bell | Description ends with the closure line when the market is closed or closes early this week → market card → 2–3 big movers (24px) → "On deck today" small headline + meta rows (24px), in time order, untimed items last with "–". Weekend: label "Markets", Bitcoin and Ether only. |
 | 4 | Earnings | Description on Tue–Fri ends with who reports the next trading day (Friday: Monday), added by code. → "Reported yesterday" small headline + earnings card. No "Reporting today". Monday: "Reporting this week" small headline + one meta row per day (day name left, company names right, comma-separated, no tickers or timing) instead. Empty → skip the section. Not on weekends. |
 | 5 | Your holdings | Holdings card. Then a story for every holding with relevant, recent news (no cap), headline starting with the ticker: "PLTR: Army expands its software contract". 32px between stories. No news → card only. Not on weekends. |
-| 6 | The big read | Small headline, 3–4 body paragraphs, optional one lead-in, read link. No image. |
+| 6 | The big read | Headline as the first sentence, 6–8 short paragraphs, at most one "Why it matters:" lead-in, outlet link at the end of the last paragraph. Optional chart. No image. |
 | 7 | Top 3 | Three stories, 32px apart: emoji + headline as the first sentence, 2 paragraphs, link inline at the end. |
 | 8 | The latest | Tag pill categories Business, Tech, World, Pop culture, then Sports last; 3–5 headline rows each. Sports: headline rows → 16px → sports card (if any results, or Monday). |
-| 9 | Off the clock | 2–3 stories, 32px apart: small headline starting with an emoji, then the topic ("Ski report: Killington opens more terrain"), body, read link. No cards, no eyebrow. |
+| 9 | Off the clock | 2–3 stories, 32px apart: small headline starting with an emoji, then the topic ("Ski report: Killington opens more terrain"), body, outlet link at the end. No cards, no eyebrow. |
 | 10 | Meme roundup | Up to 6 memes stacked (Wilson, Nov 26, 2026). No captions. |
 | — | Footer | As above. |
 
@@ -275,7 +261,7 @@ Email clients are not browsers. These are non-negotiable.
 
 - Table layout (`role="presentation"`). No flexbox, grid or `position`.
 - Inline styles on every element. Build them from `brief/tokens.py` inside Jinja macros, so there is no CSS-inlining step and no extra dependency. The `<style>` block holds only the ≤480px query and the dark mode query.
-- Dark mode: `<meta name="color-scheme" content="light dark">` plus `@media (prefers-color-scheme: dark)` swapping colors via the classes in the reference file (`.bg`, `.card`, `.c-primary`, `.c-secondary`, `.c-theme`, `.c-up`, `.c-down`, `.b-subtle`, `.pill`, `.tpill`). Apple Mail follows it; Gmail apps invert on their own. Never put text in images (charts are the one exception, with their numbers repeated in `alt`).
+- Dark mode: `<meta name="color-scheme" content="light dark">` plus `@media (prefers-color-scheme: dark)` swapping colors via the classes in `email.html.j2` (`.bg`, `.card`, `.c-primary`, `.c-secondary`, `.c-up`, `.c-down`, `.c-link`, `.c-lo`, `.c-hi`, `.b-subtle`, `.pill`, `.tpill`). Apple Mail follows it; Gmail apps invert on their own. Never put text in images (charts are the one exception, with their numbers repeated in `alt`).
 - No web fonts. System font stack only (see Text Styles).
 - Icons are PNG attachments embedded inline (`src="cid:calendar"`), not hosted, so there's nothing to host and they show even before "load images". The mockup uses `icons/calendar.png` instead.
 - Total HTML under 100KB, or Gmail clips the email. render.py fails loudly above 95KB.
@@ -350,7 +336,7 @@ Up:               #1B7A5E   Down:          #C03A3A   Link:           #007AFF
 > `<h1>`, system font 26px weight 500, line-height 30px, letter-spacing −0.02em. First sentence #1D1D1F, remaining sentences in a `<span>` at #6E6E73. 22px at ≤480px.
 
 **Section header:**
-> `<h2>`, system font 20px weight 500, line-height 27px, letter-spacing −0.01em, sentence case, #1D1D1F. 18px at ≤480px. Then `<p>` 16px 400 #6E6E73, 2px above. 96px padding-top on the header, 16px below the description. No line.
+> `<h2>`, system font 22px weight 500, line-height 28px, letter-spacing −0.01em, sentence case, #1D1D1F. 20px (26px line) at ≤480px. Then `<p>` 16px 400 #6E6E73, 2px above. 96px padding-top on the header, 16px below the description. No line.
 
 **Story:**
 > `<h3>` 16px weight 500, #1D1D1F. 2px gap. Body `<p>` 16px 400, line-height 22px, #6E6E73, 16px between paragraphs, max 250 characters each. The last paragraph ends with the outlet name as a link: #007AFF, no underline, "WSJ&nbsp;↗".

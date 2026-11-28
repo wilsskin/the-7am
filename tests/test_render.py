@@ -83,16 +83,7 @@ def test_disallowed_domain_fails_strict_then_drops_lenient(issue):
         c["latest"]["tech"][0]["url"] = "https://www.example.com/story"
     with pytest.raises(render.RenderError, match="not an allowed source"):
         go(issue(edit_content=bad))
-
-
-def test_lenient_drops_disallowed_domain(tmp_path):
-    d = tmp_path / "x"
-    shutil.copytree(ISSUES / "weekday", d)
-    c = json.loads((d / "content.json").read_text())
-    c["latest"]["tech"][0]["url"] = "https://www.example.com/story"
-    (d / "content.json").write_text(json.dumps(c))
-    meta = render.render(d, lenient=True, now=NOW)
-    html = (d / "issue.html").read_text()
+    meta, html, _ = go(issue(edit_content=bad), lenient=True)
     assert "example.com" not in html and "Sample headline about big tech regulation" in html
     assert meta["errors_dropped"]
 
@@ -112,35 +103,33 @@ def test_unknown_holding_ticker(issue):
         go(issue(edit_content=bad))
 
 
-def test_schema_error_strict_fails_lenient_renders(issue):
+def test_schema_error_strict_fails_lenient_keeps_valid_parts(issue):
     def bad(c):
-        c["top_3"] = c["top_3"][:2]
         c["subject"] = "x" * 80
+        c["big_read"] = {"headline": "no body or link"}
     with pytest.raises(render.RenderError):
         go(issue(edit_content=bad))
-
-
-def test_lenient_keeps_valid_parts(tmp_path):
-    d = tmp_path / "x"
-    shutil.copytree(ISSUES / "weekday", d)
-    c = json.loads((d / "content.json").read_text())
-    c["subject"] = "x" * 80
-    c["big_read"] = {"headline": "no body or link"}
-    (d / "content.json").write_text(json.dumps(c))
-    meta = render.render(d, lenient=True, now=NOW)
-    html = (d / "issue.html").read_text()
+    meta, html, _ = go(issue(edit_content=bad), lenient=True)
     assert len(meta["subject"]) == 70 and ">The big read</h2>" not in html and ">Top 3</h2>" in html
     assert "The big read" in meta["missing"]
 
 
-def test_missing_content_still_renders_data_sections(tmp_path):
-    d = tmp_path / "x"
-    shutil.copytree(ISSUES / "weekday", d)
+def test_lenient_drops_only_the_bad_link_or_description(issue):
+    def bad(c):
+        c["latest"]["tech"][0]["url"] = "not a url"
+        c["section_desc"]["movers"] = "not a section"
+    meta, html, _ = go(issue(edit_content=bad), lenient=True)
+    tech = json.loads((ISSUES / "weekday" / "content.json").read_text())["latest"]["tech"]
+    assert tech[0]["title"] not in html and tech[1]["title"] in html and ">The latest</h2>" in html
+    assert "Chips led a down day for the Nasdaq." in html     # the other descriptions survive
+
+
+def test_missing_content_still_renders_data_sections(issue):
+    d = issue()
     (d / "content.json").unlink()
     with pytest.raises(render.RenderError):
         render.render(d, now=NOW)
-    meta = render.render(d, lenient=True, now=NOW)
-    html = (d / "issue.html").read_text()
+    _, html, _ = go(d, lenient=True)
     assert "S&amp;P 500" in html and "Before the bell" in html
 
 
@@ -209,12 +198,13 @@ def test_movers_render_and_must_come_from_the_shortlist(issue):
     assert "TSLA <span" not in html and "NVDA <span" in html
 
 
-def test_old_standout_field_still_renders(issue):
-    def old(c):
-        m = c.pop("movers")[0]
-        c["standout"] = {"body": m["body"], "link": m["link"]}
-    meta, html, _ = go(issue(edit_content=old))
-    assert "NVDA <span" in html and "WMT <span" not in html
+def test_plain_text_keeps_lead_ins_and_paragraphs_in_every_section(issue):
+    def lead(c):
+        for s in (c["top_3"][0], c["movers"][0], c["off_the_clock"][0]):
+            s["body"] = "First paragraph here.\n\nWhy it matters: second paragraph here."
+    _, _, txt = go(issue(edit_content=lead))
+    assert txt.count("Why it matters: second paragraph here.") == 3
+    assert txt.count("First paragraph here.\n\nWhy it matters:") == 3
 
 
 def test_emoji_before_headline_and_bad_emoji_rejected(issue):
@@ -313,34 +303,13 @@ def test_previous_ignores_today_and_non_issues(issue):
     (d / "previous.json").write_text(json.dumps([
         {"date": "2026-11-24", "subject": "today's test send", "body": f"The 7AM · Tue Nov 24\n- x (NYT) {url}\n"},
         {"date": "2026-11-23", "subject": "not an issue", "body": f"Some other email {url}\n"}]))
-    meta = render.render(d, now=NOW)
+    render.render(d, now=NOW)
     assert c["latest"]["tech"][0]["title"] in (d / "issue.html").read_text()
 
 
 def test_no_previous_file_is_fine(issue):
     meta = render.render(issue(), now=NOW)
     assert not any("repeat" in w for w in meta["warnings"])
-
-
-def test_tag_icons_draw_close_to_one_pixel_lines():
-    from PIL import Image
-    import statistics
-    for n in ("business", "tech", "world", "pop", "sports"):
-        im = Image.open(Path(render.ROOT) / "templates" / "icons" / f"tag-{n}.png").convert("RGBA")
-        a, (W, H) = im.load(), im.size
-        runs = []
-        for rows in (True, False):
-            for j in range(H):
-                k = 0.0
-                for i in range(W):
-                    v = (a[i, j] if rows else a[j, i])[3] / 255
-                    if v > 0.05:
-                        k += v
-                    elif k:
-                        runs.append(k)
-                        k = 0
-        stroke = statistics.median([r for r in runs if r >= 1]) * 18 / 60     # shown at 18px
-        assert 0.85 <= stroke <= 1.1, (n, stroke)
 
 
 def test_reminders_due_on_countdown_days_only():

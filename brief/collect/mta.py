@@ -70,5 +70,5 @@ def parse(feed: dict, lines: list[str], now: datetime, stops: set[str] | None = 
 
 
 def collect(cfg: dict, now: datetime) -> dict:
-    return {"as_of": now.isoformat(), "lines": cfg["subway_lines"],
+    return {"lines": cfg["subway_lines"],
             "alerts": parse(get_json(URL), cfg["subway_lines"], now, set(cfg.get("subway_stops") or {}))}

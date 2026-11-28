@@ -11,10 +11,11 @@ Rows are sorted biggest first.
 """
 import os
 import re
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 
 from brief import sp500
-from brief.collect.market_calendar import next_session_after, reference_sessions, sessions_between
+from brief.collect.market_calendar import next_session_after, reference_sessions, session_close_et, sessions_between
+from brief.collect.markets import column
 from brief.common import ET, get_json, pct
 
 FINNHUB = "https://finnhub.io/api/v1/calendar/earnings"
@@ -39,25 +40,14 @@ def fetch_extended_prices(tickers: list[str]) -> dict[str, list[tuple[datetime, 
         return {}
     df = yf.download(tickers, period="5d", interval="5m", prepost=True, progress=False,
                      auto_adjust=False)
-    out = {}
-    close = df["Close"]
-    for t in tickers:
-        col = close[t] if hasattr(close, "columns") and t in close.columns else close
-        out[t] = [(ts.tz_convert(ET).to_pydatetime(), float(v)) for ts, v in col.dropna().items()]
-    return out
+    return {t: [(ts.tz_convert(ET).to_pydatetime(), float(v)) for ts, v in column(df["Close"], t).dropna().items()]
+            for t in tickers}
 
 
 # ---------- pure logic (tested) ----------
 
 def norm(sym: str) -> str:
     return sym.replace(".", "-").upper()
-
-
-def surprise(actual, estimate) -> float | None:
-    """(actual - estimate) / |estimate|, as a percent rounded to 0.1. Positive = beat."""
-    if actual is None or estimate in (None, 0):
-        return None
-    return round((actual - estimate) / abs(estimate) * 100, 1)
 
 
 def after_hours_move(bars: list[tuple[datetime, float]], close_at: datetime) -> float | None:
@@ -113,7 +103,7 @@ def collect(cfg: dict, now: datetime) -> dict:
     reported_raw = by_size([r for r in rows_for(cal, refs["last"], universe)
                             if r.get("epsActual") is not None or r.get("revenueActual") is not None], rank)
     ext = fetch_extended_prices([norm(r["symbol"]) for r in reported_raw])
-    close_at = datetime.combine(refs["last"], time(16, 0), ET)
+    close_at = session_close_et(refs["last"])           # 1pm on early-close days
     reported = []
     for r in reported_raw:
         t = norm(r["symbol"])
@@ -123,10 +113,10 @@ def collect(cfg: dict, now: datetime) -> dict:
             "timing": r.get("hour") or None,          # bmo, amc, dmh
             "revenue_actual": r.get("revenueActual"),
             "revenue_estimate": r.get("revenueEstimate"),
-            "revenue_surprise_pct": surprise(r.get("revenueActual"), r.get("revenueEstimate")),
+            "revenue_surprise_pct": pct(r.get("revenueActual"), r.get("revenueEstimate"), 1),
             "eps_actual": r.get("epsActual"),
             "eps_estimate": r.get("epsEstimate"),
-            "eps_surprise_pct": surprise(r.get("epsActual"), r.get("epsEstimate")),
+            "eps_surprise_pct": pct(r.get("epsActual"), r.get("epsEstimate"), 1),
             "after_hours_pct": after_hours_move(ext.get(t, []), close_at),
         })
 
@@ -138,7 +128,6 @@ def collect(cfg: dict, now: datetime) -> dict:
             week.append({"date": d.isoformat(), "day": d.strftime("%a"), "names": n})
 
     return {
-        "as_of": now.isoformat(),
         "reported_date": refs["last"].isoformat(),
         "reported": reported,
         "next_day": {"date": nxt.isoformat(), "names": next_names,

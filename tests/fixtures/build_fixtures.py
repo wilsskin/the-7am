@@ -1,11 +1,10 @@
 """Writes the sample issues in tests/fixtures/issues/<name>/ (data, calendar, content).
 
-They reuse the placeholder content from build_reference.py, so a rendered fixture can be
-compared one-to-one with templates/reference_*.html. Run: python tests/fixtures/build_fixtures.py
-Names: weekday, monday, weekend (the three references), birthday and unavailable (the two
-states that were never mocked up, BUILD_PLAN.md §14).
+Placeholder content only. Render them with python -m brief.run --fixture; the rendered
+previews are the visual reference (DESIGN_SYSTEM.md). Run: python tests/fixtures/build_fixtures.py
+Names: weekday, monday, weekend, birthday (Wilson's own birthday pill) and unavailable
+(every collector failed).
 """
-import copy
 import json
 import sys
 from datetime import date, datetime

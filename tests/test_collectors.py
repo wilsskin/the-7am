@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from brief.collect import earnings, market_calendar as mc, markets, memes, mta, sports, weather
-from brief.common import ET
+from brief.common import ET, pct
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -102,20 +102,12 @@ def test_movers_shortlist_sorted_by_absolute_move():
     assert [m["ticker"] for m in ms] == ["BBB", "AAA"]
 
 
-def test_standout_is_biggest_absolute_move():
-    closes = {"AAA": {REFS["prev"]: 100, REFS["last"]: 103},
-              "BBB": {REFS["prev"]: 100, REFS["last"]: 93.6},
-              "CCC": {REFS["prev"]: 100}}
-    s = markets.pick_standout(closes, REFS, {"BBB": "Bravo"})
-    assert s["ticker"] == "BBB" and s["name"] == "Bravo" and s["change_1d_pct"] == -6.4
-
-
 # ---------- earnings ----------
 
 def test_surprise():
-    assert earnings.surprise(57.0, 55.18) == 3.3
-    assert earnings.surprise(-0.5, -1.0) == 50.0          # smaller loss is a beat
-    assert earnings.surprise(1.0, None) is None and earnings.surprise(1.0, 0) is None
+    assert pct(57.0, 55.18, 1) == 3.3
+    assert pct(-0.5, -1.0, 1) == 50.0          # smaller loss is a beat
+    assert pct(1.0, None, 1) is None and pct(1.0, 0, 1) is None
 
 
 def test_next_line():
@@ -151,8 +143,8 @@ def test_weather_parse_fixture():
 @pytest.mark.parametrize("code,icon", [(0, "sun"), (1, "sun"), (2, "partly"), (3, "cloud"), (45, "fog"), (48, "fog"),
                                        (51, "drizzle"), (61, "rain"), (67, "rain"), (80, "rain"), (95, "storm"),
                                        (71, "snow"), (77, "snow"), (85, "snow")])
-def test_icon_for(code, icon):
-    assert weather.icon_for(code) == icon
+def test_kind_for(code, icon):
+    assert weather.kind_for(code) == icon
 
 
 def test_outlook_line():

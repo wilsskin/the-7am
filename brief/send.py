@@ -22,7 +22,7 @@ from datetime import datetime
 
 import requests
 
-from brief.common import ET, ROOT, RUN_DIR, TIMEOUT, load_config, now_et
+from brief.common import ROOT, RUN_DIR, TIMEOUT, load_config, now_et
 
 API = "https://api.resend.com/emails"
 ICONS = ROOT / "templates" / "icons"
@@ -35,7 +35,7 @@ def attachments(icons: list[str], charts: list[dict] | None = None, run_dir=None
              "content_type": "image/png", "content_id": n} for n, path in files]
 
 
-def fallback_text(run_dir, error: str) -> tuple[str, str]:
+def fallback_text(run_dir, error: str) -> str:
     """Plain-text email for when render failed: what we have, plus the error."""
     lines = ["The 7AM could not be rendered this morning.", "", f"Error: {error}", ""]
     txt = run_dir / "issue.txt"
@@ -53,7 +53,7 @@ def fallback_text(run_dir, error: str) -> tuple[str, str]:
                 lines += ["", f"Weather: {d['weather']['summary']} {d['weather']['precip'] or ''}".strip()]
         except Exception as e:  # nothing usable on disk
             lines.append(f"(data.json unavailable too: {e})")
-    return "\n".join(lines).strip() + "\n", None
+    return "\n".join(lines).strip() + "\n"
 
 
 def build_payload(cfg: dict, run_dir, now: datetime) -> dict:
@@ -68,7 +68,7 @@ def build_payload(cfg: dict, run_dir, now: datetime) -> dict:
     else:
         err_path = run_dir / "render_error.txt"
         error = err_path.read_text().strip() if err_path.exists() else "render produced no output"
-        text, _ = fallback_text(run_dir, error)
+        text = fallback_text(run_dir, error)
         payload = {**base, "subject": f"{cfg['brand']['name']}, {now:%a %b} {now.day} (plain-text fallback)", "text": text}
     return payload
 

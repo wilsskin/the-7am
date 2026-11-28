@@ -24,16 +24,19 @@ def now_et() -> datetime:
     return datetime.now(ET)
 
 
-def get_json(url: str, params: dict | None = None, headers: dict | None = None):
-    h = {"User-Agent": USER_AGENT}
-    h.update(headers or {})
-    r = requests.get(url, params=params, headers=h, timeout=TIMEOUT)
+def get(url: str, params: dict | None = None, headers: dict | None = None) -> requests.Response:
+    r = requests.get(url, params=params, headers={"User-Agent": USER_AGENT, **(headers or {})}, timeout=TIMEOUT)
     r.raise_for_status()
-    return r.json()
+    return r
 
 
-def pct(new: float, base: float) -> float | None:
-    """Percent change, rounded to 2 decimals. None if either side is missing."""
+def get_json(url: str, params: dict | None = None, headers: dict | None = None):
+    return get(url, params, headers).json()
+
+
+def pct(new: float, base: float, decimals: int = 2) -> float | None:
+    """Percent change, rounded. None if either side is missing. Earnings surprise uses 1 decimal:
+    (actual - estimate) / |estimate|, so a smaller loss than expected is a beat."""
     if new is None or base in (None, 0):
         return None
-    return round((new - base) / abs(base) * 100, 2)
+    return round((new - base) / abs(base) * 100, decimals)

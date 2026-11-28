@@ -5,8 +5,9 @@ version of the last two issues from Gmail into run/previous.json, untouched:
 
     [{"id": "<gmail message id>", "date": "YYYY-MM-DD", "subject": "...", "body": "<plain text>"}]
 
-The plain-text part keeps the real article links (the HTML ones are rewritten by Resend's
-click tracking). This module turns those bodies into the links and headlines render.py checks
+The plain-text part (email.txt.j2) lists every story and its link in a simple, stable
+format; issues before Nov 28, 2026 also had their HTML links rewritten by Resend's click
+tracking. This module turns those bodies into the links and headlines render.py checks
 today's content against. Missing or empty file: nothing to check, the issue still renders.
 """
 import json

@@ -1,4 +1,12 @@
-{#- Plain-text version. Same order as email.html.j2. -#}
+{#- Plain-text version. Same order as email.html.j2. brief/previous.py reads it back to block repeats. -#}
+{% macro story(s) %}
+{% for p in s.paragraphs %}{% if p.head %}{{ p.head }} {% endif %}{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
+
+{% endfor %}
+{{ s.source }}: {{ s.url }}
+{% if s.chart %}{{ s.chart.alt }}
+{% endif %}
+{% endmacro %}
 {{ v.brand }} · {{ v.date_label }}
 
 {{ v.lead }}{% if v.rest %} {{ v.rest }}{% endif %}
@@ -42,12 +50,7 @@ YOUR DAY
 {% for m in v.bell.movers %}
 
 {{ m.ticker }} {{ m.move.text }}
-{% for p in m.paragraphs %}{{ p.text }}
-
-{% endfor %}
-{{ m.source }}: {{ m.url }}
-{% if m.chart %}{{ m.chart.alt }}
-{% endif %}{% endfor %}
+{{ story(m) }}{% endfor %}
 {% if v.bell.on_deck %}
 
 On deck today
@@ -86,12 +89,7 @@ YOUR HOLDINGS
 {% for s in v.holdings.stories %}
 
 {{ s.headline }}
-{% for p in s.paragraphs %}{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
-
-{% endfor %}
-{{ s.source }}: {{ s.url }}
-{% if s.chart %}{{ s.chart.alt }}
-{% endif %}{% endfor %}
+{{ story(s) }}{% endfor %}
 {% endif %}
 {% if v.big_read %}
 
@@ -99,14 +97,7 @@ YOUR HOLDINGS
 THE BIG READ
 {{ v.big_read.desc }}
 
-{% for p in v.big_read.story.paragraphs %}
-
-{% if p.head %}{{ p.head }} {% endif %}{% if p.lead_in %}{{ p.lead_in }} {% endif %}{{ p.text }}
-{% endfor %}
-
-{{ v.big_read.story.source }}: {{ v.big_read.story.url }}
-{% if v.big_read.story.chart %}{{ v.big_read.story.chart.alt }}
-{% endif %}{% endif %}
+{{ story(v.big_read.story) }}{% endif %}
 {% if v.top_3 %}
 
 
@@ -114,12 +105,7 @@ TOP 3
 {{ v.top_3.desc }}
 {% for s in v.top_3.stories %}
 
-{% for p in s.paragraphs %}{% if p.head %}{{ p.head }} {% endif %}{{ p.text }}
-
-{% endfor %}
-{{ s.source }}: {{ s.url }}
-{% if s.chart %}{{ s.chart.alt }}
-{% endif %}{% endfor %}
+{{ story(s) }}{% endfor %}
 {% endif %}
 {% if v.latest %}
 
@@ -154,11 +140,7 @@ OFF THE CLOCK
 {% for s in v.off_the_clock.stories %}
 
 {{ s.headline }}
-{% for p in s.paragraphs %}{{ p.text }}
-{% endfor %}
-{{ s.source }}: {{ s.url }}
-{% if s.chart %}{{ s.chart.alt }}
-{% endif %}{% endfor %}
+{{ story(s) }}{% endfor %}
 {% endif %}
 {% if v.memes %}
 

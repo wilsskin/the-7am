@@ -30,10 +30,8 @@ sports:
     - { league: nfl, team: "San Francisco 49ers", week_preview: true }
     - { league: nba, team: "Golden State Warriors", week_preview: true }
     - { league: mlb, team: "San Francisco Giants", week_preview: false }
-  also_cover: ["NFL major headlines and trades", "NBA major headlines and trades"]
 
 memes:
-  count: 6                 # Claude picks up to this many
   # In order of preference. Any of: shortsqueez, litquidity, lemmy, reddit (needs approved API keys).
   sources: ["shortsqueez", "litquidity", "lemmy"]
   newsletter_max_age_hours: 26   # only issues from the last day, so nothing repeats
@@ -48,12 +46,10 @@ memes:
   reddit_min_score: 500
 
 sources:
-  subscribed: ["wsj.com", "nytimes.com"]          # prefer these links
   allowed: ["wsj.com", "nytimes.com", "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk",
             "nbcnews.com", "cnbc.com", "axios.com", "theverge.com", "techcrunch.com",
             "espn.com", "variety.com", "hollywoodreporter.com", "gothamist.com", "ny1.com",
             "ft.com", "bloomberg.com"]
-  paywalled_unsubscribed: ["ft.com", "bloomberg.com"]   # link only if no other source has it
   # Allowed only in Off the clock (ski, things to do, outdoors, cars, AI tools). Decided Nov 22, 2026.
   off_the_clock_extra: ["onthesnow.com", "skimag.com", "killington.com", "stowe.com", "palisadestahoe.com",
                         "timeout.com", "theinfatuation.com", "eater.com", "nymag.com", "secretnyc.co",

@@ -8,22 +8,16 @@ from functools import lru_cache
 
 import pandas as pd
 
+from brief import fmt
 from brief.common import ET
 
-# exchange_calendars' holiday names, made readable for the closure sentence.
+# exchange_calendars' holiday names that read badly in the closure sentence (checked against
+# exchange_calendars 4.x, Nov 27, 2026). Any other name is used as is ("Thanksgiving", "Good Friday").
 HOLIDAY_NAMES = {
-    "New Years Day": "New Year's Day",
-    "Martin Luther King Jr. Day": "Martin Luther King Jr. Day",
-    "Presidents Day": "Presidents' Day",
-    "Washington's Birthday": "Presidents' Day",
-    "Good Friday": "Good Friday",
-    "Memorial Day": "Memorial Day",
-    "Juneteenth": "Juneteenth",
+    "Dr. Martin Luther King Jr. Day": "Martin Luther King Jr. Day",
+    "President's Day": "Presidents' Day",
+    "Juneteenth National Independence Day": "Juneteenth",
     "July 4th": "the Fourth of July",
-    "Independence Day": "the Fourth of July",
-    "Labor Day": "Labor Day",
-    "Thanksgiving": "Thanksgiving",
-    "Christmas": "Christmas",
 }
 
 
@@ -90,12 +84,6 @@ def last_session_before(d: date) -> date:
     return sessions_between(d - timedelta(days=15), d - timedelta(days=1))[-1]
 
 
-def _fmt_time(t: time) -> str:
-    h = t.hour % 12 or 12
-    ampm = "am" if t.hour < 12 else "pm"
-    return f"{h}{ampm}" if t.minute == 0 else f"{h}:{t.minute:02d}{ampm}"
-
-
 def _holiday_names(start: date, end: date) -> dict[date, str]:
     cal = _cal()
     names = {}
@@ -119,7 +107,7 @@ def week_events(today: date) -> list[dict]:
             else:
                 close = session_close_et(d).time()
                 if close != time(16, 0):
-                    out.append({"date": d.isoformat(), "kind": "early_close", "close": _fmt_time(close)})
+                    out.append({"date": d.isoformat(), "kind": "early_close", "close": fmt.hour(close.hour, close.minute)})
         d += timedelta(days=1)
     return out
 
@@ -150,11 +138,6 @@ def collect(cfg: dict, now: datetime) -> dict:
     return {
         "today_is_trading_day": is_session(today),
         "last_close": refs["last"].isoformat(),
-        "last_close_at": session_close_et(refs["last"]).isoformat(),
-        "prev_close": refs["prev"].isoformat(),
-        "week_base": refs["week"].isoformat(),
-        "year_base": refs["year"].isoformat(),
-        "next_trading_day": next_session_after(today).isoformat(),
         "this_week": events,
         "closure_line": closure_line(today, events),
     }
