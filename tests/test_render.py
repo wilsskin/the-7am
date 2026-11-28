@@ -321,3 +321,14 @@ def test_reminders_due_on_countdown_days_only():
     assert due(date(2027, 3, 11)) == ["Reminder. In 3 days: Move the cron."]
     assert due(date(2027, 3, 13)) == ["Reminder. Tomorrow: Move the cron."]
     assert due(date(2027, 2, 23)) == [] and due(date(2027, 3, 14)) == [] and render.reminders_due({}, date(2027, 3, 13)) == []
+
+
+def test_weekend_ignores_weekday_only_stories(issue):
+    src = json.loads((ISSUES / "weekday" / "content.json").read_text())
+    def extra(c):
+        c["holdings_news"] = src["holdings_news"][:1]
+        c["latest"]["business"][0]["url"] = src["holdings_news"][0]["link"]["url"]   # same story in both
+    meta, html, _ = go(issue("weekend", edit_content=extra))
+    weekend = json.loads((ISSUES / "weekend" / "content.json").read_text())
+    assert weekend["latest"]["business"][0]["title"] in html
+    assert not any("dropped duplicate" in w for w in meta["warnings"])

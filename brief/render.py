@@ -712,6 +712,8 @@ def render(run_dir: Path, lenient: bool = False, icon_src: str = "cid:{}", now: 
     if c.edition and c.edition != data.edition:
         warnings.append(f"content.json says edition {c.edition}, data.json says {data.edition}; using data.json")
 
+    if data.edition == "weekend":       # these sections don't exist on weekends; don't let hidden
+        c.holdings_news, c.on_deck_today = [], []   # stories knock real ones out in dedupe
     check_links(c, cfg, lenient, errors)
     check_memes(c, data, lenient, errors)
     check_holdings(c, cfg, lenient, errors)
