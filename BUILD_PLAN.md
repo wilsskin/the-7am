@@ -299,7 +299,7 @@ Follow `DESIGN_SYSTEM.md` exactly. `build_reference.py` already contains a helpe
 ## 10. Sending
 
 - Resend. Wilson signs up with w0skinner@gmail.com. Without a verified domain, Resend only sends from its test address to the account's own email, which is exactly this use case. Verify this at build time. A custom domain can come later.
-- `from: "The 7AM <onboarding@resend.dev>"` until a domain is verified.
+- `from: "The 7AM <7am@wilsonskinner.com>"`. wilsonskinner.com was verified in Resend on Nov 27, 2026 (DNS at Porkbun: DKIM `resend._domainkey`, CNAMEs `send` and `rsend`, `_dmarc` p=none). Open and click tracking are off (opt-in on a verified domain).
 - Icons go in the `attachments` array with a `content_id` (inline images). Verify at build time that Resend supports this and that Gmail iOS shows them; if not, fall back to hosting the PNGs at a public https URL and ask Wilson where.
 - `reply_to: config.feedback_address`, so hitting Reply in Gmail sends feedback without typing an address (§10b).
 - Subject line comes from content.json (`subject`), no prefix.
@@ -382,9 +382,9 @@ Read before Milestone 1. Each risk names its fallback; if the fallback isn't goo
 - Wilson's own birthday (theme pill in Your day) and "unavailable" states (a collector failed) aren't mocked up. Build them from the spec, render each with a fixture at Milestone 2, and show Wilson the draft.
 
 **To do later (agreed Nov 22, 2026)**
-- **Send from Wilson's own domain** (option A). Higher priority than it looked: on Nov 22 the resend-clicks.com redirect failed its TLS handshake, so tapped links in the email did not open (direct URLs all work). Verify wilsonskinner.com (or a subdomain) in Resend by adding the DNS records Resend gives, then change `sender` in config.yaml to something like `The 7AM <7am@wilsonskinner.com>` and update the Gmail filter. Why: the shared onboarding@resend.dev sender forces click and open tracking (links go through resend-clicks.com), which DESIGN_SYSTEM.md rules out; on a verified domain tracking is off by default. Confirm both tracking toggles are off in Resend → Domains afterwards.
+- ~~**Send from Wilson's own domain**~~ **Done Nov 27, 2026** (sender `7am@wilsonskinner.com`, tracking off). Higher priority than it looked: on Nov 22 the resend-clicks.com redirect failed its TLS handshake, so tapped links in the email did not open (direct URLs all work). Verify wilsonskinner.com (or a subdomain) in Resend by adding the DNS records Resend gives, then change `sender` in config.yaml to something like `The 7AM <7am@wilsonskinner.com>` and update the Gmail filter. Why: the shared onboarding@resend.dev sender forces click and open tracking (links go through resend-clicks.com), which DESIGN_SYSTEM.md rules out; on a verified domain tracking is off by default. Confirm both tracking toggles are off in Resend → Domains afterwards.
 - **Sender avatar for everyone (with the own-domain step).** Gmail's inbox circle comes from the sender address. Once mail comes from e.g. 7am@wilsonskinner.com, create a free Google Account for that address (needs email forwarding on the domain to receive Google's code) and set `brand/7am-twotone.png` as its profile photo. BIMI is the official route but needs a paid certificate, so it's out. Until then: a Google Contact for the sender with the logo as its photo, which only Wilson sees.
-- **Rotate the Resend API key**: the first key was pasted into a chat. Create a new one, delete the old one (ends in 24p2), update ~/.zshrc and the scheduled task's secret.
+- ~~Rotate the Resend API key~~ Dropped (Wilson, Nov 27, 2026): free account, low stakes, not worth it.
 
 **Small decisions still open (ask Wilson when you reach them)**
 - Plain-text version layout: derive it from the HTML order; show Wilson once.

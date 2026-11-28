@@ -2,7 +2,7 @@
 brand: { name: "The 7AM" }          # working name, Wilson may rename
 recipient: w0skinner@gmail.com
 feedback_address: w0skinner+7am-feedback@gmail.com   # Reply-To on every issue (§10b)
-sender: "The 7AM <onboarding@resend.dev>"     # Resend test sender until a domain is verified (§10)
+sender: "The 7AM <7am@wilsonskinner.com>"     # wilsonskinner.com verified in Resend Nov 27, 2026 (§10); tracking off
 timezone: America/New_York
 location: { name: "New York", lat: 40.7306, lon: -73.9866 }   # East Village
 subway_lines: ["4", "5"]

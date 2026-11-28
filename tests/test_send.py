@@ -24,7 +24,7 @@ def rendered(tmp_path):
 
 def test_payload_sends_now_with_inline_icons(rendered):
     p = send.build_payload(CFG, rendered, datetime(2026, 11, 24, 6, 45, tzinfo=ET))
-    assert p["from"] == "The 7AM <onboarding@resend.dev>" and p["to"] == ["w0skinner@gmail.com"]
+    assert p["from"] == "The 7AM <7am@wilsonskinner.com>" and p["to"] == ["w0skinner@gmail.com"]
     assert p["reply_to"] == "w0skinner+7am-feedback@gmail.com"
     assert p["subject"] == "Nvidia beat, and it still wasn't enough."
     assert "scheduled_at" not in p  # Resend can't schedule emails with attachments
