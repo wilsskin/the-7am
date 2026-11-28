@@ -25,7 +25,7 @@ Unlocks: the Earnings section.
 1. Go to resend.com and sign up **with w0skinner@gmail.com**. Without your own domain, Resend can only send to the address on the account, which is exactly what we want.
 2. In the dashboard, **API Keys → Create API Key**. Name it "the-7am", permission **Sending access**. Copy it (it's shown once).
 3. `! echo 'export RESEND_API_KEY=your_key' >> ~/.zshrc`
-4. In Gmail, make a filter so the issue never lands in spam: search `from:7am@wilsonskinner.com`, click the filter icon, **Create filter**, tick **Never send it to Spam** and **Always mark it as important**.
+4. Optional (Wilson has none; issues land in the inbox fine): a Gmail filter so the issue never lands in spam: search `from:7am@wilsonskinner.com`, click the filter icon, **Create filter**, tick **Never send it to Spam** and **Always mark it as important**.
 
 Unlocks: Milestone 4, a real email in your inbox. Free plan: 100 emails a day, we send one.
 
