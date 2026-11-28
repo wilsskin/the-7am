@@ -345,10 +345,10 @@ def test_tag_icons_draw_close_to_one_pixel_lines():
 
 def test_reminders_due_on_countdown_days_only():
     from datetime import date
-    cfg = {"reminders": [{"date": date(2027, 3, 8), "days_before": [14, 7, 3, 2, 1], "text": "Move the cron."}]}
+    cfg = {"reminders": [{"date": date(2027, 3, 14), "days_before": [14, 7, 3, 2, 1], "text": "Move the cron."}]}
     due = lambda d: render.reminders_due(cfg, d)
-    assert due(date(2027, 2, 22)) == ["Reminder. In 2 weeks: Move the cron."]
-    assert due(date(2027, 3, 1)) == ["Reminder. In 1 week: Move the cron."]
-    assert due(date(2027, 3, 5)) == ["Reminder. In 3 days: Move the cron."]
-    assert due(date(2027, 3, 7)) == ["Reminder. Tomorrow: Move the cron."]
-    assert due(date(2027, 2, 23)) == [] and due(date(2027, 3, 8)) == [] and render.reminders_due({}, date(2027, 3, 7)) == []
+    assert due(date(2027, 2, 28)) == ["Reminder. In 2 weeks: Move the cron."]
+    assert due(date(2027, 3, 7)) == ["Reminder. In 1 week: Move the cron."]
+    assert due(date(2027, 3, 11)) == ["Reminder. In 3 days: Move the cron."]
+    assert due(date(2027, 3, 13)) == ["Reminder. Tomorrow: Move the cron."]
+    assert due(date(2027, 2, 23)) == [] and due(date(2027, 3, 14)) == [] and render.reminders_due({}, date(2027, 3, 13)) == []
